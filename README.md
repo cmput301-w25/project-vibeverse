@@ -9,7 +9,7 @@
 | Divit Singhal | divit1 | divitsinghall     |
 | Usaid Ahmed | usaid1 | Usaidahmed10     |
 | Tanmay Satija | tsatija | tanmay-satija    |
-| [Full Name] | [CCID] | [@username]     |
+| Syed Ayman Quadri | syedaym1 | saymanq     |
 
 ## Project Description
 
