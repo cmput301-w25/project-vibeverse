@@ -6,7 +6,7 @@
 | ----------- | ------ | --------------- |
 | Ahmed Zafar | azafar3 | @AhmedZ04    |
 | Munib Moienuddin | moienudd | @IAMMUNIBMIR    |
-| [Full Name] | [CCID] | [@username]     |
+| [Divit Singhal] | [divit1] | [divitsinghall]     |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
