@@ -5,7 +5,7 @@
 | Name        | CCID   | GitHub Username |
 | ----------- | ------ | --------------- |
 | Ahmed Zafar | azafar3 | @AhmedZ04    |
-| [Full Name] | [CCID] | [@username]     |
+| Munib Moienuddin | moienudd | @IAMMUNIBMIR    |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
 | [Full Name] | [CCID] | [@username]     |
