@@ -8,7 +8,7 @@
 | Munib Moienuddin | moienudd | @IAMMUNIBMIR    |
 | Divit Singhal | divit1 | divitsinghall     |
 | Usaid Ahmed | usaid1 | Usaidahmed10     |
-| [Full Name] | [CCID] | [@username]     |
+| Tanmay Satija | tsatija | tanmay-satija    |
 | [Full Name] | [CCID] | [@username]     |
 
 ## Project Description
