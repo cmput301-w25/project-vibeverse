@@ -4,8 +4,8 @@
 
 | Name        | CCID   | GitHub Username |
 | ----------- | ------ | --------------- |
-| Ahmed Zafar | azafar3 | @AhmedZ04    |
-| Munib Moienuddin | moienudd | @IAMMUNIBMIR    |
+| Ahmed Zafar | azafar3 | AhmedZ04    |
+| Munib Moienuddin | moienudd | IAMMUNIBMIR    |
 | Divit Singhal | divit1 | divitsinghall     |
 | Usaid Ahmed | usaid1 | Usaidahmed10     |
 | Tanmay Satija | tsatija | tanmay-satija    |
