@@ -1,8 +1,10 @@
 ---
 name: User Story
 about: Create a new user story
-title: '[STORY] '
-labels: story
+title: "[STORY] "
+labels: ''
+assignees: ''
+
 ---
 
 **Story**
