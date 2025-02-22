@@ -3,6 +3,7 @@ package com.example.vibeverse;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,15 +29,25 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private static final int REQUEST_PICK_IMAGE = 2;
+    private static final int REQUEST_IMAGE_CAPTURE = 1; // for images captured directly from the camera
+    private static final int REQUEST_PICK_IMAGE = 2; // for images taken from the gallery
+    private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
     private Bitmap currentBitmap;
+    private ImageView imgPlaceholder;
+    private ImageView imgSelected;
+    private TextView txtImageDetails;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.create_mood);
+
+        imgPlaceholder = findViewById(R.id.imgPlaceholder);
+        imgSelected = findViewById(R.id.imgSelected);
+        txtImageDetails = findViewById(R.id.txtImageDetails);
 
         // Temporary testing button
         FrameLayout btnTestImage = findViewById(R.id.btnTestImage);
@@ -50,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Toast.makeText(this, "Activity result: requestCode=" + requestCode +
+                ", resultCode=" + resultCode, Toast.LENGTH_SHORT).show();
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 // For the camera, imageUri is already set.
@@ -82,9 +96,19 @@ public class MainActivity extends AppCompatActivity {
                 sizeKB = imageBytes.length / 1024;
             }
 
+            Date dateTaken = new Date(); // For testing, using current date
+            String location = "Test Location"; // In a real app, you'd get this from GPS or EXIF data
+
+            txtImageDetails.setVisibility(View.VISIBLE);
+            Photograph photograph = new Photograph(imageUri, sizeKB, bitmap, dateTaken, location);
+            txtImageDetails.setText(photograph.getFormattedDetails());
+
             currentBitmap = bitmap;
+            imgPlaceholder.setVisibility(View.GONE);
+            imgSelected.setVisibility(View.VISIBLE);
+            imgSelected.setImageBitmap(bitmap);
             // Display a preview dialog of the (possibly compressed) image
-            showPreviewDialog(bitmap, imageUri, sizeKB);
+            showPreviewDialog(bitmap, imageUri, sizeKB, dateTaken, location);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -121,19 +145,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void dispatchTakePictureIntent() {
+        requestPermissions();
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Add this debug Toast
+        Toast.makeText(this, "Starting camera intent", Toast.LENGTH_SHORT).show();
+
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
             try {
                 photoFile = createImageFile();
             } catch (IOException ex) {
+                // Add error handling
+                Toast.makeText(this, "Error creating image file: " + ex.getMessage(), Toast.LENGTH_LONG).show();
                 ex.printStackTrace();
+                return;
             }
+
             if (photoFile != null) {
-                imageUri = FileProvider.getUriForFile(this, "com.example.vibeverse.fileprovider", photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                try {
+                    imageUri = FileProvider.getUriForFile(this,
+                            "com.example.vibeverse.fileprovider",
+                            photoFile);
+                    takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                    // Add success Toast
+                    Toast.makeText(this, "Camera intent started", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    // Add error handling
+                    Toast.makeText(this, "Error starting camera: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+            } else {
+                Toast.makeText(this, "Could not create photo file", Toast.LENGTH_SHORT).show();
             }
+        } else {
+            Toast.makeText(this, "No camera app available", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -150,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         return File.createTempFile(imageFileName, ".jpg", storageDir);
     }
 
-    private void showPreviewDialog(final Bitmap bitmap, final Uri imageUri, final long fileSizeKB) {
+    private void showPreviewDialog(final Bitmap bitmap, final Uri imageUri, final long fileSizeKB, final Date dateTaken, final String location) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View dialogView = getLayoutInflater().inflate(R.layout.image_preview_dialog, null);
         ImageView previewImageView = dialogView.findViewById(R.id.previewImageView);
@@ -162,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         // Create a Photograph object when confirmed
-                        Photograph photograph = new Photograph(imageUri, fileSizeKB, bitmap);
+                        Photograph photograph = new Photograph(imageUri, fileSizeKB, bitmap, dateTaken, location);
                         // You can now proceed to attach the photograph to your post
                         Toast.makeText(MainActivity.this, "Image confirmed!", Toast.LENGTH_SHORT).show();
                     }
@@ -175,6 +221,34 @@ public class MainActivity extends AppCompatActivity {
                     }
                 })
                 .show();
+    }
+
+    private void requestPermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (checkSelfPermission(android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+
+                requestPermissions(new String[]{
+                        android.Manifest.permission.CAMERA,
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                }, PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted
+                Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
 
