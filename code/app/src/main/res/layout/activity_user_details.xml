@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User Details"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_gravity="center" />
+
+        <EditText
+            android:id="@+id/fullName"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="Full name"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white"
+            android:padding="10dp"
+            android:textColorHint="@android:color/darker_gray"/>
+
+        <EditText
+            android:id="@+id/username"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="Username"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white"
+            android:padding="10dp"
+            android:textColorHint="@android:color/darker_gray"/>
+
+        <EditText
+            android:id="@+id/age"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="Age"
+            android:inputType="number"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white"
+            android:padding="10dp"
+            android:textColorHint="@android:color/darker_gray"/>
+
+        <Spinner
+            android:id="@+id/genderSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@android:color/black"
+            android:padding="10dp"
+            android:popupBackground="@android:color/white"/>
+
+        <EditText
+            android:id="@+id/dob"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="Date of Birth"
+            android:focusable="false"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white"
+            android:padding="10dp"
+            android:textColorHint="@android:color/darker_gray"
+            android:onClick="showDatePicker"/>
+
+        <EditText
+            android:id="@+id/bio"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:hint="Bio (Max 30 words)"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white"
+            android:padding="10dp"
+            android:textColorHint="@android:color/darker_gray"
+            android:maxLines="3"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/profilePicture"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:background="@android:color/black"
+                android:scaleType="centerCrop"
+                android:src="@android:drawable/ic_menu_camera"/>
+
+            <Button
+                android:id="@+id/selectProfilePicture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add Profile Picture"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/continueButton"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="CONTINUE"
+            android:background="@android:color/darker_gray"
+            android:textColor="@android:color/white"/>
+    </LinearLayout>
+</ScrollView>
