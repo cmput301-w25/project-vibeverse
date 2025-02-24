@@ -99,14 +99,8 @@ public class MainActivity extends AppCompatActivity {
             Date dateTaken = new Date(); // For testing, using current date
             String location = "Test Location"; // In a real app, you'd get this from GPS or EXIF data
 
-            txtImageDetails.setVisibility(View.VISIBLE);
             Photograph photograph = new Photograph(imageUri, sizeKB, bitmap, dateTaken, location);
             txtImageDetails.setText(photograph.getFormattedDetails());
-
-            currentBitmap = bitmap;
-            imgPlaceholder.setVisibility(View.GONE);
-            imgSelected.setVisibility(View.VISIBLE);
-            imgSelected.setImageBitmap(bitmap);
             // Display a preview dialog of the (possibly compressed) image
             showPreviewDialog(bitmap, imageUri, sizeKB, dateTaken, location);
 
@@ -207,13 +201,20 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+
+                        currentBitmap = bitmap;
+                        imgPlaceholder.setVisibility(View.GONE);
+                        imgSelected.setVisibility(View.VISIBLE);
+                        imgSelected.setImageBitmap(bitmap);
+                        txtImageDetails.setVisibility(View.VISIBLE);
+
                         // Create a Photograph object when confirmed
                         Photograph photograph = new Photograph(imageUri, fileSizeKB, bitmap, dateTaken, location);
                         // You can now proceed to attach the photograph to your post
-                        Toast.makeText(MainActivity.this, "Image confirmed!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Image selected!", Toast.LENGTH_SHORT).show();
                     }
                 })
-                .setNegativeButton("Choose another", new DialogInterface.OnClickListener() {
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         // Dismiss the dialog and allow user to pick a different image
