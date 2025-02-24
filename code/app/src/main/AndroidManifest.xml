@@ -12,15 +12,32 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VibeVerse"
         tools:targetApi="31">
+
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Mood Selection Activity -->
+        <activity
+            android:name=".SelectMoodActivity"
+            android:exported="false"/>
+
+        <!-- Add Mood Activity -->
+        <activity
+            android:name=".AddMoodActivity"
+            android:exported="false"/>
+
+        <!-- Edit Mood Activity (Added to fix crash on Edit button click) -->
+        <activity
+            android:name=".EditMoodActivity"
+            android:exported="false"/>
+
     </application>
 
 </manifest>

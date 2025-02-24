@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Emotional State"
+        android:textSize="18sp"/>
+
+    <Spinner
+        android:id="@+id/emotionSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <EditText
+        android:id="@+id/triggerInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Trigger (Optional)"/>
+
+    <EditText
+        android:id="@+id/socialSituationInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Social Situation (Optional)"/>
+
+    <Button
+        android:id="@+id/saveMoodButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Mood"/>
+</LinearLayout>

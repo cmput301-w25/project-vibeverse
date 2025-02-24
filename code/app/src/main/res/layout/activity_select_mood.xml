@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/mainContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#4B2C39"> <!-- Default background color -->
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choose how you're feeling right now"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="16dp"/>
+
+    <!-- Mood Selection Grid -->
+    <GridLayout
+        android:id="@+id/moodGrid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="4"
+        android:rowCount="2"
+        android:padding="8dp"/>
+
+    <!-- Large Mood Display -->
+    <LinearLayout
+        android:id="@+id/selectedMoodContainer"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:background="#D94C4C"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/selectedMoodEmoji"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="😡"
+            android:textSize="80sp"
+            android:layout_gravity="center"/>
+
+        <TextView
+            android:id="@+id/selectedMoodText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Angry"
+            android:textSize="24sp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:layout_gravity="center"/>
+    </LinearLayout>
+
+    <!-- Mood Intensity Slider -->
+    <SeekBar
+        android:id="@+id/moodIntensitySlider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="10"
+        android:progress="5"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Trigger Input -->
+    <EditText
+        android:id="@+id/triggerInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Trigger (Optional)"
+        android:background="@android:color/white"
+        android:padding="10dp"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Social Situation Input -->
+    <EditText
+        android:id="@+id/socialSituationInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Social Situation (Optional)"
+        android:background="@android:color/white"
+        android:padding="10dp"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Continue Button -->
+    <Button
+        android:id="@+id/continueButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Continue →"
+        android:textSize="18sp"
+        android:backgroundTint="#D94C4C"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
