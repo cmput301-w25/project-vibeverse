@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">VibeVerse</string>
+
+    <string-array name="gender_options">
+        <item>Select Gender</item>
+        <item>Male</item>
+        <item>Female</item>
+        <item>Others</item>
+    </string-array>
+
+    <string name="select_gender">Select Gender</string>
+
 </resources>

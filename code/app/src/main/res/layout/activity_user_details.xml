@@ -23,6 +23,14 @@
             android:textSize="28sp"
             android:textStyle="bold" />
 
+        <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:padding="10dp"
+            android:textColor="@color/white"
+            android:gravity="center_vertical"/>
+
         <!-- Profile Picture Section -->
         <EditText
             android:id="@+id/fullName"
@@ -41,7 +49,7 @@
             style="@style/RoundedBox"
             android:layout_height="100dp"
             android:layout_marginBottom="12dp"
-            android:hint="Bio (Max 30 words)"
+            android:hint="Bio (Max 150 Characters)"
             android:maxLines="3" />
 
         <EditText
@@ -104,5 +112,6 @@
             android:backgroundTint="@android:color/black"
             android:text="CONTINUE"
             android:textColor="@android:color/white" />
+
     </LinearLayout>
 </ScrollView>
