@@ -7,4 +7,15 @@
     <string name="click_to_login">Click to Login</string>
     <string name="click_to_register">Click to Register</string>
     <string name="logout">LOGOUT</string>
+    <string name="sign_up">Sign up</string>
+    <string name="googleSignInText">Sign in with Google</string>
+    <string name="XSignInText">Sign in with X</string>
+    <string name="app_logo">Logo for App (VibeSync)</string>
+    <string name="emailHint">abc@email.com</string>
+    <string name="passwordHint">Your password</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="googleSignUpText">Sign up with Google</string>
+    <string name="XSignUpText">Sign up with X</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="continueButton">CONTINUE</string>
 </resources>
