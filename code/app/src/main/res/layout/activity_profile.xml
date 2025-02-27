@@ -13,53 +13,152 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        app:layout_constraintTop_toTopOf="parent">
+        android:padding="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
-            android:id="@+id/profile_image"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginEnd="16dp"
-            android:src="@drawable/ic_profile" />
+        <!-- Profile Image & Name Layout -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
+            <ImageView
+                android:id="@+id/profile_image"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_profile"
+                android:scaleType="centerCrop"
+                android:layout_marginEnd="12dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/profile_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="First &amp; Last Name"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/profile_username"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@username"
+                    android:textSize="14sp"
+                    android:textColor="@color/black" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Followers & Following Layout -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:gravity="center">
 
-            <TextView
-                android:id="@+id/profile_name"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="First &amp; Last Name"
-                android:textStyle="bold"
-                android:textSize="18sp"/>
+                android:orientation="vertical"
+                android:gravity="center">
 
-            <TextView
-                android:id="@+id/profile_username"
+                <TextView
+                    android:id="@+id/followers_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1732"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Follows"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:gravity="center" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="16dp"
+                android:layout_height="match_parent" />
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="username"
-                android:textSize="14sp"
-                android:textColor="@color/black"/>
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/following_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2.4M"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:gravity="center" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Following"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:gravity="center" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Search & Filter -->
+    <!-- Search & Filter Bar -->
     <LinearLayout
         android:id="@+id/search_filter_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/profile_header">
+        android:padding="12dp"
+        app:layout_constraintTop_toBottomOf="@id/profile_header"
+        android:gravity="center_vertical">
 
-        <ImageButton
+        <EditText
+            android:id="@+id/search_bar"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/search_background"
+            android:hint="Search..."
+            android:padding="12dp"
+            android:textColor="@android:color/black"
+            android:textColorHint="@android:color/darker_gray"
+            android:drawableStart="@drawable/ic_search"
+            android:drawablePadding="12dp"/>
+
+        <Button
             android:id="@+id/filter_button"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/ic_filter" />
+            android:layout_marginStart="12dp"
+            android:background="@drawable/rounded_black_button"
+            android:drawableStart="@drawable/ic_filter"
+            android:drawablePadding="8dp"
+            android:gravity="center"
+            android:padding="12dp"
+            android:tint="@color/black" />
+
+
+
     </LinearLayout>
 
     <!-- Mood History RecyclerView -->
@@ -71,15 +170,6 @@
         app:layout_constraintTop_toBottomOf="@id/search_filter_layout"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation"/>
 
-    <!-- Three-Dots Menu (⋮) for Mood Options -->
-    <ImageButton
-        android:id="@+id/mood_options"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_three_dots"
-        android:contentDescription="Mood Options"
-        android:background="@null"/>
-
     <!-- Bottom Navigation -->
     <include
         android:id="@+id/bottom_navigation"
@@ -90,15 +180,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-
-    <EditText
-        android:id="@+id/search_bar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:background="@drawable/search_background"
-        android:hint="Search..."
-        android:padding="8dp"
-        tools:layout_editor_absoluteX="70dp"
-        tools:layout_editor_absoluteY="364dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
