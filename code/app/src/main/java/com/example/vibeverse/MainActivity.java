@@ -13,9 +13,9 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
 
     private ListView moodListView;
     private Button addMoodButton;
+    private Button profileButton; // New button for profile page
     private MoodAdapter adapter;
     private static final List<String> moodDisplayList = new ArrayList<>();
-
     private static final int REQUEST_EDIT_MOOD = 2;
 
     @Override
@@ -25,10 +25,18 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
 
         moodListView = findViewById(R.id.moodListView);
         addMoodButton = findViewById(R.id.addMoodButton);
+        profileButton = findViewById(R.id.profileButton); // Initialize profile button
 
+        // Open SelectMoodActivity when clicking "Add Mood"
         addMoodButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, SelectMoodActivity.class);
             startActivityForResult(intent, 1);
+        });
+
+        // Open ProfileActivity when clicking "Go to Profile"
+        profileButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ProfilePage.class);
+            startActivity(intent);
         });
 
         // Use the custom adapter

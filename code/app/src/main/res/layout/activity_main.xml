@@ -47,4 +47,12 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="16dp"/>
 
+    <Button
+        android:id="@+id/profileButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Profile"
+        android:layout_marginTop="20dp"/>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

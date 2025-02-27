@@ -38,6 +38,11 @@
             android:name=".EditMoodActivity"
             android:exported="false"/>
 
+        <!-- Profile Activity (Added) -->
+        <activity
+            android:name=".ProfilePage"
+            android:exported="false"/>
+
     </application>
 
 </manifest>
