@@ -3,6 +3,9 @@ package com.example.vibeverse;
 import android.app.DatePickerDialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -18,7 +21,7 @@ import java.util.Calendar;
 
 public class activity_user_details extends AppCompatActivity {
 
-    private EditText fullName, username, bio, age, dob;
+    private EditText fullName, username, bio, dob;
     private Spinner genderSpinner;
     private Button continueButton;
 
@@ -31,7 +34,6 @@ public class activity_user_details extends AppCompatActivity {
         fullName = findViewById(R.id.fullName);
         username = findViewById(R.id.username);
         bio = findViewById(R.id.bio);
-        age = findViewById(R.id.age);
         dob = findViewById(R.id.dob);
         genderSpinner = findViewById(R.id.genderSpinner);
         continueButton = findViewById(R.id.continueButton);
@@ -41,7 +43,9 @@ public class activity_user_details extends AppCompatActivity {
 //                R.array.gender_options, android.R.layout.simple_spinner_item);
 //        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 //        genderSpinner.setAdapter(adapter);
-        ArrayAdapter<CharSequence> adapter = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.gender_options)) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                this, android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.gender_options)) {
+
             @Override
             public boolean isEnabled(int position) {
                 return position != 0; // Disable first item (placeholder)
@@ -51,11 +55,14 @@ public class activity_user_details extends AppCompatActivity {
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
                 TextView textView = (TextView) view;
+
                 if (position == 0) {
-                    textView.setTextColor(getResources().getColor(R.color.white)); // Placeholder color
+                    textView.setTextColor(Color.parseColor("#908E8E")); // Placeholder color
                 } else {
-                    textView.setTextColor(Color.WHITE);
+                    textView.setTextColor(Color.WHITE); // Regular text color
                 }
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+
                 return view;
             }
 
@@ -63,7 +70,7 @@ public class activity_user_details extends AppCompatActivity {
             public View getDropDownView(int position, View convertView, ViewGroup parent) {
                 View view = super.getDropDownView(position, convertView, parent);
                 TextView textView = (TextView) view;
-                textView.setTextColor(Color.BLACK);
+                textView.setTextColor(Color.BLACK); // Dropdown items should be black
                 return view;
             }
         };
@@ -90,18 +97,51 @@ public class activity_user_details extends AppCompatActivity {
             }
         });
     }
-
     private void handleContinueButtonClick() {
-        // Handle the logic for the continue button click
-        String fullNameText = fullName.getText().toString();
-        String usernameText = username.getText().toString();
-        String bioText = bio.getText().toString();
-        String ageText = age.getText().toString();
-        String dobText = dob.getText().toString();
-        String gender = genderSpinner.getSelectedItem().toString();
+        boolean allFieldsFilled = true;
 
-        // Add your logic here
+        // Check Full Name
+        if (fullName.getText().toString().trim().isEmpty()) {
+            fullName.setError("Required!");
+            allFieldsFilled = false;
+        }
+
+        // Check Username
+        if (username.getText().toString().trim().isEmpty()) {
+            username.setError("Required!");
+            allFieldsFilled = false;
+        }
+
+        // Check Bio
+        if (bio.getText().toString().trim().isEmpty()) {
+            bio.setError("Required!");
+            allFieldsFilled = false;
+        }
+
+        // Check Date of Birth
+        if (dob.getText().toString().trim().isEmpty()) {
+            dob.setError("Required!");
+            allFieldsFilled = false;
+        }
+
+        // Check Gender (must not be the placeholder)
+        if (genderSpinner.getSelectedItemPosition() == 0) {
+            TextView errorText = (TextView) genderSpinner.getSelectedView();
+            errorText.setError("Required!"); // Show error
+            allFieldsFilled = false;
+        }
+
+        // If all fields are filled, proceed
+        if (allFieldsFilled) {
+            Toast.makeText(this, "All fields are complete!", Toast.LENGTH_SHORT).show();
+            // Continue to the next screen or action
+        } else {
+            Toast.makeText(this, "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
+        }
     }
+
+
+
 
     private void showDatePicker() {
         // Get the current date

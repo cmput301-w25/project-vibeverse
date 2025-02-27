@@ -23,48 +23,40 @@
             android:textSize="28sp"
             android:textStyle="bold" />
 
-        <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:padding="10dp"
-            android:textColor="@color/white"
-            android:gravity="center_vertical"/>
-
-        <!-- Profile Picture Section -->
         <EditText
             android:id="@+id/fullName"
             style="@style/RoundedBox"
             android:layout_marginBottom="12dp"
-            android:hint="Full Name" />
+            android:hint="Full Name"
+            android:layout_weight="1"
+            android:textColorHint="#908E8E"/>
 
         <EditText
             android:id="@+id/username"
             style="@style/RoundedBox"
             android:layout_marginBottom="12dp"
-            android:hint="Username" />
+            android:hint="Username"
+            android:layout_weight="1"
+            android:textColorHint="#908E8E"/>
 
         <EditText
             android:id="@+id/bio"
             style="@style/RoundedBox"
             android:layout_height="100dp"
             android:layout_marginBottom="12dp"
+            android:layout_weight="1"
             android:hint="Bio (Max 150 Characters)"
-            android:maxLines="3" />
-
-        <EditText
-            android:id="@+id/age"
-            style="@style/RoundedBox"
-            android:layout_marginBottom="12dp"
-            android:hint="Age"
-            android:inputType="number" />
+            android:maxLength="150"
+            android:maxLines="4"
+            android:textColorHint="#908E8E" />
 
         <Spinner
             android:id="@+id/genderSpinner"
             style="@style/RoundedBox"
             android:layout_marginBottom="12dp"
             android:paddingStart="10dp"
-            android:paddingEnd="10dp" />
+            android:paddingEnd="10dp"
+            android:layout_weight="1" />
 
         <EditText
             android:id="@+id/dob"
@@ -72,46 +64,55 @@
             android:layout_marginBottom="12dp"
             android:focusable="false"
             android:hint="Date of Birth"
-            android:onClick="showDatePicker" />
-
-        <FrameLayout
+            android:onClick="showDatePicker"
+            android:layout_weight="1"
+            android:textColorHint="#908E8E"/>
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_marginBottom="24dp"
-            android:background="@drawable/rounded_black_box">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="vertical">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:onClick="onAddProfilePictureClick">  <!-- Click event on whole button -->
 
                 <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:src="@android:drawable/ic_menu_add"
-                    app:tint="@android:color/white" />
+                android:id="@+id/addProfilePictureButton"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:background="@drawable/rounded_black_box"
+                android:src="@android:drawable/ic_menu_add"
+                app:tint="@android:color/white"
+                android:scaleType="centerInside"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_gravity="center_horizontal|bottom"
+                    android:paddingBottom="8dp"
                     android:text="Add Profile Picture"
-                    android:textColor="@android:color/white" />
-            </LinearLayout>
-        </FrameLayout>
+                    android:textColor="#908E8E"
+                    android:textSize="16sp"
+                    android:translationY="-15dp" />
+            </FrameLayout>
 
-        <!-- Continue Button -->
+        </LinearLayout>
+
+
+
         <Button
             android:id="@+id/continueButton"
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="20dp"
             android:layout_marginTop="12dp"
             android:backgroundTint="@android:color/black"
             android:text="CONTINUE"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:layout_weight="1" />
 
     </LinearLayout>
 </ScrollView>
