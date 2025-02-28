@@ -25,6 +25,8 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class Register extends AppCompatActivity {
 
@@ -37,12 +39,23 @@ public class Register extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        // Check if user is signed in (non-null) and update UI accordingly.
+        mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser != null){
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            startActivity(intent);
-            finish();
+        if(currentUser != null) {
+            FirebaseFirestore.getInstance()
+                    .collection("users")
+                    .document(currentUser.getUid())
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            if (task.getResult().exists()) {
+                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                            } else {
+                                startActivity(new Intent(getApplicationContext(), activity_user_details.class));
+                            }
+                            finish();
+                        }
+                    });
         }
     }
 
@@ -91,7 +104,7 @@ public class Register extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(Register.this, "Account created successfully",
                                             Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(getApplicationContext(), Login.class);
+                                    Intent intent = new Intent(getApplicationContext(), activity_user_details.class);
                                     startActivity(intent);
                                     finish();
                                 } else {

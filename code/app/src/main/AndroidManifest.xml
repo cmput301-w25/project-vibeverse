@@ -34,12 +34,13 @@
         </activity>
         <activity
             android:name=".activity_user_details"
-            android:exported="true" />
+            android:theme="@style/Theme.Material3.Light.NoActionBar"
+            android:exported="true" >
 
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
-        </activty>
+        </activity>
 
     </application>
 

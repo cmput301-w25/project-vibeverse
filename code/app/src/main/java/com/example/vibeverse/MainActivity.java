@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     Button button;
     TextView textView;
     FirebaseUser user;
+    FirebaseFirestore db;
 
 
     @Override
@@ -28,13 +31,30 @@ public class MainActivity extends AppCompatActivity {
 
 
         auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
         button = findViewById(R.id.logout_button);
         textView = findViewById(R.id.userDetails);
         user = auth.getCurrentUser();
 
         if (user != null) {
-            String userDetails = "User ID: " + user.getUid() + "\nEmail: " + user.getEmail();
-            textView.setText(userDetails);
+            // Check if user exists in Firestore
+            db.collection("users").document(user.getUid())
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document.exists()) {
+                                // User details exist, show main activity
+                                String userDetails = "User ID: " + user.getUid() + "\nEmail: " + user.getEmail();
+                                textView.setText(userDetails);
+                            } else {
+                                // User details don't exist, redirect to user details activity
+                                Intent intent = new Intent(getApplicationContext(), activity_user_details.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        }
+                    });
         } else {
             Intent intent = new Intent(getApplicationContext(), Login.class);
             startActivity(intent);
