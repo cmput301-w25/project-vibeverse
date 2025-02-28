@@ -17,6 +17,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.Calendar;
 
 public class activity_user_details extends AppCompatActivity {
@@ -24,6 +27,8 @@ public class activity_user_details extends AppCompatActivity {
     private EditText fullName, username, bio, dob;
     private Spinner genderSpinner;
     private Button continueButton;
+    FirebaseAuth auth;
+    FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +43,14 @@ public class activity_user_details extends AppCompatActivity {
         genderSpinner = findViewById(R.id.genderSpinner);
         continueButton = findViewById(R.id.continueButton);
 
-        // Set up the gender spinner
-//        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-//                R.array.gender_options, android.R.layout.simple_spinner_item);
-//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        genderSpinner.setAdapter(adapter);
+        auth = FirebaseAuth.getInstance();
+        user = auth.getCurrentUser();
+        if (user != null) {
+            String userDetails = "User ID: " + user.getUid() + "\nEmail: " + user.getEmail();
+            }
+
+
+        // Set the hint for the Date of Birth field
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this, android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.gender_options)) {
 

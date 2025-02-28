@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:fontFamily="@font/berkshire_swash"
-            android:text="User Details"
+            android:text="@string/user_details"
             android:textColor="@android:color/black"
             android:textSize="28sp"
             android:textStyle="bold" />
@@ -27,7 +27,7 @@
             android:id="@+id/fullName"
             style="@style/RoundedBox"
             android:layout_marginBottom="12dp"
-            android:hint="Full Name"
+            android:hint="@string/full_name"
             android:layout_weight="1"
             android:textColorHint="#908E8E"/>
 
@@ -35,7 +35,7 @@
             android:id="@+id/username"
             style="@style/RoundedBox"
             android:layout_marginBottom="12dp"
-            android:hint="Username"
+            android:hint="@string/username"
             android:layout_weight="1"
             android:textColorHint="#908E8E"/>
 
@@ -45,7 +45,7 @@
             android:layout_height="100dp"
             android:layout_marginBottom="12dp"
             android:layout_weight="1"
-            android:hint="Bio (Max 150 Characters)"
+            android:hint="@string/bio_max_150_characters"
             android:maxLength="150"
             android:maxLines="4"
             android:textColorHint="#908E8E" />
@@ -63,7 +63,7 @@
             style="@style/RoundedBox"
             android:layout_marginBottom="12dp"
             android:focusable="false"
-            android:hint="Date of Birth"
+            android:hint="@string/date_of_birth"
             android:onClick="showDatePicker"
             android:layout_weight="1"
             android:textColorHint="#908E8E"/>
@@ -93,7 +93,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal|bottom"
                     android:paddingBottom="8dp"
-                    android:text="Add Profile Picture"
+                    android:text="@string/add_profile_picture"
                     android:textColor="#908E8E"
                     android:textSize="16sp"
                     android:translationY="-15dp" />
