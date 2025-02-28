@@ -6,10 +6,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -26,6 +30,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private Button buttonFilter;
     private PostAdapter postAdapter;
     private List<Post> allPosts;
+    private EditText editSearch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +42,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
         recyclerFeed.setLayoutManager(new LinearLayoutManager(this));
         recyclerFeed.setHasFixedSize(true);
+        editSearch = findViewById(R.id.editSearch);
 
         // Create some dummy data to display in the feed
         allPosts = new ArrayList<>();
@@ -52,6 +58,21 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         recyclerFeed.setAdapter(postAdapter);
 
         buttonFilter.setOnClickListener(v -> FilterDialog.show(ProfilePage.this, this));
+
+        editSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                postAdapter.filter(charSequence.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
     }
 
     @Override
@@ -99,6 +120,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     }
 
     private static class Post {
+        public String subtitle;
         String title;
         String mood;
         int imageResId;
@@ -115,10 +137,15 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
 
         private final List<Post> postList;
+        private List<Post> originalList;
+        private List<Post> currentList;
+
         private final SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy • hh:mm:ss a", Locale.US);
 
         PostAdapter(List<Post> postList) {
             this.postList = postList;
+            this.originalList = new ArrayList<>(postList);
+            this.currentList = new ArrayList<>(postList);
         }
 
         public void updatePosts(List<Post> newPosts) {
@@ -146,6 +173,29 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         public int getItemCount() {
             return postList.size();
         }
+
+        // Custom filter method
+        public void filter(String query) {
+            query = query.toLowerCase().trim();
+            currentList.clear();
+            if (query.isEmpty()) {
+                currentList.addAll(originalList);
+            } else {
+                for (Post post : originalList) {
+                    boolean titleMatches = post.title != null && post.title.toLowerCase().contains(query);
+                    boolean subtitleMatches = post.subtitle != null && post.subtitle.toLowerCase().contains(query);
+                    if (titleMatches || subtitleMatches) {
+                        currentList.add(post);
+                    }
+                }
+            }
+            // Update postList since it's used for display
+            postList.clear();
+            postList.addAll(currentList);
+            notifyDataSetChanged();
+        }
+
+
 
         class PostViewHolder extends RecyclerView.ViewHolder {
             ImageView imagePost;
