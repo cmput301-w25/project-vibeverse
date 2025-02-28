@@ -1,6 +1,7 @@
 package com.example.vibeverse;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
@@ -19,8 +20,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 public class activity_user_details extends AppCompatActivity {
 
@@ -108,41 +112,52 @@ public class activity_user_details extends AppCompatActivity {
     private void handleContinueButtonClick() {
         boolean allFieldsFilled = true;
 
-        // Check Full Name
+        // Check fields for emptiness
         if (fullName.getText().toString().trim().isEmpty()) {
             fullName.setError("Required!");
             allFieldsFilled = false;
         }
-
-        // Check Username
         if (username.getText().toString().trim().isEmpty()) {
             username.setError("Required!");
             allFieldsFilled = false;
         }
-
-        // Check Bio
         if (bio.getText().toString().trim().isEmpty()) {
             bio.setError("Required!");
             allFieldsFilled = false;
         }
-
-        // Check Date of Birth
         if (dob.getText().toString().trim().isEmpty()) {
             dob.setError("Required!");
             allFieldsFilled = false;
         }
-
-        // Check Gender (must not be the placeholder)
         if (genderSpinner.getSelectedItemPosition() == 0) {
             TextView errorText = (TextView) genderSpinner.getSelectedView();
-            errorText.setError("Required!"); // Show error
+            errorText.setError("Required!");
             allFieldsFilled = false;
         }
 
-        // If all fields are filled, proceed
         if (allFieldsFilled) {
-            Toast.makeText(this, "All fields are complete!", Toast.LENGTH_SHORT).show();
-            // Continue to the next screen or action
+            // Create user data HashMap
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("fullName", fullName.getText().toString().trim());
+            userData.put("username", username.getText().toString().trim());
+            userData.put("bio", bio.getText().toString().trim());
+            userData.put("dateOfBirth", dob.getText().toString().trim());
+            userData.put("gender", genderSpinner.getSelectedItem().toString());
+            userData.put("email", user.getEmail());
+
+            // Get Firestore instance and save data
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users").document(user.getUid())
+                    .set(userData)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(activity_user_details.this, "Profile created successfully!", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(activity_user_details.this, MainActivity.class);
+                        startActivity(intent);
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(activity_user_details.this, "Error creating profile", Toast.LENGTH_SHORT).show();
+                    });
         } else {
             Toast.makeText(this, "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
         }
