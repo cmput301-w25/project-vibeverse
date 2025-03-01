@@ -2,6 +2,7 @@ package com.example.vibeverse;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -123,9 +124,12 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         String moodEntry = moodDisplayList.get(position);
         String[] parts = moodEntry.split("\n");
 
+
+
         if (parts.length < 2) return;
 
         String[] moodDetails = parts[0].split(" ", 2);
+        Log.d("EditMoodActivity", "Mood details length: " + moodDetails.length + ", contents: " + java.util.Arrays.toString(moodDetails));
         String emoji = moodDetails[0];
         String mood = moodDetails[1];
 

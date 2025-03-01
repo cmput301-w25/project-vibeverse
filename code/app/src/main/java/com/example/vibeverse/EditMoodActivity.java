@@ -11,6 +11,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -94,6 +95,10 @@ public class EditMoodActivity extends AppCompatActivity {
         String trigger = intent.getStringExtra("trigger");
         String socialSituation = intent.getStringExtra("socialSituation");
         String currentPhotoUri = intent.getStringExtra("photoUri");
+
+
+        Log.d("EditMoodActivity", "CurrentPhotoUri: " + currentPhotoUri);
+
 
         // Set UI values
         selectedMoodText.setText(selectedMood);

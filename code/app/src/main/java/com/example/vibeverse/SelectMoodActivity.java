@@ -124,9 +124,9 @@ public class SelectMoodActivity extends AppCompatActivity {
             // If the user has selected an image, create a Photograph instance
             if (imageUri != null) {
                 Photograph photograph = new Photograph(imageUri, 0, new Date(), "Test Location");
-                moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, photograph);
+                moodEvent = new MoodEvent(selectedEmoji + " " + selectedMood, trigger, socialSituation, photograph);
             } else {
-                moodEvent = new MoodEvent(selectedMood, trigger, socialSituation);
+                moodEvent = new MoodEvent(selectedEmoji + " " + selectedMood, trigger, socialSituation);
             }
 
             // Pass the MoodEvent via the Intent
