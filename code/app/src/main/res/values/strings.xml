@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">VibeVerse</string>
+    <string name="mood_selection_prompt">Choose how you\'re feeling right now</string>
+    <string name="default_emoji_selection">😡</string>
+    <string name="default_emoji_text">Angry</string>
+    <string name="select_trigger">Trigger (Optional)</string>
+    <string name="select_social_situation">Social Situation (Optional)</string>
+    <string name="continue_text">Continue →</string>
+    <string name="emotional_state_selection">Select Emotional State</string>
+    <string name="save_mood">Save Mood</string>
+    <string name="delete">Delete</string>
+    <string name="image_button_desc">Test Image Button</string>
 </resources>
