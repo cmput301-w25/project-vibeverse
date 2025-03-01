@@ -3,12 +3,14 @@ package com.example.vibeverse;
 import android.graphics.Bitmap;
 import android.net.Uri;
 
+import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class Photograph {
+public class Photograph implements Serializable {
     private Uri imageUri;
+    private String imageUriString;
     private long fileSizeKB;
     private Bitmap bitmap;
     private Date dateTaken;
@@ -22,6 +24,14 @@ public class Photograph {
         this.dateTaken = dateTaken;
         this.location = location;
     }
+
+    public Photograph(Uri imageUri, long fileSizeKB,  Date dateTaken, String location) {
+        this.imageUriString = imageUri.toString();
+        this.fileSizeKB = fileSizeKB;
+        this.dateTaken = dateTaken;
+        this.location = location;
+    }
+
 
 
     public Uri getImageUri() {

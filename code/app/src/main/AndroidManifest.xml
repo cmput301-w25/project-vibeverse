@@ -34,6 +34,7 @@
                 android:resource="@xml/filepaths" />
         </provider>
 
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -42,6 +43,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Mood Selection Activity -->
+        <activity
+            android:name=".SelectMoodActivity"
+            android:exported="false"/>
+
+
+        <!-- Edit Mood Activity (Added to fix crash on Edit button click) -->
+        <activity
+            android:name=".EditMoodActivity"
+            android:exported="false"/>
 
     </application>
 </manifest>
