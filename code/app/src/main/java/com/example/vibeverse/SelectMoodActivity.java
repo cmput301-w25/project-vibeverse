@@ -23,16 +23,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
 
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
 import com.google.android.material.button.MaterialButton;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -124,15 +121,13 @@ public class SelectMoodActivity extends AppCompatActivity {
             String socialSituation = socialSituationInput.getText().toString().trim();
             MoodEvent moodEvent;
 
-            // If the user has selected an image, create a Photograph instance (you'll need to define this appropriately)
+            // If the user has selected an image, create a Photograph instance
             if (imageUri != null) {
-                // Example: Assume Photograph has a constructor that accepts a Uri.
                 Photograph photograph = new Photograph(imageUri, 0, new Date(), "Test Location");
                 moodEvent = new MoodEvent(selectedMood, trigger, socialSituation, photograph);
             } else {
                 moodEvent = new MoodEvent(selectedMood, trigger, socialSituation);
             }
-
 
             // Pass the MoodEvent via the Intent
             Intent intent = new Intent(SelectMoodActivity.this, MainActivity.class);
@@ -181,50 +176,28 @@ public class SelectMoodActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 // For camera, imageUri is already set
-                processImage(imageUri);
+                ImageUtils.processImage(this, imageUri, new ImageUtils.ImageProcessCallback() {
+                    @Override
+                    public void onImageConfirmed(Bitmap bitmap, Uri uri) {
+                        currentBitmap = bitmap;
+                        imgPlaceholder.setVisibility(View.GONE);
+                        imgSelected.setVisibility(View.VISIBLE);
+                        imgSelected.setImageBitmap(bitmap);
+                    }
+                });
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
-                processImage(imageUri);
+                ImageUtils.processImage(this, imageUri, new ImageUtils.ImageProcessCallback() {
+                    @Override
+                    public void onImageConfirmed(Bitmap bitmap, Uri uri) {
+                        currentBitmap = bitmap;
+                        imgPlaceholder.setVisibility(View.GONE);
+                        imgSelected.setVisibility(View.VISIBLE);
+                        imgSelected.setImageBitmap(bitmap);
+                    }
+                });
             }
         }
-    }
-
-    private void processImage(Uri imageUri) {
-        try {
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
-
-            // Estimate file size
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            byte[] imageBytes = baos.toByteArray();
-            long sizeKB = imageBytes.length / 1024;
-
-            // Compress if needed (example threshold)
-            if (sizeKB > 65536) {
-                bitmap = compressBitmap(bitmap);
-                baos.reset();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-                imageBytes = baos.toByteArray();
-                sizeKB = imageBytes.length / 1024;
-            }
-
-            Date dateTaken = new Date(); // For demo, current date
-            String location = "Test Location"; // Replace with actual location if available
-
-            // Show preview dialog for confirmation
-            showPreviewDialog(bitmap, imageUri, sizeKB, dateTaken, location);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Bitmap compressBitmap(Bitmap bitmap) {
-        int width = bitmap.getWidth();
-        int height = bitmap.getHeight();
-        int newWidth = (int) (width * 0.8);
-        int newHeight = (int) (height * 0.8);
-        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
     }
 
     private void showImagePickerDialog() {
@@ -249,7 +222,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
             try {
-                photoFile = createImageFile();
+                photoFile = ImageUtils.createImageFile(this);
             } catch (IOException ex) {
                 Toast.makeText(this, "Error creating image file: " + ex.getMessage(), Toast.LENGTH_LONG).show();
                 ex.printStackTrace();
@@ -272,35 +245,6 @@ public class SelectMoodActivity extends AppCompatActivity {
     private void dispatchPickImageIntent() {
         Intent pickIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(pickIntent, REQUEST_PICK_IMAGE);
-    }
-
-    private File createImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        return File.createTempFile(imageFileName, ".jpg", storageDir);
-    }
-
-    private void showPreviewDialog(final Bitmap bitmap, final Uri imageUri, final long fileSizeKB, final Date dateTaken, final String location) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View dialogView = getLayoutInflater().inflate(R.layout.image_preview_dialog, null);
-        ImageView previewImageView = dialogView.findViewById(R.id.previewImageView);
-        previewImageView.setImageBitmap(bitmap);
-
-        builder.setView(dialogView)
-                .setTitle("Preview Image")
-                .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        currentBitmap = bitmap;
-                        imgPlaceholder.setVisibility(View.GONE);
-                        imgSelected.setVisibility(View.VISIBLE);
-                        imgSelected.setImageBitmap(bitmap);
-                        Toast.makeText(SelectMoodActivity.this, "Image selected!", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                .show();
     }
 
     private void requestPermissions() {
@@ -329,5 +273,4 @@ public class SelectMoodActivity extends AppCompatActivity {
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
-
 }

@@ -25,7 +25,7 @@ public class Photograph implements Serializable {
         this.location = location;
     }
 
-    public Photograph(Uri imageUri, long fileSizeKB,  Date dateTaken, String location) {
+    public Photograph(Uri imageUri, long fileSizeKB, Date dateTaken, String location) {
         this.imageUriString = imageUri.toString();
         this.fileSizeKB = fileSizeKB;
         this.dateTaken = dateTaken;
@@ -33,6 +33,34 @@ public class Photograph implements Serializable {
     }
 
 
+
+    public String getImageUriString() {
+        return imageUriString;
+    }
+
+    public void setImageUriString(String imageUriString) {
+        this.imageUriString = imageUriString;
+    }
+
+    public void setFileSizeKB(long fileSizeKB) {
+        this.fileSizeKB = fileSizeKB;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public void setDateTaken(Date dateTaken) {
+        this.dateTaken = dateTaken;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setImageUri(Uri imageUri) {
+        this.imageUri = imageUri;
+    }
 
     public Uri getImageUri() {
         return imageUri;

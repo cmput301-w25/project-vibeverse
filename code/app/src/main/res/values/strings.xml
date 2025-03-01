@@ -10,4 +10,6 @@
     <string name="save_mood">Save Mood</string>
     <string name="delete">Delete</string>
     <string name="image_button_desc">Test Image Button</string>
+    <string name="add_mood_button">Add Mood</string>
+    <string name="mood_history_heading">Mood History</string>
 </resources>
