@@ -1,6 +1,7 @@
 package com.example.vibeverse;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +36,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private PostAdapter postAdapter;
     private List<Post> allPosts;
     private EditText editSearch;
+    private Button logoutButton;
+    private FirebaseAuth mAuth;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +79,20 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             @Override
             public void afterTextChanged(Editable editable) {
 
+            }
+        });
+
+        // Logout button
+        mAuth = FirebaseAuth.getInstance();
+        logoutButton = findViewById(R.id.buttonLogout);
+
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAuth.signOut();
+                Intent intent = new Intent(ProfilePage.this, Login.class);
+                startActivity(intent);
+                finish();
             }
         });
     }

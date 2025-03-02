@@ -85,7 +85,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Follows"
+                    android:text="@string/follows"
                     android:textSize="14sp"
                     android:textColor="@color/black"
                     android:gravity="center" />
@@ -114,13 +114,25 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Following"
+                    android:text="@string/following"
                     android:textSize="14sp"
                     android:textColor="@color/black"
                     android:gravity="center" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
+
+    <!-- Logout Button -->
+    <Button
+        android:id="@+id/buttonLogout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Logout"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@android:color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp"/>
 
     <!-- Search & Filter Bar -->
     <LinearLayout
@@ -138,7 +150,7 @@
             android:layout_height="48dp"
             android:layout_weight="1"
             android:background="@drawable/search_background"
-            android:hint="Search..."
+            android:hint="@string/search"
             android:padding="12dp"
             android:textColor="@android:color/black"
             android:textColorHint="@android:color/darker_gray"

@@ -63,13 +63,6 @@
             android:text="Like"
             android:layout_margin="4dp"
             android:backgroundTint="@android:color/black"/>
-        <Button
-            android:id="@+id/buttonShare"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Share"
-            android:layout_margin="4dp"
-            android:backgroundTint="@android:color/black"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
