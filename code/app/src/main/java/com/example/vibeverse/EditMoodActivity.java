@@ -35,7 +35,16 @@ import java.util.Locale;
 import java.util.Map;
 import com.bumptech.glide.Glide;
 
-
+/**
+ * EditMoodActivity allows users to update an existing mood event.
+ * <p>
+ * This activity uses the same layout as SelectMoodActivity for consistency.
+ * It receives mood details from the calling activity (e.g., MainActivity),
+ * displays the current values, and allows the user to update the mood,
+ * trigger, social situation, and an optional image. When the user clicks
+ * "Update Mood", the updated details are sent back to the caller.
+ * </p>
+ */
 public class EditMoodActivity extends AppCompatActivity {
 
     private TextView selectedMoodEmoji, selectedMoodText;
@@ -63,6 +72,16 @@ public class EditMoodActivity extends AppCompatActivity {
     private Uri imageUri;
     private Bitmap currentBitmap;
 
+    /**
+     * Called when the activity is first created.
+     * <p>
+     * Initializes the UI components, loads mood colors and emojis,
+     * sets the current mood values from the intent, applies the gradient background,
+     * loads an image if available, and sets click listeners for updating mood and picking images.
+     * </p>
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -145,7 +164,12 @@ public class EditMoodActivity extends AppCompatActivity {
         });
     }
 
-    // Function to apply a gradient background based on mood color
+    /**
+     * Applies a gradient background to the main container based on the given base color.
+     * The gradient transitions from the base color to a darker shade.
+     *
+     * @param baseColor The base color for the gradient.
+     */
     private void applyGradientBackground(int baseColor) {
         int darkerColor = darkenColor(baseColor, 0.7f); // 70% darker shade
 
@@ -156,7 +180,13 @@ public class EditMoodActivity extends AppCompatActivity {
         mainContainer.setBackground(gradientDrawable);
     }
 
-    // Function to darken color for the gradient effect
+    /**
+     * Darkens the given color by the specified factor.
+     *
+     * @param color  The original color.
+     * @param factor The factor to darken the color (e.g., 0.7 for 70% brightness).
+     * @return The darkened color.
+     */
     private int darkenColor(int color, float factor) {
         int r = Math.round(Color.red(color) * factor);
         int g = Math.round(Color.green(color) * factor);
@@ -164,7 +194,12 @@ public class EditMoodActivity extends AppCompatActivity {
         return Color.rgb(r, g, b);
     }
 
-    // Initialize Mood Colors
+    /**
+     * Initializes the mood colors.
+     * <p>
+     * These colors are used to style the UI based on the selected mood.
+     * </p>
+     */
     private void initializeMoodColors() {
         moodColors.put("Happy", Color.parseColor("#FFD700"));
         moodColors.put("Sad", Color.parseColor("#6495ED"));
@@ -176,7 +211,12 @@ public class EditMoodActivity extends AppCompatActivity {
         moodColors.put("Shameful", Color.parseColor("#8B0000"));
     }
 
-    // Initialize Mood Emojis
+    /**
+     * Initializes the mood emojis.
+     * <p>
+     * Each mood is associated with a specific emoji.
+     * </p>
+     */
     private void initializeMoodEmojis() {
         moodEmojis.put("Happy", "😊");
         moodEmojis.put("Sad", "😢");
@@ -188,6 +228,16 @@ public class EditMoodActivity extends AppCompatActivity {
         moodEmojis.put("Shameful", "😳");
     }
 
+    /**
+     * Handles the result from camera or gallery intents.
+     * <p>
+     * Processes the selected image using ImageUtils and updates the UI.
+     * </p>
+     *
+     * @param requestCode The request code identifying the image action.
+     * @param resultCode  The result code returned by the child activity.
+     * @param data        The Intent data returned.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -219,6 +269,9 @@ public class EditMoodActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Displays a dialog for the user to select an image source (camera or gallery).
+     */
     private void showImagePickerDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select Image")
@@ -235,6 +288,10 @@ public class EditMoodActivity extends AppCompatActivity {
                 .show();
     }
 
+    /**
+     * Dispatches an intent to capture an image using the device camera.
+     * Creates a temporary file for the image and requests necessary permissions.
+     */
     private void dispatchTakePictureIntent() {
         requestPermissions();
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -261,11 +318,17 @@ public class EditMoodActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Dispatches an intent to pick an image from the device gallery.
+     */
     private void dispatchPickImageIntent() {
         Intent pickIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(pickIntent, REQUEST_PICK_IMAGE);
     }
 
+    /**
+     * Requests the necessary permissions (Camera, Read & Write External Storage) at runtime.
+     */
     private void requestPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             if (checkSelfPermission(android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
@@ -281,6 +344,13 @@ public class EditMoodActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Callback for the result from permission requests.
+     *
+     * @param requestCode  The request code passed in requestPermissions().
+     * @param permissions  The requested permissions.
+     * @param grantResults The results for the corresponding permissions.
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == PERMISSION_REQUEST_CODE) {

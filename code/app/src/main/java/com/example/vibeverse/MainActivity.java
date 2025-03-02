@@ -10,6 +10,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * MainActivity is the primary activity that displays the history of mood events.
+ * <p>
+ * It uses a custom adapter (MoodAdapter) to display mood entries in a ListView.
+ * Users can add new moods via the Add Mood button, edit existing moods by tapping on them,
+ * and delete moods by long-pressing on an entry.
+ * </p>
+ */
 public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoodActionListener {
 
     private ListView moodListView;
@@ -19,6 +27,16 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
 
     private static final int REQUEST_EDIT_MOOD = 2;
 
+    /**
+     * Called when the activity is first created.
+     * <p>
+     * Initializes the ListView and Add Mood button, sets up the custom adapter,
+     * and checks for any mood event passed via the Intent. If a MoodEvent is found,
+     * it converts it into a display string and adds it to the list.
+     * </p>
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +77,17 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         }
     }
 
+    /**
+     * Handles results from activities started with startActivityForResult.
+     * <p>
+     * If a new mood is added or an existing mood is edited, the corresponding method
+     * (addMoodToList or updateMoodInList) is called to update the ListView.
+     * </p>
+     *
+     * @param requestCode The integer request code originally supplied to startActivityForResult().
+     * @param resultCode  The integer result code returned by the child activity.
+     * @param data        An Intent that carries the result data.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -72,6 +101,11 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         }
     }
 
+    /**
+     * Adds a new mood entry to the moodDisplayList.
+     *
+     * @param data The Intent containing mood details from SelectMoodActivity.
+     */
     private void addMoodToList(Intent data) {
         String selectedMood = data.getStringExtra("selectedMood");
         String selectedEmoji = data.getStringExtra("selectedEmoji");
@@ -90,6 +124,11 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         adapter.notifyDataSetChanged();
     }
 
+    /**
+     * Updates an existing mood entry in the moodDisplayList.
+     *
+     * @param data The Intent containing updated mood details from EditMoodActivity.
+     */
     private void updateMoodInList(Intent data) {
         int moodPosition = data.getIntExtra("moodPosition", -1);
         if (moodPosition != -1) {
@@ -111,6 +150,12 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         }
     }
 
+    /**
+     * Callback for the delete action from the MoodAdapter.
+     * Removes the mood entry at the given position from the list and updates the ListView.
+     *
+     * @param position The index of the mood entry to be deleted.
+     */
     @Override
     public void onMoodDelete(int position) {
         moodDisplayList.remove(position);
@@ -118,6 +163,12 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         Toast.makeText(this, "Mood deleted", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Callback for the edit action from the MoodAdapter.
+     * Extracts mood details from the selected entry and starts EditMoodActivity for result.
+     *
+     * @param position The index of the mood entry to be edited.
+     */
     @Override
     public void onMoodEdit(int position) {
         // Extract details to send to EditMoodActivity

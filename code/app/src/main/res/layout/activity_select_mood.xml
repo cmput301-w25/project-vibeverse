@@ -75,25 +75,32 @@
                 android:layout_height="wrap_content"
                 android:max="10"
                 android:progress="5"
-                android:layout_marginTop="16dp"/>
+                android:layout_marginTop="16dp"
+                android:progressTint="@android:color/white"
+                android:progressTintMode="src_in"
+                android:secondaryProgressTint="@android:color/darker_gray"
+                android:secondaryProgressTintMode="src_in"
+                android:thumbTint="@android:color/white"
+                android:thumbTintMode="src_in"
+                android:splitTrack="false"/>
 
-            <!-- Trigger Input -->
+            <!-- Trigger Input with Rounded Corners -->
             <EditText
                 android:id="@+id/triggerInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/select_trigger"
-                android:background="@android:color/white"
+                android:background="@drawable/rounded_edittext_background"
                 android:padding="10dp"
                 android:layout_marginTop="8dp"/>
 
-            <!-- Social Situation Input -->
+            <!-- Social Situation Input with Rounded Corners -->
             <EditText
                 android:id="@+id/socialSituationInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/select_social_situation"
-                android:background="@android:color/white"
+                android:background="@drawable/rounded_edittext_background"
                 android:padding="10dp"
                 android:layout_marginTop="8dp"/>
 
@@ -130,6 +137,8 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="100dp" />
+
+
 
         </LinearLayout>
     </ScrollView>
