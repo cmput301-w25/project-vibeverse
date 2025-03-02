@@ -45,8 +45,11 @@ public class MainActivity extends AppCompatActivity {
                             DocumentSnapshot document = task.getResult();
                             if (document.exists()) {
                                 // User details exist, show main activity
-                                String userDetails = "User ID: " + user.getUid() + "\nEmail: " + user.getEmail();
-                                textView.setText(userDetails);
+                                Intent intent = new Intent(getApplicationContext(), ProfilePage.class);
+                                startActivity(intent);
+                                finish();
+//                                String userDetails = "User ID: " + user.getUid() + "\nEmail: " + user.getEmail();
+//                                textView.setText(userDetails);
                             } else {
                                 // User details don't exist, redirect to user details activity
                                 Intent intent = new Intent(getApplicationContext(), activity_user_details.class);

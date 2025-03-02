@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialogFiltersOverlay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#80000000"
+    android:gravity="center">
+
+    <LinearLayout
+        android:id="@+id/dialogFiltersRoot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:background="@drawable/white_bg"
+        android:gravity="center_horizontal">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/textDialogTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Filters"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Time Filter -->
+        <TextView
+            android:id="@+id/textTimeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <RadioGroup
+            android:id="@+id/radioGroupTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/radioLast24"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Last 24 Hours" />
+
+            <RadioButton
+                android:id="@+id/radioLast3Days"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Last 3 Days" />
+
+            <RadioButton
+                android:id="@+id/radioLastWeek"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Last Week" />
+
+            <RadioButton
+                android:id="@+id/radioLastMonth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Last Month" />
+
+            <RadioButton
+                android:id="@+id/radioAllTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All Time" />
+        </RadioGroup>
+
+        <!-- Mood Filter -->
+        <TextView
+            android:id="@+id/textMoodLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mood"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/checkboxContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <CheckBox
+                android:id="@+id/checkHappy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Happy" />
+
+            <CheckBox
+                android:id="@+id/checkAfraid"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Afraid" />
+
+            <CheckBox
+                android:id="@+id/checkSad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sad" />
+
+            <CheckBox
+                android:id="@+id/checkConfused"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Confused" />
+        </LinearLayout>
+
+        <!-- Confirm Button -->
+        <Button
+            android:id="@+id/buttonApplyFilters"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Apply"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@android:color/black"/>
+    </LinearLayout>
+</FrameLayout>
