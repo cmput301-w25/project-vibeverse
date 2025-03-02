@@ -24,7 +24,10 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
     private Button addMoodButton;
     private MoodAdapter adapter;
     private static final List<String> moodDisplayList = new ArrayList<>();
+    // Add a list to store MoodEvent objects
+    private static final List<MoodEvent> moodEventList = new ArrayList<>();
 
+    private static final int REQUEST_ADD_MOOD = 1;
     private static final int REQUEST_EDIT_MOOD = 2;
 
     /**
@@ -47,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
 
         addMoodButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, SelectMoodActivity.class);
-            startActivityForResult(intent, 1);
+            startActivityForResult(intent, REQUEST_ADD_MOOD);
         });
 
         // Use the custom adapter
@@ -58,23 +61,42 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         if (getIntent().hasExtra("moodEvent")) {
             MoodEvent moodEvent = (MoodEvent) getIntent().getSerializableExtra("moodEvent");
             if (moodEvent != null) {
-                // Retrieve the photograph URI if available
-                String photoUri = "N/A";
-                if (moodEvent.getPhotograph() != null &&
-                        moodEvent.getPhotograph().getImageUriString() != null &&
-                        !moodEvent.getPhotograph().getImageUriString().isEmpty()) {
-                    photoUri = moodEvent.getPhotograph().getImageUriString();
-                }
+                // Add the mood event to our list
+                moodEventList.add(moodEvent);
 
-                String moodDisplay = moodEvent.getEmotionalState() + "\n" +
-                        moodEvent.getTimestamp() + "\n" +
-                        "Trigger: " + (moodEvent.getTrigger().isEmpty() ? "N/A" : moodEvent.getTrigger()) + "\n" +
-                        "Social Situation: " + (moodEvent.getSocialSituation().isEmpty() ? "N/A" : moodEvent.getSocialSituation()) + "\n" +
-                        "Photo: " + photoUri;
+                // Create display string
+                String moodDisplay = createMoodDisplayString(moodEvent);
                 moodDisplayList.add(moodDisplay);
                 adapter.notifyDataSetChanged();
             }
         }
+    }
+
+    /**
+     * Creates a display string for a mood event
+     *
+     * @param moodEvent The mood event to generate a display string for
+     * @return A formatted string representing the mood event
+     */
+    private String createMoodDisplayString(MoodEvent moodEvent) {
+        // Retrieve the photograph URI if available
+        String photoUri = moodEvent.getPhotoUri();
+
+        // Get intensity label based on value
+        int intensity = moodEvent.getIntensity();
+        String intensityLabel = "";
+        if (intensity <= 3) {
+            intensityLabel = "Slightly ";
+        } else if (intensity >= 8) {
+            intensityLabel = "Very ";
+        }
+
+        return moodEvent.getEmoji() + " " + intensityLabel + moodEvent.getMood() + "\n" +
+                moodEvent.getTimestamp() + "\n" +
+                "Trigger: " + (moodEvent.getTrigger().isEmpty() ? "N/A" : moodEvent.getTrigger()) + "\n" +
+                "Social Situation: " + (moodEvent.getSocialSituation().isEmpty() ? "N/A" : moodEvent.getSocialSituation()) + "\n" +
+                "Photo: " + photoUri + "\n" +
+                "Intensity: " + intensity;
     }
 
     /**
@@ -93,8 +115,19 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == RESULT_OK) {
-            if (requestCode == 1) {
-                addMoodToList(data);
+            if (requestCode == REQUEST_ADD_MOOD) {
+                if (data.hasExtra("moodEvent")) {
+                    // Handle the MoodEvent object directly
+                    MoodEvent moodEvent = (MoodEvent) data.getSerializableExtra("moodEvent");
+                    if (moodEvent != null) {
+                        moodEventList.add(moodEvent);
+                        moodDisplayList.add(createMoodDisplayString(moodEvent));
+                        adapter.notifyDataSetChanged();
+                    }
+                } else {
+                    // Fall back to the old way for backward compatibility
+                    addMoodToList(data);
+                }
             } else if (requestCode == REQUEST_EDIT_MOOD) {
                 updateMoodInList(data);
             }
@@ -112,13 +145,36 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         String timestamp = data.getStringExtra("timestamp");
         String trigger = data.getStringExtra("trigger");
         String socialSituation = data.getStringExtra("socialSituation");
-        String photoUri = data.getStringExtra("photoUri");  // New extra for photo
+        String photoUri = data.getStringExtra("photoUri");  // Photo URI
+        int intensity = data.getIntExtra("intensity", 5);   // Intensity with default 5
 
-        String moodEntry = selectedEmoji + " " + selectedMood + "\n"
+        // Create a MoodEvent object to store
+        MoodEvent moodEvent = new MoodEvent(selectedEmoji + " " + selectedMood, trigger, socialSituation);
+        moodEvent.setTimestamp(timestamp);
+        moodEvent.setIntensity(intensity);
+        if (photoUri != null && !photoUri.equals("N/A")) {
+            // Create photograph from URI if available
+            Photograph photo = new Photograph(android.net.Uri.parse(photoUri), 0, new java.util.Date(), "");
+            moodEvent.setPhotograph(photo);
+        }
+
+        // Add to both lists
+        moodEventList.add(moodEvent);
+
+        // Get intensity label
+        String intensityLabel = "";
+        if (intensity <= 3) {
+            intensityLabel = "Slightly ";
+        } else if (intensity >= 8) {
+            intensityLabel = "Very ";
+        }
+
+        String moodEntry = selectedEmoji + " " + intensityLabel + selectedMood + "\n"
                 + timestamp + "\n"
                 + "Trigger: " + (trigger.isEmpty() ? "N/A" : trigger) + "\n"
                 + "Social Situation: " + (socialSituation.isEmpty() ? "N/A" : socialSituation) + "\n"
-                + "Photo: " + (photoUri == null || photoUri.isEmpty() ? "N/A" : photoUri);
+                + "Photo: " + (photoUri == null || photoUri.isEmpty() ? "N/A" : photoUri) + "\n"
+                + "Intensity: " + intensity;
 
         moodDisplayList.add(moodEntry);
         adapter.notifyDataSetChanged();
@@ -137,13 +193,41 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
             String updatedTrigger = data.getStringExtra("updatedTrigger");
             String updatedSocialSituation = data.getStringExtra("updatedSocialSituation");
             String timestamp = data.getStringExtra("timestamp");
-            String updatedPhotoUri = data.getStringExtra("updatedPhotoUri");  // New extra for updated photo
+            String updatedPhotoUri = data.getStringExtra("updatedPhotoUri");  // Updated photo URI
+            int updatedIntensity = data.getIntExtra("updatedIntensity", 5);   // Updated intensity
 
-            String updatedMoodEntry = updatedEmoji + " " + updatedMood + "\n"
+            // Update the MoodEvent object if available
+            if (moodPosition < moodEventList.size()) {
+                MoodEvent moodEvent = moodEventList.get(moodPosition);
+                moodEvent.setEmotionalState(updatedEmoji + " " + updatedMood);
+                moodEvent.setTrigger(updatedTrigger);
+                moodEvent.setSocialSituation(updatedSocialSituation);
+                moodEvent.setTimestamp(timestamp);
+                moodEvent.setIntensity(updatedIntensity);
+
+                if (updatedPhotoUri != null && !updatedPhotoUri.equals("N/A")) {
+                    // Update photograph if available
+                    Photograph photo = new Photograph(android.net.Uri.parse(updatedPhotoUri), 0, new java.util.Date(), "");
+                    moodEvent.setPhotograph(photo);
+                } else {
+                    moodEvent.setPhotograph(null);
+                }
+            }
+
+            // Get intensity label
+            String intensityLabel = "";
+            if (updatedIntensity <= 3) {
+                intensityLabel = "Slightly ";
+            } else if (updatedIntensity >= 8) {
+                intensityLabel = "Very ";
+            }
+
+            String updatedMoodEntry = updatedEmoji + " " + intensityLabel + updatedMood + "\n"
                     + timestamp + "\n"
                     + "Trigger: " + (updatedTrigger.isEmpty() ? "N/A" : updatedTrigger) + "\n"
                     + "Social Situation: " + (updatedSocialSituation.isEmpty() ? "N/A" : updatedSocialSituation) + "\n"
-                    + "Photo: " + (updatedPhotoUri == null || updatedPhotoUri.isEmpty() ? "N/A" : updatedPhotoUri);
+                    + "Photo: " + (updatedPhotoUri == null || updatedPhotoUri.isEmpty() ? "N/A" : updatedPhotoUri) + "\n"
+                    + "Intensity: " + updatedIntensity;
 
             moodDisplayList.set(moodPosition, updatedMoodEntry);
             adapter.notifyDataSetChanged();
@@ -159,6 +243,9 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
     @Override
     public void onMoodDelete(int position) {
         moodDisplayList.remove(position);
+        if (position < moodEventList.size()) {
+            moodEventList.remove(position);
+        }
         adapter.notifyDataSetChanged();
         Toast.makeText(this, "Mood deleted", Toast.LENGTH_SHORT).show();
     }
@@ -171,25 +258,59 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
      */
     @Override
     public void onMoodEdit(int position) {
-        // Extract details to send to EditMoodActivity
+        // Check if we have a MoodEvent object for this position
+        if (position < moodEventList.size()) {
+            MoodEvent moodEvent = moodEventList.get(position);
+
+            // Open EditMoodActivity and pass the complete mood details
+            Intent editIntent = new Intent(MainActivity.this, EditMoodActivity.class);
+            editIntent.putExtra("selectedMood", moodEvent.getMood());
+            editIntent.putExtra("selectedEmoji", moodEvent.getEmoji());
+            editIntent.putExtra("timestamp", moodEvent.getTimestamp());
+            editIntent.putExtra("trigger", moodEvent.getTrigger());
+            editIntent.putExtra("socialSituation", moodEvent.getSocialSituation());
+            editIntent.putExtra("photoUri", moodEvent.getPhotoUri());
+            editIntent.putExtra("moodPosition", position);
+            editIntent.putExtra("intensity", moodEvent.getIntensity());
+            startActivityForResult(editIntent, REQUEST_EDIT_MOOD);
+            return;
+        }
+
+        // Fallback method parsing from the display string
         String moodEntry = moodDisplayList.get(position);
         String[] parts = moodEntry.split("\n");
 
-
-
         if (parts.length < 2) return;
 
-        String[] moodDetails = parts[0].split(" ", 2);
+        String[] moodDetails = parts[0].split(" ", 2); // Split emoji and the rest
         Log.d("EditMoodActivity", "Mood details length: " + moodDetails.length + ", contents: " + java.util.Arrays.toString(moodDetails));
+
         String emoji = moodDetails[0];
         String mood = moodDetails[1];
+
+        // Check if mood starts with "Slightly " or "Very "
+        if (mood.startsWith("Slightly ")) {
+            mood = mood.substring("Slightly ".length());
+        } else if (mood.startsWith("Very ")) {
+            mood = mood.substring("Very ".length());
+        }
 
         String timestamp = parts[1].trim();
         String trigger = parts.length > 2 ? parts[2].replace("Trigger: ", "").trim() : "N/A";
         String socialSituation = parts.length > 3 ? parts[3].replace("Social Situation: ", "").trim() : "N/A";
         String photoUri = parts.length > 4 ? parts[4].replace("Photo: ", "").trim() : "N/A";
 
-        // Open EditMoodActivity and pass the photo URI along with other mood details
+        // Extract intensity if available
+        int intensity = 5; // Default
+        if (parts.length > 5 && parts[5].startsWith("Intensity: ")) {
+            try {
+                intensity = Integer.parseInt(parts[5].replace("Intensity: ", "").trim());
+            } catch (NumberFormatException e) {
+                Log.e("MainActivity", "Error parsing intensity: " + e.getMessage());
+            }
+        }
+
+        // Open EditMoodActivity and pass all mood details
         Intent editIntent = new Intent(MainActivity.this, EditMoodActivity.class);
         editIntent.putExtra("selectedMood", mood);
         editIntent.putExtra("selectedEmoji", emoji);
@@ -198,6 +319,7 @@ public class MainActivity extends AppCompatActivity implements MoodAdapter.OnMoo
         editIntent.putExtra("socialSituation", socialSituation);
         editIntent.putExtra("moodPosition", position);
         editIntent.putExtra("photoUri", photoUri);
+        editIntent.putExtra("intensity", intensity);
         startActivityForResult(editIntent, REQUEST_EDIT_MOOD);
     }
 }

@@ -10,7 +10,7 @@ import java.util.Locale;
  * <p>
  * Each MoodEvent contains the emotional state (with an emoji),
  * an optional trigger, an optional social situation, a formatted timestamp,
- * and an optional photograph.
+ * an intensity level, and an optional photograph.
  * </p>
  */
 public class MoodEvent implements Serializable {
@@ -18,7 +18,7 @@ public class MoodEvent implements Serializable {
     private String trigger;
     private String socialSituation;
     private String timestamp; // Formatted timestamp
-
+    private int intensity = 5; // Default intensity set to middle value
     private Photograph photograph;
 
     /**
@@ -50,8 +50,6 @@ public class MoodEvent implements Serializable {
         this.timestamp = getCurrentFormattedTime();
         this.photograph = photograph;
     }
-
-
 
     /**
      * Returns the current date and time formatted as "MMM dd, yyyy - hh:mm a".
@@ -118,6 +116,24 @@ public class MoodEvent implements Serializable {
     }
 
     /**
+     * Gets the intensity level of this mood.
+     *
+     * @return The intensity level (0-10).
+     */
+    public int getIntensity() {
+        return intensity;
+    }
+
+    /**
+     * Sets the intensity level of this mood.
+     *
+     * @param intensity The intensity level (0-10).
+     */
+    public void setIntensity(int intensity) {
+        this.intensity = intensity;
+    }
+
+    /**
      * Returns the emotional state of this mood event.
      *
      * @return The emotional state.
@@ -144,4 +160,42 @@ public class MoodEvent implements Serializable {
      * @return The timestamp.
      */
     public String getTimestamp() { return timestamp; }
+
+    /**
+     * Extracts the emoji from the emotional state string.
+     * Assumes the emotional state starts with an emoji followed by a space.
+     *
+     * @return The emoji part of the emotional state.
+     */
+    public String getEmoji() {
+        if (emotionalState != null && emotionalState.contains(" ")) {
+            return emotionalState.substring(0, emotionalState.indexOf(" "));
+        }
+        return "";
+    }
+
+    /**
+     * Extracts the mood text from the emotional state string.
+     * Assumes the emotional state starts with an emoji followed by a space.
+     *
+     * @return The mood text part of the emotional state.
+     */
+    public String getMood() {
+        if (emotionalState != null && emotionalState.contains(" ")) {
+            return emotionalState.substring(emotionalState.indexOf(" ") + 1);
+        }
+        return emotionalState;
+    }
+
+    /**
+     * Gets the photo URI as a string if a photograph is attached.
+     *
+     * @return The photo URI as a string, or "N/A" if no photograph is attached.
+     */
+    public String getPhotoUri() {
+        if (photograph != null && photograph.getImageUri() != null) {
+            return photograph.getImageUri().toString();
+        }
+        return "N/A";
+    }
 }
