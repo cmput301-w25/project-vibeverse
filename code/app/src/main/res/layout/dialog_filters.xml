@@ -119,6 +119,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Apply"
-            android:layout_marginTop="24dp"/>
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@android:color/black"/>
     </LinearLayout>
 </FrameLayout>

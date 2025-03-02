@@ -145,17 +145,16 @@
             android:drawableStart="@drawable/ic_search"
             android:drawablePadding="12dp"/>
 
-        <Button
+        <ImageButton
             android:id="@+id/buttonFilter"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginStart="12dp"
             android:background="@drawable/rounded_black_button"
-            android:drawableStart="@drawable/ic_filter"
-            android:drawablePadding="8dp"
-            android:gravity="center"
+            android:src="@drawable/ic_filter"
             android:padding="12dp"
-            android:tint="@color/black" />
+            />
+
 
 
 
