@@ -14,15 +14,33 @@
         android:theme="@style/Theme.VibeVerse"
         tools:targetApi="31">
 
-        <!-- Main Activity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".Register"
+            android:theme="@style/Theme.Material3.Light.NoActionBar"
+            android:exported="false" />
+        <activity
+            android:name=".Login"
+            android:theme="@style/Theme.Material3.Light.NoActionBar"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+
+            android:name=".MainActivity"
+            android:exported="true">
+        </activity>
+        <activity
+            android:name=".activity_user_details"
+            android:theme="@style/Theme.Material3.Light.NoActionBar"
+            android:exported="true" >
+
+            <meta-data
+                android:name="preloaded_fonts"
+                android:resource="@array/preloaded_fonts" />
         </activity>
 
         <!-- Profile Activity (Added) -->

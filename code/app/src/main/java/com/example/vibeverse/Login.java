@@ -47,7 +47,7 @@ public class Login extends AppCompatActivity {
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             if (task.getResult().exists()) {
-                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                                startActivity(new Intent(getApplicationContext(), ProfilePage.class));
                             } else {
                                 startActivity(new Intent(getApplicationContext(), activity_user_details.class));
                             }
@@ -102,7 +102,7 @@ public class Login extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(Login.this, "Login successful.",
                                             Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                    Intent intent = new Intent(getApplicationContext(), ProfilePage.class);
                                     startActivity(intent);
                                     finish();
                                 } else {
