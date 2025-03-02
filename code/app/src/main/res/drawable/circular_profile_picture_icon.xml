@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <!-- Set the fill color for the circle -->
+    <solid android:color="#000000" />
 
-</selector>
+    <!-- Optional: Add a border around the circle -->
+    <stroke
+        android:width="2dp"
+        android:color="#FFFFFFFF" />
+
+    <!-- Optional: Define padding if needed -->
+    <padding
+        android:left="4dp"
+        android:top="4dp"
+        android:right="4dp"
+        android:bottom="4dp" />
+</shape>
