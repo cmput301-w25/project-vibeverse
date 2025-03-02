@@ -1,5 +1,40 @@
 <resources>
     <string name="app_name">VibeVerse</string>
+
+    <string name="login">Log In</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="register">REGISTER</string>
+    <string name="click_to_login">Click to Login</string>
+    <string name="click_to_register">Click to Register</string>
+    <string name="logout">LOGOUT</string>
+    <string name="sign_up">Sign up</string>
+    <string name="googleSignInText">Sign in with Google</string>
+    <string name="XSignInText">Sign in with X</string>
+    <string name="app_logo">Logo for App (VibeSync)</string>
+    <string name="emailHint">abc@email.com</string>
+    <string name="passwordHint">Your password</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="googleSignUpText">Sign up with Google</string>
+    <string name="XSignUpText">Sign up with X</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="continueButton">CONTINUE</string>
+
+
+    <string-array name="gender_options">
+        <item>Select Gender</item>
+        <item>Male</item>
+        <item>Female</item>
+        <item>Others</item>
+    </string-array>
+
+    <string name="select_gender">Select Gender</string>
+    <string name="full_name">Full Name</string>
+    <string name="username">Username</string>
+    <string name="bio_max_150_characters">Bio (Max 150 Characters)</string>
+    <string name="user_details">User Details</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="add_profile_picture">Add Profile Picture</string>
     <string name="mood_selection_prompt">Choose how you\'re feeling right now</string>
     <string name="default_emoji_selection">😡</string>
     <string name="default_emoji_text">Angry</string>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:fontFamily="@font/berkshire_swash"
+            android:text="@string/user_details"
+            android:textColor="@android:color/black"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/fullName"
+            style="@style/RoundedBox"
+            android:layout_marginBottom="12dp"
+            android:hint="@string/full_name"
+            android:layout_weight="1"
+            android:textColorHint="#908E8E"/>
+
+        <EditText
+            android:id="@+id/username"
+            style="@style/RoundedBox"
+            android:layout_marginBottom="12dp"
+            android:hint="@string/username"
+            android:layout_weight="1"
+            android:textColorHint="#908E8E"/>
+
+        <EditText
+            android:id="@+id/bio"
+            style="@style/RoundedBox"
+            android:layout_height="100dp"
+            android:layout_marginBottom="12dp"
+            android:layout_weight="1"
+            android:hint="@string/bio_max_150_characters"
+            android:maxLength="150"
+            android:maxLines="4"
+            android:textColorHint="#908E8E" />
+
+        <Spinner
+            android:id="@+id/genderSpinner"
+            style="@style/RoundedBox"
+            android:layout_marginBottom="12dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:layout_weight="1" />
+
+        <EditText
+            android:id="@+id/dob"
+            style="@style/RoundedBox"
+            android:layout_marginBottom="12dp"
+            android:focusable="false"
+            android:hint="@string/date_of_birth"
+            android:onClick="showDatePicker"
+            android:layout_weight="1"
+            android:textColorHint="#908E8E"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginBottom="24dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:onClick="onAddProfilePictureClick">  <!-- Click event on whole button -->
+
+                <ImageView
+                android:id="@+id/addProfilePictureButton"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:background="@drawable/rounded_black_box"
+                android:src="@android:drawable/ic_menu_add"
+                app:tint="@android:color/white"
+                android:scaleType="centerInside"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal|bottom"
+                    android:paddingBottom="8dp"
+                    android:text="@string/add_profile_picture"
+                    android:textColor="#908E8E"
+                    android:textSize="16sp"
+                    android:translationY="-15dp" />
+            </FrameLayout>
+
+        </LinearLayout>
+
+
+
+        <Button
+            android:id="@+id/continueButton"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="@android:color/black"
+            android:text="CONTINUE"
+            android:textColor="@android:color/white"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+</ScrollView>

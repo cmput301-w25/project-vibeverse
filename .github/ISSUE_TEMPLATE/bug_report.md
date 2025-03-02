@@ -1,8 +1,10 @@
 ---
 name: Bug Report
 about: Report issues found during development or testing
-title: '[BUG] '
+title: "[BUG] "
 labels: bug
+assignees: ''
+
 ---
 
 **Description**

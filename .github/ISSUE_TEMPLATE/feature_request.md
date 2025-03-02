@@ -1,8 +1,10 @@
 ---
 name: Feature Request
 about: Track new feature implementation
-title: '[FEATURE] '
-labels: feature
+title: "[FEATURE] "
+labels: ''
+assignees: ''
+
 ---
 
 **Description**
