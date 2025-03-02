@@ -1,5 +1,6 @@
 package com.example.vibeverse;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -38,7 +40,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         setContentView(R.layout.profile_page);
 
         recyclerFeed = findViewById(R.id.recyclerFeed);
-        buttonFilter = findViewById(R.id.buttonFilter);
+        ImageButton buttonFilter = findViewById(R.id.buttonFilter);
 
         recyclerFeed.setLayoutManager(new LinearLayoutManager(this));
         recyclerFeed.setHasFixedSize(true);
