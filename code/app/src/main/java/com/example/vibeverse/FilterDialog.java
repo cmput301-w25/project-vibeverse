@@ -65,7 +65,12 @@ public class FilterDialog {
 
             if (timeFilter.isEmpty() && !isHappy && !isSad && !isAfraid && !isConfused) {
                 listener.onFilterApplied("all_time", true, true, true, true);
-            } else {
+            }
+            else if (timeFilter.isEmpty() && (isHappy || isSad || isAfraid || isConfused)) {
+                timeFilter = "all_time";
+                listener.onFilterApplied(timeFilter, isHappy, isSad, isAfraid, isConfused);
+            }
+            else {
                 listener.onFilterApplied(timeFilter, isHappy, isSad, isAfraid, isConfused);
             }
             dialog.dismiss();
