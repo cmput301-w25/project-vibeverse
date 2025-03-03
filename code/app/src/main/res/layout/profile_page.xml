@@ -152,22 +152,68 @@
             android:layout_marginStart="12dp"
             android:background="@drawable/rounded_black_button"
             android:src="@drawable/ic_filter"
-            android:padding="12dp"
-            />
-
-
-
+            android:padding="12dp" />
 
     </LinearLayout>
 
-    <!-- Mood History RecyclerView -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerFeed"
+    <!-- FrameLayout to hold both RecyclerView and ProgressBar -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="12dp"
         app:layout_constraintTop_toBottomOf="@id/searchFilterBar"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"/>
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
+
+        <!-- Mood History RecyclerView -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerFeed"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <!-- Loading Progress Indicator -->
+        <ProgressBar
+            android:id="@+id/progressLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+        <!-- Empty State View (Optional) -->
+        <LinearLayout
+            android:id="@+id/emptyStateView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+
+<!--            <ImageView-->
+<!--                android:layout_width="72dp"-->
+<!--                android:layout_height="72dp"-->
+<!--                android:src="@drawable/ic_mood_empty"-->
+<!--                android:alpha="0.5"-->
+<!--                android:contentDescription="No moods found" />-->
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="No mood entries yet"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Tap the + button to add your first mood!"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="16sp"
+                android:gravity="center" />
+        </LinearLayout>
+    </FrameLayout>
 
     <!-- Bottom Navigation -->
     <include

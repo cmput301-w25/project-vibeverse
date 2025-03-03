@@ -5,8 +5,10 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
@@ -38,6 +40,8 @@ import androidx.transition.TransitionManager;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,6 +86,10 @@ public class SelectMoodActivity extends AppCompatActivity {
     private ImageView imgPlaceholder, imgSelected;
     private TextView imageHintText;
 
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
+    private String userId;
+
     /**
      * Called when the activity is starting. Initializes the UI, sets up mood data,
      * creates mood buttons, configures the image picker, and sets the click listener for the continue button.
@@ -104,6 +112,23 @@ public class SelectMoodActivity extends AppCompatActivity {
         continueButton = findViewById(R.id.continueButton);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
         imgSelected = findViewById(R.id.imgSelected);
+
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
+        // Get current user ID or use a device ID if not logged in
+        if (mAuth.getCurrentUser() != null) {
+            userId = mAuth.getCurrentUser().getUid();
+        } else {
+            SharedPreferences prefs = getSharedPreferences("VibeVersePrefs", Context.MODE_PRIVATE);
+            userId = prefs.getString("device_id", null);
+
+            // If no device ID exists, create one
+            if (userId == null) {
+                userId = java.util.UUID.randomUUID().toString();
+                prefs.edit().putString("device_id", userId).apply();
+            }
+        }
 
         // Create a custom toolbar
         setupToolbar();
@@ -154,9 +179,16 @@ public class SelectMoodActivity extends AppCompatActivity {
                         int intensity = moodIntensitySlider.getProgress();
 
                         MoodEvent moodEvent;
-                        if (imageUri != null) {
+                        if (imageUri != null && currentBitmap != null) {
                             // If an image is selected, create a Photograph instance and attach it to the mood event
-                            Photograph photograph = new Photograph(imageUri, 0, new Date(), "Test Location");
+                            // Using the existing Photograph constructor that matches your implementation
+                            Photograph photograph = new Photograph(
+                                    imageUri,
+                                    currentBitmap.getByteCount() / 1024, // Estimate file size in KB
+                                    currentBitmap,
+                                    new Date(),
+                                    "VibeVerse Location" // Default location or get actual location
+                            );
                             moodEvent = new MoodEvent(selectedEmoji + " " + selectedMood, trigger, socialSituation, photograph);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
@@ -165,15 +197,72 @@ public class SelectMoodActivity extends AppCompatActivity {
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
                         }
-                        Intent intent = new Intent(SelectMoodActivity.this, MainActivity.class);
-                        intent.putExtra("moodEvent", moodEvent);
-                        startActivity(intent);
 
-                        // Apply a fade-out transition
-                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                        // Save to Firestore
+                        saveMoodToFirestore(moodEvent);
                     })
                     .start();
         });
+    }
+
+    private void saveMoodToFirestore(MoodEvent moodEvent) {
+        // Show a loading indicator
+        Toast.makeText(this, "Saving your mood...", Toast.LENGTH_SHORT).show();
+
+        // Convert MoodEvent to Map for Firestore
+        Map<String, Object> moodData = new HashMap<>();
+        moodData.put("emotionalState", moodEvent.getEmotionalState());
+        moodData.put("emoji", moodEvent.getEmoji());
+        moodData.put("mood", moodEvent.getMood());
+        moodData.put("trigger", moodEvent.getTrigger());
+        moodData.put("socialSituation", moodEvent.getSocialSituation());
+        moodData.put("timestamp", moodEvent.getTimestamp());
+        moodData.put("intensity", moodEvent.getIntensity());
+
+        // Handle photograph if present
+        if (moodEvent.getPhotograph() != null) {
+            moodData.put("hasPhoto", true);
+            moodData.put("photoUri", moodEvent.getPhotoUri());
+            moodData.put("photoDateTaken", moodEvent.getPhotograph().getDateTaken().getTime());
+            moodData.put("photoLocation", moodEvent.getPhotograph().getLocation());
+            moodData.put("photoSizeKB", moodEvent.getPhotograph().getFileSizeKB());
+
+            // Note: For a complete solution, you would upload the actual image to Firebase Storage
+            // and store the download URL. This simplified version just stores the local URI.
+        } else {
+            moodData.put("hasPhoto", false);
+        }
+
+        // Add to Firestore - create a document with timestamp as ID
+        String docId = String.valueOf(System.currentTimeMillis());
+
+        db.collection("Usermoods")
+                .document(userId)
+                .collection("moods")
+                .document(docId)
+                .set(moodData)
+                .addOnSuccessListener(aVoid -> {
+                    // Success! Now return to ProfilePage
+                    Toast.makeText(SelectMoodActivity.this, "Mood saved successfully!", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(SelectMoodActivity.this, ProfilePage.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
+                    startActivity(intent);
+
+                    // Apply a fade-out transition
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    // Handle the error
+                    Toast.makeText(SelectMoodActivity.this, "Error saving mood: " + e.getMessage(),
+                            Toast.LENGTH_LONG).show();
+
+                    // Still navigate back to avoid user being stuck
+                    Intent intent = new Intent(SelectMoodActivity.this, ProfilePage.class);
+                    startActivity(intent);
+                    finish();
+                });
     }
     /**
      * Sets up a custom toolbar

@@ -350,6 +350,9 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Handle the update button click with animation
         updateButton.setOnClickListener(view -> {
+            // Show updating toast
+            Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
+
             // Create a subtle animation before finishing
             mainContainer.animate()
                     .alpha(0.8f)
@@ -364,8 +367,6 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("timestamp", new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault()).format(new Date()));
                         resultIntent.putExtra("moodPosition", moodPosition);
                         resultIntent.putExtra("updatedPhotoUri", (currentImageUri != null) ? currentImageUri : "N/A");
-
-                        // Add the intensity value to the result
                         resultIntent.putExtra("updatedIntensity", moodIntensitySlider.getProgress());
 
                         setResult(RESULT_OK, resultIntent);

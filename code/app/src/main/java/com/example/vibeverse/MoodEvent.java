@@ -1,9 +1,17 @@
 package com.example.vibeverse;
 
+import android.content.Intent;
+import android.net.Uri;
+import android.widget.Toast;
+
+import com.google.firebase.Timestamp;
+
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Represents a mood event recorded by the user.
@@ -51,6 +59,97 @@ public class MoodEvent implements Serializable {
         this.photograph = photograph;
     }
 
+    public Map<String, Object> toMap() {
+        Map<String, Object> moodMap = new HashMap<>();
+        moodMap.put("emotionalState", this.emotionalState);
+        moodMap.put("trigger", this.trigger);
+        moodMap.put("socialSituation", this.socialSituation);
+        moodMap.put("timestamp", this.timestamp);
+        moodMap.put("intensity", this.intensity);
+
+        // Handle emoji and mood text extraction
+        moodMap.put("emoji", getEmoji());
+        moodMap.put("mood", getMood());
+
+        // Handle photograph if present
+        if (this.photograph != null) {
+            moodMap.put("hasPhoto", true);
+            moodMap.put("photoUri", getPhotoUri());
+
+            // Add additional photo metadata
+            if (photograph.getDateTaken() != null) {
+                moodMap.put("photoDateTaken", photograph.getDateTaken().getTime());
+            }
+
+            moodMap.put("photoLocation", photograph.getLocation());
+            moodMap.put("photoSizeKB", photograph.getFileSizeKB());
+        } else {
+            moodMap.put("hasPhoto", false);
+        }
+
+        return moodMap;
+    }
+    public static MoodEvent fromMap(Map<String, Object> data) {
+        String emotionalState = (String) data.get("emotionalState");
+        String trigger = (String) data.get("trigger");
+        String socialSituation = (String) data.get("socialSituation");
+
+        MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation);
+
+        // Set the timestamp if it exists
+        if (data.containsKey("timestamp")) {
+            moodEvent.setTimestamp((String) data.get("timestamp"));
+        }
+
+        // Set intensity if it exists
+        if (data.containsKey("intensity")) {
+            moodEvent.setIntensity(((Long) data.get("intensity")).intValue());
+        }
+
+        // Handle photograph if it exists
+        if (data.containsKey("hasPhoto") && (Boolean) data.get("hasPhoto")) {
+            String photoUri = (String) data.get("photoUri");
+            if (photoUri != null && !photoUri.equals("N/A")) {
+                // Create a Photograph object with the available data
+                Uri uri = Uri.parse(photoUri);
+
+                // Get photo metadata if available
+                Date photoDate = new Date();
+                if (data.containsKey("photoDateTaken")) {
+                    Object dateObj = data.get("photoDateTaken");
+                    if (dateObj instanceof Long) {
+                        photoDate = new Date((Long) dateObj);
+                    } else if (dateObj instanceof Timestamp) {
+                        photoDate = ((Timestamp) dateObj).toDate();
+                    }
+                }
+
+                String location = "Unknown";
+                if (data.containsKey("photoLocation")) {
+                    location = (String) data.get("photoLocation");
+                }
+
+                long sizeKB = 0;
+                if (data.containsKey("photoSizeKB")) {
+                    Object sizeObj = data.get("photoSizeKB");
+                    if (sizeObj instanceof Long) {
+                        sizeKB = (Long) sizeObj;
+                    } else if (sizeObj instanceof Integer) {
+                        sizeKB = (Integer) sizeObj;
+                    } else if (sizeObj instanceof Double) {
+                        sizeKB = ((Double) sizeObj).longValue();
+                    }
+                }
+
+                // Create photograph without bitmap (which can't be stored in Firestore)
+                Photograph photograph = new Photograph(uri, sizeKB, photoDate, location);
+                moodEvent.setPhotograph(photograph);
+            }
+        }
+
+        return moodEvent;
+    }
+
     /**
      * Returns the current date and time formatted as "MMM dd, yyyy - hh:mm a".
      *
@@ -60,6 +159,8 @@ public class MoodEvent implements Serializable {
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
         return sdf.format(new Date());
     }
+
+
 
     /**
      * Returns the Photograph associated with this mood event.
