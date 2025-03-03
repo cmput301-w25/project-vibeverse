@@ -1,6 +1,7 @@
 package com.example.vibeverse;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,11 +36,24 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private PostAdapter postAdapter;
     private List<Post> allPosts;
     private EditText editSearch;
+    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile_page);
+
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.nav_add) {
+                // Launch SelectMoodActivity
+                Intent intent = new Intent(ProfilePage.this, SelectMoodActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            // Handle other navigation items here
+            return false;
+        });
 
         recyclerFeed = findViewById(R.id.recyclerFeed);
         ImageButton buttonFilter = findViewById(R.id.buttonFilter);
