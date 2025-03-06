@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -52,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 //                                textView.setText(userDetails);
                             } else {
                                 // User details don't exist, redirect to user details activity
-                                Intent intent = new Intent(getApplicationContext(), activity_user_details.class);
+                                Intent intent = new Intent(getApplicationContext(), UserDetails.class);
                                 startActivity(intent);
                                 finish();
                             }
