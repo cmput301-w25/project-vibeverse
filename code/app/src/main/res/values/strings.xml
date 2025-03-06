@@ -47,4 +47,7 @@
     <string name="image_button_desc">Test Image Button</string>
     <string name="add_mood_button">Add Mood</string>
     <string name="mood_history_heading">Mood History</string>
+    <string name="following">Following</string>
+    <string name="follows">Follows</string>
+    <string name="search">Search...</string>
 </resources>
