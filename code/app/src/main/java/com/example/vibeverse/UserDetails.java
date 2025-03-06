@@ -4,8 +4,6 @@ import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +24,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
-public class activity_user_details extends AppCompatActivity {
+public class UserDetails extends AppCompatActivity {
 
     private EditText fullName, username, bio, dob;
     private Spinner genderSpinner;
@@ -150,13 +148,13 @@ public class activity_user_details extends AppCompatActivity {
             db.collection("users").document(user.getUid())
                     .set(userData)
                     .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(activity_user_details.this, "Profile created successfully!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(activity_user_details.this, MainActivity.class);
+                        Toast.makeText(UserDetails.this, "Profile created successfully!", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(UserDetails.this, MainActivity.class);
                         startActivity(intent);
                         finish();
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(activity_user_details.this, "Error creating profile", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(UserDetails.this, "Error creating profile", Toast.LENGTH_SHORT).show();
                     });
         } else {
             Toast.makeText(this, "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
