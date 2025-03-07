@@ -1,10 +1,12 @@
 package com.example.vibeverse;
 
 import android.annotation.SuppressLint;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,6 +33,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -39,6 +42,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.ParseException;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -59,6 +63,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private PostAdapter postAdapter;
     private List<Post> allPosts;
     private EditText editSearch;
+
+    private Button logoutButton;
     private BottomNavigationView bottomNavigationView;
     private View emptyStateView;
 
@@ -282,6 +288,23 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 updateMoodInFirestore(postToUpdate.documentId, updatedEmoji, updatedMood,
                         updatedTrigger, updatedSocialSituation, updatedIntensity, updatedPhotoUri);
             }
+
+        });
+
+        // Logout button
+        mAuth = FirebaseAuth.getInstance();
+        logoutButton = findViewById(R.id.buttonLogout);
+
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAuth.signOut();
+                Intent intent = new Intent(ProfilePage.this, Login.class);
+                startActivity(intent);
+                finish();
+            }
+        });
+
         }
     }
 
@@ -374,6 +397,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+
     }
 
     @Override

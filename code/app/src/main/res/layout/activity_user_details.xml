@@ -23,13 +23,40 @@
             android:textSize="28sp"
             android:textStyle="bold" />
 
+        <!-- FrameLayout containing both the placeholder and the selected image -->
+        <FrameLayout
+            android:id="@+id/btnProfilePicture"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginBottom="16dp"
+            android:layout_gravity="center">
+
+            <!-- Placeholder ImageView (visible by default) -->
+            <ImageView
+                android:id="@+id/profilePicturePlaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/circular_profile_picture_icon"
+                android:src="@android:drawable/ic_menu_add"
+                android:scaleType="centerInside"
+                android:visibility="visible" />
+
+            <!-- Selected image ImageView (hidden until a picture is chosen) -->
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/profilePictureSelected"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+        </FrameLayout>
+
         <EditText
             android:id="@+id/fullName"
             style="@style/RoundedBox"
             android:layout_marginBottom="12dp"
             android:hint="@string/full_name"
             android:layout_weight="1"
-            android:textColorHint="#908E8E"/>
+            android:textColorHint="#908E8E" />
 
         <EditText
             android:id="@+id/username"
@@ -37,7 +64,7 @@
             android:layout_marginBottom="12dp"
             android:hint="@string/username"
             android:layout_weight="1"
-            android:textColorHint="#908E8E"/>
+            android:textColorHint="#908E8E" />
 
         <EditText
             android:id="@+id/bio"
@@ -66,42 +93,7 @@
             android:hint="@string/date_of_birth"
             android:onClick="showDatePicker"
             android:layout_weight="1"
-            android:textColorHint="#908E8E"/>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:layout_marginBottom="24dp">
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:onClick="onAddProfilePictureClick">  <!-- Click event on whole button -->
-
-                <ImageView
-                android:id="@+id/addProfilePictureButton"
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:background="@drawable/rounded_black_box"
-                android:src="@android:drawable/ic_menu_add"
-                app:tint="@android:color/white"
-                android:scaleType="centerInside"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal|bottom"
-                    android:paddingBottom="8dp"
-                    android:text="@string/add_profile_picture"
-                    android:textColor="#908E8E"
-                    android:textSize="16sp"
-                    android:translationY="-15dp" />
-            </FrameLayout>
-
-        </LinearLayout>
-
-
+            android:textColorHint="#908E8E" />
 
         <Button
             android:id="@+id/continueButton"
