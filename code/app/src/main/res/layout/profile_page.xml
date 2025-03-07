@@ -190,7 +190,7 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:background="@drawable/search_background"
+            android:background="@drawable/rounded_black_box"
             android:hint="@string/search"
             android:padding="12dp"
             android:textColor="@android:color/black"
