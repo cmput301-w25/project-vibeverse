@@ -108,17 +108,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             }
         });
 
+        // Navigation
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.nav_add) {
-                // Launch SelectMoodActivity
-                Intent intent = new Intent(ProfilePage.this, SelectMoodActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            // Handle other navigation items here
-            return false;
-        });
+        NavigationHelper.setupBottomNavigation(this, bottomNavigationView);
 
         recyclerFeed = findViewById(R.id.recyclerFeed);
         ImageButton buttonFilter = findViewById(R.id.buttonFilter);

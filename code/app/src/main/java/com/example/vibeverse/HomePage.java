@@ -90,17 +90,9 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
             public void afterTextChanged(Editable s) {}
         });
 
+        // Navigation
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.nav_add) {
-                // Launch SelectMoodActivity
-                Intent intent = new Intent(HomePage.this, SelectMoodActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            // Handle other navigation items here
-            return false;
-        });
+        NavigationHelper.setupBottomNavigation(this, bottomNavigationView);
     }
 
     @Override
