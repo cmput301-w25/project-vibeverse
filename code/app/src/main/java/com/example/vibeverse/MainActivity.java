@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
                             DocumentSnapshot document = task.getResult();
                             if (document.exists()) {
                                 // User details exist, show main activity
-                                Intent intent = new Intent(getApplicationContext(), ProfilePage.class);
+                                Intent intent = new Intent(getApplicationContext(), HomePage.class);
                                 startActivity(intent);
                                 finish();
 //                                String userDetails = "User ID: " + user.getUid() + "\nEmail: " + user.getEmail();

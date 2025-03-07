@@ -1,5 +1,6 @@
 package com.example.vibeverse;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -17,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.vibeverse.FilterDialog;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
 
     private RecyclerView recyclerFeed;
     private ImageButton buttonNotification;
+    private BottomNavigationView bottomNavigationView;
     private ImageButton buttonFilter;
     private PostAdapter postAdapter;
     private List<Post> allPosts;
@@ -85,6 +88,18 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
 
             @Override
             public void afterTextChanged(Editable s) {}
+        });
+
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.nav_add) {
+                // Launch SelectMoodActivity
+                Intent intent = new Intent(HomePage.this, SelectMoodActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            // Handle other navigation items here
+            return false;
         });
     }
 

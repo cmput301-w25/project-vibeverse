@@ -80,9 +80,14 @@
                 android:resource="@array/preloaded_fonts" />
         </activity>
 
-        <!-- Profile Activity (Added) -->
+        <!-- Profile Activity -->
         <activity
             android:name=".ProfilePage"
+            android:exported="false"/>
+
+        <!-- Home Activity -->
+        <activity
+            android:name=".HomePage"
             android:exported="false"/>
 
 
