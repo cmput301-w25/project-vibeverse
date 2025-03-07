@@ -6,10 +6,12 @@ plugins {
 android {
     namespace = "com.example.vibeverse"
     compileSdk = 35
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.vibeverse"
         minSdk = 24
+        targetSdk = 35
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -38,6 +40,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
@@ -53,8 +57,10 @@ dependencies {
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-    implementation ("de.hdodenhof:circleimageview:3.1.0")
 
+    implementation ("de.hdodenhof:circleimageview:3.1.0")
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
 
 
 }

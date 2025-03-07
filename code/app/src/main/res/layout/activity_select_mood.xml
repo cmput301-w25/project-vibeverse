@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Scrollable content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/mainContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="#4B2C39">
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/mood_selection_prompt"
+                android:textSize="18sp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:layout_gravity="center_horizontal"
+                android:paddingBottom="16dp"/>
+
+            <!-- Mood Selection Grid -->
+            <GridLayout
+                android:id="@+id/moodGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="4"
+                android:rowCount="2"
+                android:padding="8dp"/>
+
+            <!-- Large Mood Display -->
+            <LinearLayout
+                android:id="@+id/selectedMoodContainer"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:background="#D94C4C"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/selectedMoodEmoji"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/default_emoji_selection"
+                    android:textSize="80sp"
+                    android:layout_gravity="center"/>
+
+                <TextView
+                    android:id="@+id/selectedMoodText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/default_emoji_text"
+                    android:textSize="24sp"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <!-- Mood Intensity Slider -->
+            <SeekBar
+                android:id="@+id/moodIntensitySlider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="10"
+                android:progress="5"
+                android:layout_marginTop="16dp"
+                android:progressTint="@android:color/white"
+                android:progressTintMode="src_in"
+                android:secondaryProgressTint="@android:color/darker_gray"
+                android:secondaryProgressTintMode="src_in"
+                android:thumbTint="@android:color/white"
+                android:thumbTintMode="src_in"
+                android:splitTrack="false"/>
+
+            <!-- Trigger Input with Rounded Corners -->
+            <EditText
+                android:id="@+id/triggerInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/select_trigger"
+                android:background="@drawable/rounded_edittext_background"
+                android:padding="10dp"
+                android:layout_marginTop="8dp"/>
+
+            <!-- Social Situation Input with Rounded Corners -->
+            <EditText
+                android:id="@+id/socialSituationInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/select_social_situation"
+                android:background="@drawable/rounded_edittext_background"
+                android:padding="10dp"
+                android:layout_marginTop="8dp"/>
+
+            <!-- Image Button (Above the overlay button) -->
+            <FrameLayout
+                android:id="@+id/btnImage"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/image_button_background"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <!-- Placeholder Image -->
+                <ImageView
+                    android:id="@+id/imgPlaceholder"
+                    android:layout_width="89dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_image_placeholder" />
+
+                <!-- Selected Image (Initially Hidden) -->
+                <ImageView
+                    android:id="@+id/imgSelected"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- Extra spacing at the bottom if needed -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="100dp" />
+
+
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Floating Continue Button pinned at bottom right -->
+    <Button
+        android:id="@+id/continueButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/continue_text"
+        android:textSize="18sp"
+        android:backgroundTint="#D94C4C"
+        android:textColor="@android:color/white"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"/>
+
+</FrameLayout>

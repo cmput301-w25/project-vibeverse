@@ -1,5 +1,6 @@
 package com.example.vibeverse;
 
+
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -12,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,20 +21,26 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
 import androidx.core.content.FileProvider;
+
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+
 import java.io.File;
 import java.io.IOException;
+
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,12 +53,14 @@ public class UserDetails extends AppCompatActivity {
     FirebaseAuth auth;
     FirebaseUser user;
 
+
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_PICK_IMAGE = 2;
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
     private Bitmap currentBitmap;
     private ImageView profilePicturePlaceholder, profilePictureSelected;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,11 +74,13 @@ public class UserDetails extends AppCompatActivity {
         dob = findViewById(R.id.dob);
         genderSpinner = findViewById(R.id.genderSpinner);
         continueButton = findViewById(R.id.continueButton);
+
         profilePicturePlaceholder = findViewById(R.id.profilePicturePlaceholder);
         profilePictureSelected = findViewById(R.id.profilePictureSelected);
 
         FrameLayout btnProfilePicture = findViewById(R.id.btnProfilePicture);
         btnProfilePicture.setOnClickListener(v -> showImagePickerDialog());
+
 
 
         auth = FirebaseAuth.getInstance();
@@ -211,6 +223,7 @@ public class UserDetails extends AppCompatActivity {
         // Show the date picker dialog
         datePickerDialog.show();
     }
+
 
     /**
      * Displays a dialog allowing the user to choose between taking a photo or selecting one from the gallery.
@@ -364,6 +377,7 @@ public class UserDetails extends AppCompatActivity {
         }
         return true;
     }
+
 
 
 }
