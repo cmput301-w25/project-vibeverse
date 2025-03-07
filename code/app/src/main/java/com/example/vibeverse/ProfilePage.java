@@ -289,7 +289,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                         updatedTrigger, updatedSocialSituation, updatedIntensity, updatedPhotoUri);
             }
 
-        });
+
 
         // Logout button
         mAuth = FirebaseAuth.getInstance();
