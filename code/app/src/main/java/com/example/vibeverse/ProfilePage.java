@@ -95,6 +95,18 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 prefs.edit().putString("device_id", userId).apply();
             }
         }
+        // Logout button
+        logoutButton = findViewById(R.id.buttonLogout);
+
+        logoutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAuth.signOut();
+                Intent intent = new Intent(ProfilePage.this, Login.class);
+                startActivity(intent);
+                finish();
+            }
+        });
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
@@ -291,19 +303,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
 
 
-        // Logout button
-        mAuth = FirebaseAuth.getInstance();
-        logoutButton = findViewById(R.id.buttonLogout);
 
-        logoutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mAuth.signOut();
-                Intent intent = new Intent(ProfilePage.this, Login.class);
-                startActivity(intent);
-                finish();
-            }
-        });
 
         }
     }
