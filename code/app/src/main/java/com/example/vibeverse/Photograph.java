@@ -42,6 +42,8 @@ public class Photograph implements Serializable {
         this.location = location;
     }
 
+
+
     /**
      * Constructs a Photograph without a bitmap.
      * <p>
@@ -54,11 +56,14 @@ public class Photograph implements Serializable {
      * @param location   The location where the image was taken.
      */
     public Photograph(Uri imageUri, long fileSizeKB, Date dateTaken, String location) {
+        this.imageUri = imageUri;
         this.imageUriString = imageUri.toString();
         this.fileSizeKB = fileSizeKB;
         this.dateTaken = dateTaken;
         this.location = location;
     }
+
+
 
 
     /**

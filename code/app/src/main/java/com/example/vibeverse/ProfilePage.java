@@ -1,7 +1,5 @@
 package com.example.vibeverse;
 
-import android.annotation.SuppressLint;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -21,7 +19,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -36,7 +33,6 @@ import android.widget.Toast;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -45,7 +41,6 @@ import java.text.ParseException;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -60,8 +55,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
     private RecyclerView recyclerFeed;
     private Button buttonFilter;
-    private PostAdapter postAdapter;
-    private List<Post> allPosts;
+    private MoodEventAdapter moodEventAdapter;
+    private List<MoodEvent> allMoodEvents;
     private EditText editSearch;
 
     private Button logoutButton;
@@ -138,9 +133,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         }
 
         // Initialize empty lists
-        allPosts = new ArrayList<>();
-        postAdapter = new PostAdapter(new ArrayList<>());
-        recyclerFeed.setAdapter(postAdapter);
+        allMoodEvents = new ArrayList<MoodEvent>();
+        moodEventAdapter = new MoodEventAdapter(new ArrayList<>());
+        recyclerFeed.setAdapter(moodEventAdapter);
 
         // Load data from Firestore instead of using dummy data
         loadMoodsFromFirestore();
@@ -153,7 +148,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                postAdapter.filter(charSequence.toString());
+                moodEventAdapter.filter(charSequence.toString());
             }
 
             @Override
@@ -180,12 +175,13 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    allPosts.clear();
+                    allMoodEvents.clear();
                     SimpleDateFormat sourceFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
 
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         try {
                             // Create a MoodEvent from the Firestore data
+
                             MoodEvent moodEvent = MoodEvent.fromMap(document.getData());
 
                             // Parse the timestamp to a Date object
@@ -198,23 +194,16 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                                 e.printStackTrace();
                             }
 
-                            // Create a Post object
-                            Post post = new Post(
-                                    moodEvent.getMood(), // Title is the mood text
-                                    moodEvent.getEmoji(), // Mood is the emoji
-                                    R.drawable.demo_image, // Default image for now
-                                    date
-                            );
+                            moodEvent.setDate(date);
 
                             // Store the document ID for Firestore operations
-                            post.documentId = document.getId();
+                            moodEvent.setDocumentId(document.getId());
 
                             // Add subtitle using trigger and social situation
                             StringBuilder subtitle = new StringBuilder();
 
                             if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
                                 subtitle.append("Trigger: ").append(moodEvent.getTrigger());
-                                post.trigger = moodEvent.getTrigger();
                             }
 
                             if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
@@ -222,30 +211,26 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                                     subtitle.append(" | ");
                                 }
                                 subtitle.append("Social: ").append(moodEvent.getSocialSituation());
-                                post.socialSituation = moodEvent.getSocialSituation();
                             }
 
-                            post.subtitle = subtitle.toString();
-                            post.photoUri = moodEvent.getPhotoUri();
-                            post.intensity = moodEvent.getIntensity();
-                            post.timestamp = moodEvent.getTimestamp();
+                            moodEvent.setSubtitle(subtitle.toString());
 
                             // Add to the list
-                            allPosts.add(post);
+                            allMoodEvents.add(moodEvent);
                         } catch (Exception e) {
                             Log.e("ProfilePage", "Error parsing mood data: " + e.getMessage());
                         }
                     }
 
                     // Update the adapter with the new data
-                    postAdapter.updatePosts(new ArrayList<>(allPosts));
+                    moodEventAdapter.updateMoodEvents(new ArrayList<>(allMoodEvents));
 
                     if (progressLoading != null) {
                         progressLoading.setVisibility(View.GONE);
                     }
 
                     // Show empty state if no posts
-                    if (allPosts.isEmpty()) {
+                    if (allMoodEvents.isEmpty()) {
                         if (emptyStateView != null) {
                             recyclerFeed.setVisibility(View.GONE);
                             emptyStateView.setVisibility(View.VISIBLE);
@@ -284,12 +269,12 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             int moodPosition = data.getIntExtra("moodPosition", -1);
             String updatedPhotoUri = data.getStringExtra("updatedPhotoUri");
 
-            if (moodPosition >= 0 && moodPosition < allPosts.size()) {
+            if (moodPosition >= 0 && moodPosition < allMoodEvents.size()) {
                 // Get the post to update
-                Post postToUpdate = allPosts.get(moodPosition);
+                MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
 
                 // Update Firestore
-                updateMoodInFirestore(postToUpdate.documentId, updatedEmoji, updatedMood,
+                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood,
                         updatedTrigger, updatedSocialSituation, updatedIntensity, updatedPhotoUri);
             }
 
@@ -365,8 +350,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                             .delete()
                             .addOnSuccessListener(aVoid -> {
                                 // Remove from local list
-                                allPosts.remove(position);
-                                postAdapter.updatePosts(new ArrayList<>(allPosts));
+                                allMoodEvents.remove(position);
+                                moodEventAdapter.updateMoodEvents(new ArrayList<>(allMoodEvents));
 
                                 if (progressLoading != null) {
                                     progressLoading.setVisibility(View.GONE);
@@ -375,7 +360,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                                 Toast.makeText(ProfilePage.this, "Mood deleted successfully", Toast.LENGTH_SHORT).show();
 
                                 // Check if list is now empty
-                                if (allPosts.isEmpty() && emptyStateView != null) {
+                                if (allMoodEvents.isEmpty() && emptyStateView != null) {
                                     recyclerFeed.setVisibility(View.GONE);
                                     emptyStateView.setVisibility(View.VISIBLE);
                                 }
@@ -398,25 +383,25 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     }
 
     private void applyFilters(String timeFilter, boolean isHappy, boolean isSad, boolean isAfraid, boolean isConfused) {
-        List<Post> filteredPosts = new ArrayList<>();
+        List<MoodEvent> filteredMoodEvents = new ArrayList<>();
         long currentTime = System.currentTimeMillis();
 
-        for (Post post : allPosts) {
-            long postTime = post.date.getTime();
+        for (MoodEvent moodEvent: allMoodEvents) {
+            long moodEventTime = moodEvent.getDate().getTime();
             boolean isWithinTime = false;
 
             switch (timeFilter) {
                 case "last_24_hours":
-                    isWithinTime = (currentTime - postTime) <= 86400000;
+                    isWithinTime = (currentTime - moodEventTime) <= 86400000;
                     break;
                 case "3Days":
-                    isWithinTime = (currentTime - postTime) <= 259200000;
+                    isWithinTime = (currentTime - moodEventTime) <= 259200000;
                     break;
                 case "last_week":
-                    isWithinTime = (currentTime - postTime) <= 604800000;
+                    isWithinTime = (currentTime - moodEventTime) <= 604800000;
                     break;
                 case "last_month":
-                    isWithinTime = (currentTime - postTime) <= 2592000000L;
+                    isWithinTime = (currentTime - moodEventTime) <= 2592000000L;
                     break;
                 case "all_time":
                     isWithinTime = true;
@@ -424,86 +409,67 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             }
 
             if (isWithinTime) {
-                if ((isHappy && post.mood.equals("HAPPY")) ||
-                        (isSad && post.mood.equals("SAD")) ||
-                        (isAfraid && post.mood.equals("AFRAID")) ||
-                        (isConfused && post.mood.equals("CONFUSED")) ||
+                if ((isHappy && moodEvent.getMoodTitle().equals("HAPPY")) ||
+                        (isSad && moodEvent.getMoodTitle().equals("SAD")) ||
+                        (isAfraid && moodEvent.getMoodTitle().equals("AFRAID")) ||
+                        (isConfused && moodEvent.getMoodTitle().equals("CONFUSED")) ||
                         (!isHappy && !isSad && !isAfraid && !isConfused)) {
-                    filteredPosts.add(post);
+                    filteredMoodEvents.add(moodEvent);
                 }
             }
         }
-        postAdapter.updatePosts(filteredPosts);
+        moodEventAdapter.updateMoodEvents(filteredMoodEvents);
     }
 
-    private static class Post {
-        public String subtitle;
-        String title;
-        String mood;
-        int imageResId;
-        Date date;
+    private class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.MoodEventViewHolder> {
 
-        // Added fields for edit and delete functionality
-        String documentId; // Firestore document ID
-        String trigger;
-        String socialSituation;
-        int intensity = 5; // Default intensity
-        String timestamp;
-        String photoUri;
-        String emoji;
-
-        Post(String title, String mood, int imageResId, Date date) {
-            this.title = title;
-            this.mood = mood;
-            this.imageResId = imageResId;
-            this.date = date;
-        }
-    }
-
-    private class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
-
-        private final List<Post> postList;
-        private List<Post> originalList;
-        private List<Post> currentList;
+        private final List<MoodEvent> moodEventList;
+        private List<MoodEvent> originalList;
+        private List<MoodEvent> currentList;
 
         private final SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy • hh:mm:ss a", Locale.US);
 
-        PostAdapter(List<Post> postList) {
-            this.postList = postList;
-            this.originalList = new ArrayList<>(postList);
-            this.currentList = new ArrayList<>(postList);
+        MoodEventAdapter(List<MoodEvent> moodEventList) {
+            this.moodEventList = moodEventList;
+            this.originalList = new ArrayList<>(moodEventList);
+            this.currentList = new ArrayList<>(moodEventList);
         }
 
-        public void updatePosts(List<Post> newPosts) {
-            postList.clear();
-            postList.addAll(newPosts);
-            originalList = new ArrayList<>(newPosts);
-            currentList = new ArrayList<>(newPosts);
+        public void updateMoodEvents(List<MoodEvent> newMoodEvents) {
+            moodEventList.clear();
+            moodEventList.addAll(newMoodEvents);
+            originalList = new ArrayList<>(newMoodEvents);
+            currentList = new ArrayList<>(newMoodEvents);
             notifyDataSetChanged();
         }
 
         @NonNull
         @Override
-        public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post, parent, false);
-            return new PostViewHolder(view);
+            return new MoodEventViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
-            Post post = postList.get(position);
-            holder.textTitle.setText(post.title);
-            holder.textSubtitle.setText(formatter.format(post.date) + " • " + post.mood);
-            holder.imagePost.setImageResource(post.imageResId);
+        public void onBindViewHolder(@NonNull MoodEventViewHolder holder, int position) {
+            MoodEvent moodEvent = moodEventList.get(position);
+            holder.textTitle.setText(moodEvent.getTrigger());
+            holder.textSubtitle.setText(formatter.format(moodEvent.getDate()) + " • " + moodEvent.getMoodTitle());
+            Photograph photo = moodEvent.getPhotograph();
+            if (photo != null) {
+                holder.imagePost.setImageBitmap(photo.getBitmap());
+            } else {
+                holder.imagePost.setImageResource(R.drawable.demo_image);
+            }
 
             // Set click listener for the menu button
             holder.buttonPostMenu.setOnClickListener(v -> {
-                showPostMenu(v, position, post);
+                showPostMenu(v, position, moodEvent);
             });
         }
 
         // Java
-        private void showPostMenu(View view, int position, Post post) {
+        private void showPostMenu(View view, int position, MoodEvent moodEvent) {
             // Create a popup menu without XML
             PopupMenu popup = new PopupMenu(ProfilePage.this, view);
 
@@ -517,19 +483,36 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 if (id == 1) { // Edit
                     // Launch EditMoodActivity
                     Intent intent = new Intent(ProfilePage.this, EditMoodActivity.class);
-                    intent.putExtra("selectedMood", post.title);
-                    intent.putExtra("selectedEmoji", post.mood);
-                    intent.putExtra("trigger", post.trigger);
-                    intent.putExtra("socialSituation", post.socialSituation);
-                    intent.putExtra("intensity", post.intensity);
-                    intent.putExtra("timestamp", post.timestamp);
-                    intent.putExtra("photoUri", post.photoUri);
+                    intent.putExtra("selectedMood", moodEvent.getMoodTitle());
+                    intent.putExtra("selectedEmoji", moodEvent.getEmoji());
+                    intent.putExtra("trigger", moodEvent.getTrigger());
+                    intent.putExtra("socialSituation", moodEvent.getSocialSituation());
+                    intent.putExtra("intensity", moodEvent.getIntensity());
+                    intent.putExtra("timestamp", moodEvent.getTimestamp());
+                    intent.putExtra("photoUri", moodEvent.getPhotoUri());
+                    intent.putExtra("moodPosition", position);
+
+                    intent.putExtra("selectedMood", moodEvent.getMoodTitle());
+
+
+                    intent.putExtra("selectedEmoji", moodEvent.getEmoji());
+
+
+                    intent.putExtra("trigger", moodEvent.getTrigger());
+
+
+                    intent.putExtra("socialSituation", moodEvent.getSocialSituation());
+
+                    intent.putExtra("intensity", moodEvent.getIntensity());
+                    intent.putExtra("timestamp", moodEvent.getTimestamp());
+
+                    intent.putExtra("photoUri", moodEvent.getPhotoUri());
                     intent.putExtra("moodPosition", position);
                     startActivityForResult(intent, EDIT_MOOD_REQUEST_CODE);
                     return true;
                 } else if (id == 2) { // Delete
                     // Delete the mood
-                    deleteMoodFromFirestore(post.documentId, position);
+                    deleteMoodFromFirestore(moodEvent.getDocumentId(), position);
                     return true;
                 }
                 return false;
@@ -539,7 +522,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         }
         @Override
         public int getItemCount() {
-            return postList.size();
+            return moodEventList.size();
         }
 
         // Custom filter method
@@ -549,26 +532,26 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             if (query.isEmpty()) {
                 currentList.addAll(originalList);
             } else {
-                for (Post post : originalList) {
-                    boolean titleMatches = post.title != null && post.title.toLowerCase().contains(query);
-                    boolean subtitleMatches = post.subtitle != null && post.subtitle.toLowerCase().contains(query);
+                for (MoodEvent moodEvent : originalList) {
+                    boolean titleMatches = moodEvent.getTrigger() != null && moodEvent.getTrigger().toLowerCase().contains(query);
+                    boolean subtitleMatches = moodEvent.getSubtitle() != null && moodEvent.getSubtitle().toLowerCase().contains(query);
                     if (titleMatches || subtitleMatches) {
-                        currentList.add(post);
+                        currentList.add(moodEvent);
                     }
                 }
             }
-            // Update postList since it's used for display
-            postList.clear();
-            postList.addAll(currentList);
+            // Update moodEventList since it's used for display
+            moodEventList.clear();
+            moodEventList.addAll(currentList);
             notifyDataSetChanged();
         }
 
-        class PostViewHolder extends RecyclerView.ViewHolder {
+        class MoodEventViewHolder extends RecyclerView.ViewHolder {
             ImageView imagePost;
             TextView textTitle, textSubtitle;
             ImageButton buttonPostMenu;
 
-            PostViewHolder(@NonNull View itemView) {
+            MoodEventViewHolder(@NonNull View itemView) {
                 super(itemView);
                 imagePost = itemView.findViewById(R.id.imagePost);
                 textTitle = itemView.findViewById(R.id.textTitle);

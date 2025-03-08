@@ -6,7 +6,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -19,6 +18,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -38,17 +38,14 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -167,11 +164,15 @@ public class SelectMoodActivity extends AppCompatActivity {
 
         // Set up continue button to create a MoodEvent and pass it to MainActivity
         continueButton.setOnClickListener(v -> {
+
+            Log.d("SelectMoodActivity", "onClick: selectedEmoji before animation = " + selectedEmoji);
             // Create a subtle animation before continuing
             mainContainer.animate()
+
                     .alpha(0.8f)
                     .setDuration(200)
                     .withEndAction(() -> {
+                        Log.d("SelectMoodActivity", "onClick: selectedEmoji after animation = " + selectedEmoji);
                         String trigger = triggerInput.getText().toString().trim();
                         String socialSituation = socialSituationInput.getText().toString().trim();
 
@@ -187,13 +188,18 @@ public class SelectMoodActivity extends AppCompatActivity {
                                     currentBitmap.getByteCount() / 1024, // Estimate file size in KB
                                     currentBitmap,
                                     new Date(),
-                                    "VibeVerse Location" // Default location or get actual location
+                                    "VibeVerse Location" // Default location - get location functionality not yet implemented
                             );
-                            moodEvent = new MoodEvent(selectedEmoji + " " + selectedMood, trigger, socialSituation, photograph);
+
+
+                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, trigger, socialSituation, photograph);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
                         } else {
-                            moodEvent = new MoodEvent(selectedEmoji + " " + selectedMood, trigger, socialSituation);
+                            Log.d("SelectMoodActivity", "onClick: Emoji before assignment= " + selectedEmoji);
+                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, trigger, socialSituation);
+                            Log.d("SelectMoodActivity", "onClick: Emoji after assignment= " + moodEvent.getEmoji());
+                            Log.d("SelectMoodActivity", "onClick: Title after assignment= " + moodEvent.getMoodTitle());
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
                         }
@@ -211,9 +217,8 @@ public class SelectMoodActivity extends AppCompatActivity {
 
         // Convert MoodEvent to Map for Firestore
         Map<String, Object> moodData = new HashMap<>();
-        moodData.put("emotionalState", moodEvent.getEmotionalState());
         moodData.put("emoji", moodEvent.getEmoji());
-        moodData.put("mood", moodEvent.getMood());
+        moodData.put("mood", moodEvent.getMoodTitle());
         moodData.put("trigger", moodEvent.getTrigger());
         moodData.put("socialSituation", moodEvent.getSocialSituation());
         moodData.put("timestamp", moodEvent.getTimestamp());
@@ -223,6 +228,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         if (moodEvent.getPhotograph() != null) {
             moodData.put("hasPhoto", true);
             moodData.put("photoUri", moodEvent.getPhotoUri());
+
             moodData.put("photoDateTaken", moodEvent.getPhotograph().getDateTaken().getTime());
             moodData.put("photoLocation", moodEvent.getPhotograph().getLocation());
             moodData.put("photoSizeKB", moodEvent.getPhotograph().getFileSizeKB());

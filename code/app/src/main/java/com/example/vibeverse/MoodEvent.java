@@ -1,8 +1,9 @@
 package com.example.vibeverse;
 
-import android.content.Intent;
+import static android.content.ContentValues.TAG;
+
 import android.net.Uri;
-import android.widget.Toast;
+import android.util.Log;
 
 import com.google.firebase.Timestamp;
 
@@ -22,37 +23,67 @@ import java.util.Map;
  * </p>
  */
 public class MoodEvent implements Serializable {
-    private String emotionalState;
+    private String moodTitle;
+    private String moodEmoji;
+
     private String trigger;
+
+    private String documentId; // Firestore document ID
     private String socialSituation;
     private String timestamp; // Formatted timestamp
     private int intensity = 5; // Default intensity set to middle value
     private Photograph photograph;
 
-    /**
-     * Constructs a new MoodEvent without an associated photograph.
-     *
-     * @param emotionalState  The emotional state of the mood event.
-     * @param trigger         The trigger for the mood event (optional).
-     * @param socialSituation The social situation during the mood event (optional).
-     */
-    public MoodEvent(String emotionalState, String trigger, String socialSituation) {
-        this.emotionalState = emotionalState;
+    private Date date;
+
+    private String subtitle;
+
+
+    public String getMoodEmoji() {
+        return moodEmoji;
+    }
+
+    public void setMoodEmoji(String moodEmoji) {
+        this.moodEmoji = moodEmoji;
+    }
+
+
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
+    }
+
+    public String getSubtitle() {
+        return subtitle;
+    }
+
+    public void setSubtitle(String subtitle) {
+        this.subtitle = subtitle;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public MoodEvent(String moodTitle, String moodEmoji, String trigger, String socialSituation) {
+        this.moodEmoji = moodEmoji;
+        this.moodTitle = moodTitle;
         this.trigger = trigger;
         this.socialSituation = socialSituation;
         this.timestamp = getCurrentFormattedTime();
     }
 
-    /**
-     * Constructs a new MoodEvent with an associated photograph.
-     *
-     * @param emotionalState  The emotional state of the mood event.
-     * @param trigger         The trigger for the mood event (optional).
-     * @param socialSituation The social situation during the mood event (optional).
-     * @param photograph      The photograph associated with the mood event.
-     */
-    public MoodEvent(String emotionalState, String trigger, String socialSituation, Photograph photograph) {
-        this.emotionalState = emotionalState;
+
+    public MoodEvent(String moodTitle, String moodEmoji, String trigger, String socialSituation, Photograph photograph) {
+        this.moodTitle = moodTitle;
+        this.moodEmoji = moodEmoji;
         this.trigger = trigger;
         this.socialSituation = socialSituation;
         this.timestamp = getCurrentFormattedTime();
@@ -61,7 +92,7 @@ public class MoodEvent implements Serializable {
 
     public Map<String, Object> toMap() {
         Map<String, Object> moodMap = new HashMap<>();
-        moodMap.put("emotionalState", this.emotionalState);
+        moodMap.put("emotionalState", this.moodTitle);
         moodMap.put("trigger", this.trigger);
         moodMap.put("socialSituation", this.socialSituation);
         moodMap.put("timestamp", this.timestamp);
@@ -69,12 +100,13 @@ public class MoodEvent implements Serializable {
 
         // Handle emoji and mood text extraction
         moodMap.put("emoji", getEmoji());
-        moodMap.put("mood", getMood());
+        moodMap.put("mood", getMoodTitle());
 
         // Handle photograph if present
         if (this.photograph != null) {
             moodMap.put("hasPhoto", true);
             moodMap.put("photoUri", getPhotoUri());
+
 
             // Add additional photo metadata
             if (photograph.getDateTaken() != null) {
@@ -90,11 +122,16 @@ public class MoodEvent implements Serializable {
         return moodMap;
     }
     public static MoodEvent fromMap(Map<String, Object> data) {
-        String emotionalState = (String) data.get("emotionalState");
+        String moodEmoji = (String) data.get("emoji");
+
+        String moodTitle = (String) data.get("mood");
+
         String trigger = (String) data.get("trigger");
         String socialSituation = (String) data.get("socialSituation");
 
-        MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation);
+        Log.d("fromMapDebug", "photoUri field: " + data.get("photoUri"));
+
+        MoodEvent moodEvent = new MoodEvent(moodTitle, moodEmoji, trigger, socialSituation);
 
         // Set the timestamp if it exists
         if (data.containsKey("timestamp")) {
@@ -112,6 +149,7 @@ public class MoodEvent implements Serializable {
             if (photoUri != null && !photoUri.equals("N/A")) {
                 // Create a Photograph object with the available data
                 Uri uri = Uri.parse(photoUri);
+                Log.d("fromMapDebug", "photoUri after parse: " + photoUri);
 
                 // Get photo metadata if available
                 Date photoDate = new Date();
@@ -147,6 +185,8 @@ public class MoodEvent implements Serializable {
             }
         }
 
+        Log.d("fromMapDebug", "Returning MoodEvent with photoUri: " + moodEvent.getPhotoUri());
+
         return moodEvent;
     }
 
@@ -174,10 +214,10 @@ public class MoodEvent implements Serializable {
     /**
      * Sets the emotional state for this mood event.
      *
-     * @param emotionalState The new emotional state.
+     * @param moodTitle The new emotional state.
      */
-    public void setEmotionalState(String emotionalState) {
-        this.emotionalState = emotionalState;
+    public void setMoodTitle(String moodTitle) {
+        this.moodTitle = moodTitle;
     }
 
     /**
@@ -239,7 +279,7 @@ public class MoodEvent implements Serializable {
      *
      * @return The emotional state.
      */
-    public String getEmotionalState() { return emotionalState; }
+    public String getMoodTitle() { return moodTitle; }
 
     /**
      * Returns the trigger of this mood event.
@@ -269,23 +309,7 @@ public class MoodEvent implements Serializable {
      * @return The emoji part of the emotional state.
      */
     public String getEmoji() {
-        if (emotionalState != null && emotionalState.contains(" ")) {
-            return emotionalState.substring(0, emotionalState.indexOf(" "));
-        }
-        return "";
-    }
-
-    /**
-     * Extracts the mood text from the emotional state string.
-     * Assumes the emotional state starts with an emoji followed by a space.
-     *
-     * @return The mood text part of the emotional state.
-     */
-    public String getMood() {
-        if (emotionalState != null && emotionalState.contains(" ")) {
-            return emotionalState.substring(emotionalState.indexOf(" ") + 1);
-        }
-        return emotionalState;
+        return this.moodEmoji;
     }
 
     /**
