@@ -50,7 +50,7 @@ import java.util.Map;
 public class ProfilePage extends AppCompatActivity implements FilterDialog.FilterListener {
 
     private static final String TAG = "ProfilePage";
-    private static final int EDIT_MOOD_REQUEST_CODE = 1001;
+    public static final int EDIT_MOOD_REQUEST_CODE = 1001;
 
 
     private RecyclerView recyclerFeed;
@@ -134,7 +134,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
         // Initialize empty lists
         allMoodEvents = new ArrayList<MoodEvent>();
-        moodEventAdapter = new MoodEventAdapter(new ArrayList<>());
+        moodEventAdapter = new MoodEventAdapter(ProfilePage.this, new ArrayList<MoodEvent>());
         recyclerFeed.setAdapter(moodEventAdapter);
 
         // Load data from Firestore instead of using dummy data
@@ -331,7 +331,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 });
     }
 
-    private void deleteMoodFromFirestore(String documentId, int position) {
+    public void deleteMoodFromFirestore(String documentId, int position) {
         // Show a confirmation dialog
         new AlertDialog.Builder(this)
                 .setTitle("Delete Mood")
@@ -421,143 +421,5 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         moodEventAdapter.updateMoodEvents(filteredMoodEvents);
     }
 
-    private class MoodEventAdapter extends RecyclerView.Adapter<MoodEventAdapter.MoodEventViewHolder> {
 
-        private final List<MoodEvent> moodEventList;
-        private List<MoodEvent> originalList;
-        private List<MoodEvent> currentList;
-
-        private final SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy • hh:mm:ss a", Locale.US);
-
-        MoodEventAdapter(List<MoodEvent> moodEventList) {
-            this.moodEventList = moodEventList;
-            this.originalList = new ArrayList<>(moodEventList);
-            this.currentList = new ArrayList<>(moodEventList);
-        }
-
-        public void updateMoodEvents(List<MoodEvent> newMoodEvents) {
-            moodEventList.clear();
-            moodEventList.addAll(newMoodEvents);
-            originalList = new ArrayList<>(newMoodEvents);
-            currentList = new ArrayList<>(newMoodEvents);
-            notifyDataSetChanged();
-        }
-
-        @NonNull
-        @Override
-        public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post, parent, false);
-            return new MoodEventViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull MoodEventViewHolder holder, int position) {
-            MoodEvent moodEvent = moodEventList.get(position);
-            holder.textTitle.setText(moodEvent.getTrigger());
-            holder.textSubtitle.setText(formatter.format(moodEvent.getDate()) + " • " + moodEvent.getMoodTitle());
-            Photograph photo = moodEvent.getPhotograph();
-            if (photo != null) {
-                holder.imagePost.setImageBitmap(photo.getBitmap());
-            } else {
-                holder.imagePost.setImageResource(R.drawable.demo_image);
-            }
-
-            // Set click listener for the menu button
-            holder.buttonPostMenu.setOnClickListener(v -> {
-                showPostMenu(v, position, moodEvent);
-            });
-        }
-
-        // Java
-        private void showPostMenu(View view, int position, MoodEvent moodEvent) {
-            // Create a popup menu without XML
-            PopupMenu popup = new PopupMenu(ProfilePage.this, view);
-
-            // Add menu items programmatically
-            Menu menu = popup.getMenu();
-            menu.add(0, 1, 0, "Edit");
-            menu.add(0, 2, 0, "Delete");
-
-            popup.setOnMenuItemClickListener(item -> {
-                int id = item.getItemId();
-                if (id == 1) { // Edit
-                    // Launch EditMoodActivity
-                    Intent intent = new Intent(ProfilePage.this, EditMoodActivity.class);
-                    intent.putExtra("selectedMood", moodEvent.getMoodTitle());
-                    intent.putExtra("selectedEmoji", moodEvent.getEmoji());
-                    intent.putExtra("trigger", moodEvent.getTrigger());
-                    intent.putExtra("socialSituation", moodEvent.getSocialSituation());
-                    intent.putExtra("intensity", moodEvent.getIntensity());
-                    intent.putExtra("timestamp", moodEvent.getTimestamp());
-                    intent.putExtra("photoUri", moodEvent.getPhotoUri());
-                    intent.putExtra("moodPosition", position);
-
-                    intent.putExtra("selectedMood", moodEvent.getMoodTitle());
-
-
-                    intent.putExtra("selectedEmoji", moodEvent.getEmoji());
-
-
-                    intent.putExtra("trigger", moodEvent.getTrigger());
-
-
-                    intent.putExtra("socialSituation", moodEvent.getSocialSituation());
-
-                    intent.putExtra("intensity", moodEvent.getIntensity());
-                    intent.putExtra("timestamp", moodEvent.getTimestamp());
-
-                    intent.putExtra("photoUri", moodEvent.getPhotoUri());
-                    intent.putExtra("moodPosition", position);
-                    startActivityForResult(intent, EDIT_MOOD_REQUEST_CODE);
-                    return true;
-                } else if (id == 2) { // Delete
-                    // Delete the mood
-                    deleteMoodFromFirestore(moodEvent.getDocumentId(), position);
-                    return true;
-                }
-                return false;
-            });
-
-            popup.show();
-        }
-        @Override
-        public int getItemCount() {
-            return moodEventList.size();
-        }
-
-        // Custom filter method
-        public void filter(String query) {
-            query = query.toLowerCase().trim();
-            currentList.clear();
-            if (query.isEmpty()) {
-                currentList.addAll(originalList);
-            } else {
-                for (MoodEvent moodEvent : originalList) {
-                    boolean titleMatches = moodEvent.getTrigger() != null && moodEvent.getTrigger().toLowerCase().contains(query);
-                    boolean subtitleMatches = moodEvent.getSubtitle() != null && moodEvent.getSubtitle().toLowerCase().contains(query);
-                    if (titleMatches || subtitleMatches) {
-                        currentList.add(moodEvent);
-                    }
-                }
-            }
-            // Update moodEventList since it's used for display
-            moodEventList.clear();
-            moodEventList.addAll(currentList);
-            notifyDataSetChanged();
-        }
-
-        class MoodEventViewHolder extends RecyclerView.ViewHolder {
-            ImageView imagePost;
-            TextView textTitle, textSubtitle;
-            ImageButton buttonPostMenu;
-
-            MoodEventViewHolder(@NonNull View itemView) {
-                super(itemView);
-                imagePost = itemView.findViewById(R.id.imagePost);
-                textTitle = itemView.findViewById(R.id.textTitle);
-                textSubtitle = itemView.findViewById(R.id.textSubtitle);
-                buttonPostMenu = itemView.findViewById(R.id.buttonPostMenu);
-            }
-        }
-    }
 }
