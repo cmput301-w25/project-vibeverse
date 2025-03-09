@@ -394,6 +394,24 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Handle the update button click with animation
         updateButton.setOnClickListener(view -> {
+
+            String newreasonWhy = reasonWhyInput.getText().toString().trim();
+
+            // Validate character count
+            if (newreasonWhy.length() > 20) {
+                reasonWhyInput.setError("Reason why must be 20 characters or less.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
+
+            // Validate word count
+            String[] words = newreasonWhy.split("\\s+");
+            if (words.length > 3) {
+                reasonWhyInput.setError("Reason why must be 3 words or less.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
+
             // Show updating toast
             Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
 
@@ -402,12 +420,14 @@ public class EditMoodActivity extends AppCompatActivity {
                     .alpha(0.8f)
                     .setDuration(200)
                     .withEndAction(() -> {
+
+
                         // Original code for handling the update
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("updatedMood", selectedMood);
                         resultIntent.putExtra("updatedEmoji", selectedEmoji);
-                        resultIntent.putExtra("updatedTrigger", triggerInput.getText().toString().trim());
                         resultIntent.putExtra("updatedReasonWhy", reasonWhyInput.getText().toString().trim());
+                        resultIntent.putExtra("updatedTrigger", triggerInput.getText().toString().trim());
                         resultIntent.putExtra("updatedSocialSituation", socialSituationInput.getSelectedItem().toString().trim());
                         resultIntent.putExtra("timestamp", new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault()).format(new Date()));
                         resultIntent.putExtra("moodPosition", moodPosition);

@@ -88,10 +88,9 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
         // Set the trigger as title if it exists, otherwise show the mood title
         String trigger = moodEvent.getTrigger();
-        if (trigger != null && !trigger.trim().isEmpty()) {
-            holder.textTitle.setText(trigger);
-        } else {
-            holder.textTitle.setText(moodEvent.getMoodTitle());
+        String reasonWhy = moodEvent.getReasonWhy();
+        if (reasonWhy != null && !reasonWhy.trim().isEmpty()) {
+            holder.textTitle.setText(reasonWhy);
         }
 
         // Set the subtitle (date and mood)

@@ -328,8 +328,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
 
                 // Update Firestore
-                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood, updatedReasonWhy,
-                        updatedTrigger, updatedSocialSituation, updatedIntensity, updatedPhotoUri);
+                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood, updatedTrigger,
+                        updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri);;
             }
 
 
