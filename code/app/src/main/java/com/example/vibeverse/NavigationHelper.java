@@ -5,10 +5,30 @@ import android.content.Intent;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+/**
+ * NavigationHelper provides utility methods to configure and handle
+ * bottom navigation in the application.
+ * <p>
+ * This class includes methods to set the appropriate navigation item as selected
+ * based on the current Activity and to handle navigation item selections by launching
+ * the corresponding Activity.
+ * </p>
+ */
 public class NavigationHelper {
 
+    /**
+     * Sets up the bottom navigation for the given activity.
+     * <p>
+     * This method selects the correct navigation item based on the current Activity,
+     * and sets a listener that launches the appropriate Activity when a navigation item is selected.
+     * It also prevents activity flickering during transitions and ensures only one instance
+     * of each Activity runs at a time.
+     * </p>
+     *
+     * @param activity            The current Activity.
+     * @param bottomNavigationView The BottomNavigationView to configure.
+     */
     public static void setupBottomNavigation(final Activity activity, BottomNavigationView bottomNavigationView) {
-
         // Set the correct item as selected based on current activity
         int currentItemId = getCurrentItemId(activity);
         bottomNavigationView.setSelectedItemId(currentItemId);
@@ -40,6 +60,13 @@ public class NavigationHelper {
             return false;
         });
     }
+
+    /**
+     * Determines the appropriate navigation item ID based on the current Activity.
+     *
+     * @param activity The current Activity.
+     * @return The resource ID of the navigation item corresponding to the Activity.
+     */
     private static int getCurrentItemId(Activity activity) {
         if (activity instanceof HomePage) {
             return R.id.nav_home;
