@@ -17,7 +17,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.vibeverse.FilterDialog;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.text.SimpleDateFormat;
@@ -57,7 +56,8 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         // Initialize sample data
         allPosts = new ArrayList<>();
         allPosts.add(new Post("Welcome to VibeVerse!", "HAPPY", R.drawable.demo_image, new Date()));
-        allPosts.add(new Post("First Post", "EXCITED", R.drawable.demo_image, new Date(System.currentTimeMillis() - 86400000)));
+        allPosts.add(new Post("First Post", "EXCITED", R.drawable.demo_image,
+                new Date(System.currentTimeMillis() - 86400000))); // 1 day old post
         // Add more sample posts as needed
 
         // Sort posts by date (newest first)
@@ -73,34 +73,59 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
             // Add your notification logic here
         });
 
-        // Set up filter button click listener
-        buttonFilter.setOnClickListener(v -> FilterDialog.show(HomePage.this, this));
+        // Set up filter button click listener (opens FilterDialog)
+        buttonFilter.setOnClickListener(v -> FilterDialog.show(HomePage.this, HomePage.this));
 
         // Set up search functionality
         editSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 postAdapter.filter(s.toString());
             }
-
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) { }
         });
 
-        // Navigation
+        // Bottom navigation
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         NavigationHelper.setupBottomNavigation(this, bottomNavigationView);
     }
 
+    /**
+     * THIS is the updated FilterDialog.FilterListener method
+     * with all new mood booleans.
+     */
     @Override
-    public void onFilterApplied(String timeFilter, boolean isHappy, boolean isSad, boolean isAfraid, boolean isConfused) {
-        applyFilters(timeFilter, isHappy, isSad, isAfraid, isConfused);
+    public void onFilterApplied(String timeFilter,
+                                boolean isHappy,
+                                boolean isSad,
+                                boolean isAngry,
+                                boolean isSurprised,
+                                boolean isAfraid,
+                                boolean isDisgusted,
+                                boolean isConfused,
+                                boolean isShameful) {
+
+        applyFilters(timeFilter,
+                isHappy, isSad, isAngry, isSurprised,
+                isAfraid, isDisgusted, isConfused, isShameful);
     }
 
-    private void applyFilters(String timeFilter, boolean isHappy, boolean isSad, boolean isAfraid, boolean isConfused) {
+    /**
+     * Apply local (client-side) filtering to the sample posts.
+     */
+    private void applyFilters(String timeFilter,
+                              boolean isHappy,
+                              boolean isSad,
+                              boolean isAngry,
+                              boolean isSurprised,
+                              boolean isAfraid,
+                              boolean isDisgusted,
+                              boolean isConfused,
+                              boolean isShameful) {
+
         List<Post> filteredPosts = new ArrayList<>();
         long currentTime = System.currentTimeMillis();
 
@@ -108,37 +133,70 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
             long postTime = post.date.getTime();
             boolean isWithinTime = false;
 
+            // Time filter
             switch (timeFilter) {
                 case "last_24_hours":
-                    isWithinTime = (currentTime - postTime) <= 86400000;
+                    isWithinTime = (currentTime - postTime) <= 86400000L;
                     break;
                 case "3Days":
-                    isWithinTime = (currentTime - postTime) <= 259200000;
+                    isWithinTime = (currentTime - postTime) <= 259200000L;
                     break;
                 case "last_week":
-                    isWithinTime = (currentTime - postTime) <= 604800000;
+                    isWithinTime = (currentTime - postTime) <= 604800000L;
                     break;
                 case "last_month":
                     isWithinTime = (currentTime - postTime) <= 2592000000L;
                     break;
                 case "all_time":
+                default:
                     isWithinTime = true;
-                    break;
             }
 
-            if (isWithinTime) {
-                if ((isHappy && post.mood.equals("HAPPY")) ||
-                        (isSad && post.mood.equals("SAD")) ||
-                        (isAfraid && post.mood.equals("AFRAID")) ||
-                        (isConfused && post.mood.equals("CONFUSED")) ||
-                        (!isHappy && !isSad && !isAfraid && !isConfused)) {
-                    filteredPosts.add(post);
-                }
+            if (!isWithinTime) {
+                continue;
+            }
+
+            // Mood filter
+            // Post.mood is uppercase in your sample data: "HAPPY", "EXCITED", etc.
+            // Check if it matches the selected moods.
+            boolean moodMatch = false;
+            String postMood = post.mood.toUpperCase(Locale.ROOT);
+
+            if (isHappy     && "HAPPY".equals(postMood))      moodMatch = true;
+            if (isSad       && "SAD".equals(postMood))        moodMatch = true;
+            if (isAngry     && "ANGRY".equals(postMood))      moodMatch = true;
+            if (isSurprised && "SURPRISED".equals(postMood))  moodMatch = true;
+            if (isAfraid    && "AFRAID".equals(postMood))     moodMatch = true;
+            if (isDisgusted && "DISGUSTED".equals(postMood))  moodMatch = true;
+            if (isConfused  && "CONFUSED".equals(postMood))   moodMatch = true;
+            if (isShameful  && "SHAMEFUL".equals(postMood))   moodMatch = true;
+
+            // If NO moods are selected, show all.
+            if (!isHappy && !isSad && !isAngry && !isSurprised &&
+                    !isAfraid && !isDisgusted && !isConfused && !isShameful) {
+                moodMatch = true;
+            }
+
+            if (moodMatch) {
+                filteredPosts.add(post);
             }
         }
+
         postAdapter.updatePosts(filteredPosts);
     }
 
+    /**
+     * You must still implement the second method of the FilterDialog.FilterListener
+     * interface, even if it's empty.
+     */
+    @Override
+    public void onFilteredResults(List<MoodEvent> results) {
+        // Not used in HomePage; can remain empty
+    }
+
+    /**
+     * Simple Post class to hold sample data.
+     */
     private static class Post {
         String title;
         String mood;
@@ -153,10 +211,13 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         }
     }
 
+    /**
+     * RecyclerView Adapter to display your sample posts.
+     */
     private class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
         private final List<Post> postList;
-        private List<Post> originalList;
-        private List<Post> currentList;
+        private final List<Post> originalList;
+        private final List<Post> currentList;
         private final SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy • hh:mm:ss a", Locale.US);
 
         PostAdapter(List<Post> postList) {
@@ -169,12 +230,21 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
             postList.clear();
             postList.addAll(newPosts);
             notifyDataSetChanged();
+
+            // Update "originalList" and "currentList" if you want
+            // further search or filter changes to reflect these updates.
+            // (Optional, depends on your logic.)
+            originalList.clear();
+            originalList.addAll(newPosts);
+            currentList.clear();
+            currentList.addAll(newPosts);
         }
 
         @NonNull
         @Override
         public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post, parent, false);
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_post, parent, false);
             return new PostViewHolder(view);
         }
 
@@ -194,15 +264,19 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         public void filter(String query) {
             query = query.toLowerCase().trim();
             currentList.clear();
+
             if (query.isEmpty()) {
+                // If empty, restore full list
                 currentList.addAll(originalList);
             } else {
+                // Otherwise, match the query with the post title
                 for (Post post : originalList) {
                     if (post.title.toLowerCase().contains(query)) {
                         currentList.add(post);
                     }
                 }
             }
+
             postList.clear();
             postList.addAll(currentList);
             notifyDataSetChanged();
