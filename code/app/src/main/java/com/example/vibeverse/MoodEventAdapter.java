@@ -88,10 +88,9 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
         // Set the trigger as title if it exists, otherwise show the mood title
         String trigger = moodEvent.getTrigger();
-        if (trigger != null && !trigger.trim().isEmpty()) {
-            holder.textTitle.setText(trigger);
-        } else {
-            holder.textTitle.setText(moodEvent.getMoodTitle());
+        String reasonWhy = moodEvent.getReasonWhy();
+        if (reasonWhy != null && !reasonWhy.trim().isEmpty()) {
+            holder.textTitle.setText(reasonWhy);
         }
 
         // Set the subtitle (date and mood)
@@ -306,10 +305,15 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
                 intent.putExtra("selectedMood", moodEvent.getMoodTitle());
                 intent.putExtra("selectedEmoji", moodEvent.getEmoji());
                 intent.putExtra("trigger", moodEvent.getTrigger());
+                intent.putExtra("reasonWhy", moodEvent.getReasonWhy());
                 intent.putExtra("socialSituation", moodEvent.getSocialSituation());
                 intent.putExtra("intensity", moodEvent.getIntensity());
                 intent.putExtra("timestamp", moodEvent.getTimestamp());
                 intent.putExtra("photoUri", moodEvent.getPhotoUri());
+                intent.putExtra("photoDateTaken", moodEvent.getPhotoDate());
+                intent.putExtra("photoLocation", moodEvent.getPhotoLocation());
+                intent.putExtra("photoSizeKB", moodEvent.getPhotoSize());
+
                 intent.putExtra("moodPosition", position);
                 ((ProfilePage) context).startActivityForResult(intent, ProfilePage.EDIT_MOOD_REQUEST_CODE);
                 return true;

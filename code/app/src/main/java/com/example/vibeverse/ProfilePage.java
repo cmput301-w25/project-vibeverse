@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -58,6 +59,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> allMoodEvents;
     private EditText editSearch;
+
+    private TextView textName, textUsername, textBioContent;
+    private ImageView profilePicture;
 
     private Button logoutButton;
     private BottomNavigationView bottomNavigationView;
@@ -89,7 +93,18 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 userId = java.util.UUID.randomUUID().toString();
                 prefs.edit().putString("device_id", userId).apply();
             }
+
+
         }
+
+        // **Find your TextViews & ImageView from XML**
+        textName = findViewById(R.id.textName);
+        textUsername = findViewById(R.id.textUsername);
+        textBioContent = findViewById(R.id.textBioContent);
+        profilePicture = findViewById(R.id.profilePicture);
+
+        // Then call a helper method to load the profile
+        loadUserProfile();
         // Logout button
         logoutButton = findViewById(R.id.buttonLogout);
 
@@ -247,6 +262,44 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 });
     }
 
+
+    private void loadUserProfile() {
+        // Make sure you have the correct path: "users" -> document(userId)
+        db.collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Read the fields from the Firestore document
+                        String fullName = documentSnapshot.getString("fullName");
+                        String username = documentSnapshot.getString("username");
+                        String bio = documentSnapshot.getString("bio");
+                        String profilePicUri = documentSnapshot.getString("profilePicUri");
+
+                        // Populate the TextViews
+                        if (fullName != null) textName.setText(fullName);
+                        if (username != null) textUsername.setText(username);
+                        if (bio != null) textBioContent.setText(bio);
+
+                        // If you have a profile picture URL, load it using Glide (or Picasso).
+                        if (profilePicUri != null && !profilePicUri.isEmpty()) {
+                            // Make sure you have Glide in your Gradle dependencies
+                            // implementation 'com.github.bumptech.glide:glide:4.14.2'
+                            Glide.with(ProfilePage.this)
+                                    .load(profilePicUri)
+                                    .placeholder(R.drawable.user_icon) // fallback placeholder
+                                    .error(R.drawable.user_icon)       // error placeholder
+                                    .into(profilePicture);
+                        }
+                    } else {
+                        Toast.makeText(ProfilePage.this, "User profile does not exist.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ProfilePage.this, "Failed to load user profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -263,6 +316,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             String updatedMood = data.getStringExtra("updatedMood");
             String updatedEmoji = data.getStringExtra("updatedEmoji");
             String updatedTrigger = data.getStringExtra("updatedTrigger");
+            String updatedReasonWhy = data.getStringExtra("updatedReasonWhy");
             String updatedSocialSituation = data.getStringExtra("updatedSocialSituation");
             int updatedIntensity = data.getIntExtra("updatedIntensity", 5);
             String timestamp = data.getStringExtra("timestamp");
@@ -274,8 +328,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
 
                 // Update Firestore
-                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood,
-                        updatedTrigger, updatedSocialSituation, updatedIntensity, updatedPhotoUri);
+                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood, updatedTrigger,
+                        updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri);;
             }
 
 
@@ -286,7 +340,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     }
 
     private void updateMoodInFirestore(String documentId, String emoji, String mood,
-                                       String trigger, String socialSituation,
+                                       String trigger, String reasonWhy, String socialSituation,
                                        int intensity, String photoUri) {
         // Show loading indicator
         if (progressLoading != null) {
@@ -301,6 +355,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         updatedMood.put("trigger", trigger);
         updatedMood.put("socialSituation", socialSituation);
         updatedMood.put("intensity", intensity);
+        updatedMood.put("reasonWhy", reasonWhy);
 
         // Handle photo if it exists
         if (photoUri != null && !photoUri.equals("N/A")) {
