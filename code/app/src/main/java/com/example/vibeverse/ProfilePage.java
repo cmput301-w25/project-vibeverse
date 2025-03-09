@@ -5,18 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.PopupMenu;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,7 +17,13 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
@@ -41,38 +40,71 @@ import java.util.Locale;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * ProfilePage displays the user's mood feed and profile-related functionalities.
+ * <p>
+ * This activity retrieves and displays a list of MoodEvent objects from Firestore.
+ * It allows the user to filter the feed using a FilterDialog and perform a simple
+ * client-side search via an EditText. It also includes a logout button and bottom
+ * navigation for app-wide navigation.
+ * </p>
+ */
 public class ProfilePage extends AppCompatActivity implements FilterDialog.FilterListener {
 
+    /** Request code used when editing a mood event. */
     public static final int EDIT_MOOD_REQUEST_CODE = 1001;
     private static final String TAG = "ProfilePage";
 
+    /** RecyclerView to display the mood feed. */
     private RecyclerView recyclerFeed;
+    /** Adapter for the RecyclerView displaying MoodEvent objects. */
     private MoodEventAdapter moodEventAdapter;
+    /** List of all MoodEvent objects. */
     private List<MoodEvent> allMoodEvents;
+    /** EditText for performing a search within the mood feed. */
     private EditText editSearch;
+    /** View displayed when there are no mood entries. */
     private View emptyStateView;
+    /** Button to logout the user. */
     private Button logoutButton;
+    /** BottomNavigationView for navigating between app sections. */
     private BottomNavigationView bottomNavigationView;
+    /** Button to open the FilterDialog. */
     private ImageButton buttonFilter;
+    /** ProgressBar indicating loading state. */
     private ProgressBar progressLoading;
+    /** Firestore database instance. */
     private FirebaseFirestore db;
+    /** Firebase Authentication instance. */
     private FirebaseAuth mAuth;
+    /** ID of the current user. */
     private String userId;
 
+    /** Formatter for parsing and formatting timestamps. */
     private final SimpleDateFormat sourceFormat =
             new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
 
+    /**
+     * Called when the activity is created.
+     * <p>
+     * Initializes UI components, configures RecyclerView and bottom navigation,
+     * loads the current mood feed from Firestore, and sets up search and filter functionality.
+     * </p>
+     *
+     * @param savedInstanceState Bundle containing saved state data, if any.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile_page);
 
+        // Initialize Firebase Auth and Firestore instances.
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         if (mAuth.getCurrentUser() != null) {
             userId = mAuth.getCurrentUser().getUid();
         } else {
-            // If not logged in, we use a device-based ID (as a fallback)
+            // If not logged in, use a device-based ID as fallback.
             SharedPreferences prefs = getSharedPreferences("VibeVersePrefs", Context.MODE_PRIVATE);
             userId = prefs.getString("device_id", null);
             if (userId == null) {
@@ -81,6 +113,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             }
         }
 
+        // Set up logout button to sign out the user.
         logoutButton = findViewById(R.id.buttonLogout);
         logoutButton.setOnClickListener(v -> {
             mAuth.signOut();
@@ -88,19 +121,22 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             finish();
         });
 
+        // Set up bottom navigation.
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         NavigationHelper.setupBottomNavigation(this, bottomNavigationView);
 
+        // Set up RecyclerView.
         recyclerFeed = findViewById(R.id.recyclerFeed);
         recyclerFeed.setLayoutManager(new LinearLayoutManager(this));
         recyclerFeed.setHasFixedSize(true);
 
+        // Initialize search and filter UI elements.
         editSearch = findViewById(R.id.editSearch);
         buttonFilter = findViewById(R.id.buttonFilter);
         emptyStateView = findViewById(R.id.emptyStateView);
         progressLoading = findViewById(R.id.progressLoading);
 
-        // In case progressLoading is null in layout, create it programmatically
+        // If progressLoading is not defined in the layout, create it programmatically.
         if (progressLoading == null) {
             progressLoading = new ProgressBar(this);
             progressLoading.setId(View.generateViewId());
@@ -114,19 +150,20 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             parent.addView(progressLoading, params);
         }
 
+        // Initialize the list and adapter for mood events.
         allMoodEvents = new ArrayList<>();
         moodEventAdapter = new MoodEventAdapter(this, new ArrayList<>());
         recyclerFeed.setAdapter(moodEventAdapter);
 
-        // Initial load from Firestore
+        // Load mood events from Firestore.
         loadMoodsFromFirestore();
 
-        // Open Filter dialog
+        // Open the FilterDialog when the filter button is clicked.
         buttonFilter.setOnClickListener(v ->
                 FilterDialog.show(ProfilePage.this, ProfilePage.this)
         );
 
-        // Basic search filter (client-side)
+        // Set up search functionality for client-side filtering.
         editSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -134,11 +171,19 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 moodEventAdapter.filter(s.toString());
             }
+
             @Override
             public void afterTextChanged(Editable s) {}
         });
     }
 
+    /**
+     * Loads mood events from Firestore.
+     * <p>
+     * Retrieves the "moods" subcollection for the current user, orders by timestamp (descending),
+     * and converts each document into a MoodEvent. Updates the adapter and handles empty state UI.
+     * </p>
+     */
     private void loadMoodsFromFirestore() {
         if (progressLoading != null) {
             progressLoading.setVisibility(View.VISIBLE);
@@ -213,14 +258,34 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 });
     }
 
+    /**
+     * Called when the activity resumes.
+     * <p>
+     * Reloads the mood events from Firestore to update the feed.
+     * </p>
+     */
     @Override
     public void onResume() {
         super.onResume();
-        // Reload the entire list each time we resume
         loadMoodsFromFirestore();
     }
 
-    // 1) This method is required by the new interface (even if you don't use it here)
+    /**
+     * Callback method from FilterDialog.FilterListener.
+     * <p>
+     * This method is required by the interface but is not used in this implementation.
+     * </p>
+     *
+     * @param timeFilter   The time filter string.
+     * @param isHappy      True if "Happy" is selected.
+     * @param isSad        True if "Sad" is selected.
+     * @param isAngry      True if "Angry" is selected.
+     * @param isSurprised  True if "Surprised" is selected.
+     * @param isAfraid     True if "Afraid" is selected.
+     * @param isDisgusted  True if "Disgusted" is selected.
+     * @param isConfused   True if "Confused" is selected.
+     * @param isShameful   True if "Shameful" is selected.
+     */
     @Override
     public void onFilterApplied(String timeFilter,
                                 boolean isHappy,
@@ -231,17 +296,32 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                                 boolean isDisgusted,
                                 boolean isConfused,
                                 boolean isShameful) {
-        // Optionally do something here if you want local filtering logic
-        // (If not needed, leave it empty)
     }
 
-    // 2) This method receives the final filtered list from Firestore
+    /**
+     * Callback method that receives the final filtered list of MoodEvent objects from Firestore.
+     * <p>
+     * Updates the RecyclerView adapter with the filtered data.
+     * </p>
+     *
+     * @param filteredMoods The list of filtered MoodEvent objects.
+     */
     @Override
     public void onFilteredResults(List<MoodEvent> filteredMoods) {
-        // Update your recycler with the final filtered data
         moodEventAdapter.updateMoodEvents(filteredMoods);
     }
 
+    /**
+     * Handles the result from EditMoodActivity.
+     * <p>
+     * If the mood was updated, retrieves the updated details and updates the corresponding
+     * MoodEvent in Firestore.
+     * </p>
+     *
+     * @param requestCode The request code for the activity result.
+     * @param resultCode  The result code returned by the activity.
+     * @param data        The Intent containing updated mood details.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -269,6 +349,20 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         }
     }
 
+    /**
+     * Updates a MoodEvent document in Firestore with the provided updated details.
+     * <p>
+     * Updates fields such as emoji, mood, trigger, social situation, intensity, and photo URI.
+     * </p>
+     *
+     * @param documentId      The Firestore document ID of the MoodEvent.
+     * @param emoji           The updated emoji.
+     * @param mood            The updated mood title.
+     * @param trigger         The updated trigger.
+     * @param socialSituation The updated social situation.
+     * @param intensity       The updated intensity level.
+     * @param photoUri        The updated photo URI.
+     */
     private void updateMoodInFirestore(
             String documentId,
             String emoji,
@@ -321,6 +415,15 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 });
     }
 
+    /**
+     * Deletes a MoodEvent document from Firestore.
+     * <p>
+     * Displays a confirmation dialog before deletion. If confirmed, deletes the MoodEvent and updates the adapter.
+     * </p>
+     *
+     * @param documentId The Firestore document ID of the MoodEvent to delete.
+     * @param position   The position of the MoodEvent in the list.
+     */
     public void deleteMoodFromFirestore(String documentId, int position) {
         new AlertDialog.Builder(this)
                 .setTitle("Delete Mood")
