@@ -31,8 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-        button = findViewById(R.id.logout_button);
-        textView = findViewById(R.id.userDetails);
+//        button = findViewById(R.id.logout_button);
+//        textView = findViewById(R.id.userDetails);
         user = auth.getCurrentUser();
 
         if (user != null) {
@@ -63,12 +63,12 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
-        button.setOnClickListener(view -> {
-            auth.signOut();
-            Intent intent = new Intent(getApplicationContext(), Login.class);
-            startActivity(intent);
-            finish();
-
-        });
+//        button.setOnClickListener(view -> {
+//            auth.signOut();
+//            Intent intent = new Intent(getApplicationContext(), Login.class);
+//            startActivity(intent);
+//            finish();
+//
+//        });
     }
 }
