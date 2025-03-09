@@ -79,6 +79,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
                 intent.putExtra("selectedMood", moodEvent.getMoodTitle());
                 intent.putExtra("selectedEmoji", moodEvent.getEmoji());
                 intent.putExtra("trigger", moodEvent.getTrigger());
+                intent.putExtra("reasonWhy", moodEvent.getReasonWhy());
                 intent.putExtra("socialSituation", moodEvent.getSocialSituation());
                 intent.putExtra("intensity", moodEvent.getIntensity());
                 intent.putExtra("timestamp", moodEvent.getTimestamp());

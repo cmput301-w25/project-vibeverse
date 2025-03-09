@@ -28,6 +28,8 @@ public class MoodEvent implements Serializable {
 
     private String trigger;
 
+    private String reasonWhy;
+
     private String documentId; // Firestore document ID
     private String socialSituation;
     private String timestamp; // Formatted timestamp
@@ -72,7 +74,8 @@ public class MoodEvent implements Serializable {
         this.date = date;
     }
 
-    public MoodEvent(String moodTitle, String moodEmoji, String trigger, String socialSituation) {
+    public MoodEvent(String moodTitle, String moodEmoji, String reasonWhy, String trigger, String socialSituation) {
+        this.reasonWhy = reasonWhy;
         this.moodEmoji = moodEmoji;
         this.moodTitle = moodTitle;
         this.trigger = trigger;
@@ -81,7 +84,8 @@ public class MoodEvent implements Serializable {
     }
 
 
-    public MoodEvent(String moodTitle, String moodEmoji, String trigger, String socialSituation, Photograph photograph) {
+    public MoodEvent(String moodTitle, String moodEmoji, String reasonWhy,  String trigger, String socialSituation, Photograph photograph) {
+        this.reasonWhy = reasonWhy;
         this.moodTitle = moodTitle;
         this.moodEmoji = moodEmoji;
         this.trigger = trigger;
@@ -97,6 +101,7 @@ public class MoodEvent implements Serializable {
         moodMap.put("socialSituation", this.socialSituation);
         moodMap.put("timestamp", this.timestamp);
         moodMap.put("intensity", this.intensity);
+        moodMap.put("reasonWhy", this.reasonWhy);
 
         // Handle emoji and mood text extraction
         moodMap.put("emoji", getEmoji());
@@ -128,10 +133,11 @@ public class MoodEvent implements Serializable {
 
         String trigger = (String) data.get("trigger");
         String socialSituation = (String) data.get("socialSituation");
+        String reasonWhy = (String) data.get("reasonWhy");
 
         Log.d("fromMapDebug", "photoUri field: " + data.get("photoUri"));
 
-        MoodEvent moodEvent = new MoodEvent(moodTitle, moodEmoji, trigger, socialSituation);
+        MoodEvent moodEvent = new MoodEvent(moodTitle, moodEmoji, reasonWhy, trigger, socialSituation);
 
         // Set the timestamp if it exists
         if (data.containsKey("timestamp")) {
@@ -272,6 +278,14 @@ public class MoodEvent implements Serializable {
      */
     public void setIntensity(int intensity) {
         this.intensity = intensity;
+    }
+
+    public String getReasonWhy() {
+        return reasonWhy;
+    }
+
+    public void setReasonWhy(String reasonWhy) {
+        this.reasonWhy = reasonWhy;
     }
 
     /**

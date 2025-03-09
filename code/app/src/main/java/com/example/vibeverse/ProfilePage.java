@@ -263,6 +263,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             String updatedMood = data.getStringExtra("updatedMood");
             String updatedEmoji = data.getStringExtra("updatedEmoji");
             String updatedTrigger = data.getStringExtra("updatedTrigger");
+            String updatedReasonWhy = data.getStringExtra("updatedReasonWhy");
             String updatedSocialSituation = data.getStringExtra("updatedSocialSituation");
             int updatedIntensity = data.getIntExtra("updatedIntensity", 5);
             String timestamp = data.getStringExtra("timestamp");
@@ -274,7 +275,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
 
                 // Update Firestore
-                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood,
+                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood, updatedReasonWhy,
                         updatedTrigger, updatedSocialSituation, updatedIntensity, updatedPhotoUri);
             }
 
@@ -286,7 +287,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     }
 
     private void updateMoodInFirestore(String documentId, String emoji, String mood,
-                                       String trigger, String socialSituation,
+                                       String trigger, String reasonWhy, String socialSituation,
                                        int intensity, String photoUri) {
         // Show loading indicator
         if (progressLoading != null) {
@@ -301,6 +302,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         updatedMood.put("trigger", trigger);
         updatedMood.put("socialSituation", socialSituation);
         updatedMood.put("intensity", intensity);
+        updatedMood.put("reasonWhy", reasonWhy);
 
         // Handle photo if it exists
         if (photoUri != null && !photoUri.equals("N/A")) {
