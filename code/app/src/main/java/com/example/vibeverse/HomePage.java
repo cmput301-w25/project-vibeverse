@@ -17,7 +17,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.vibeverse.FilterDialog;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.text.SimpleDateFormat;
@@ -27,80 +26,159 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * HomePage is an Activity that displays a simple feed of posts.
+ * <p>
+ * It shows sample posts in a RecyclerView and provides client-side filtering
+ * based on time range and mood selection through the {@link FilterDialog}.
+ * The activity also includes a search box and bottom navigation.
+ * </p>
+ */
 public class HomePage extends AppCompatActivity implements FilterDialog.FilterListener {
 
+    /** RecyclerView displaying the feed of posts. */
     private RecyclerView recyclerFeed;
+    /** Button to access notifications (logic to be implemented). */
     private ImageButton buttonNotification;
+    /** BottomNavigationView for app-wide navigation. */
     private BottomNavigationView bottomNavigationView;
+    /** Button to open the FilterDialog for filtering posts. */
     private ImageButton buttonFilter;
+    /** Adapter for displaying posts in the RecyclerView. */
     private PostAdapter postAdapter;
+    /** List of all posts (sample data). */
     private List<Post> allPosts;
+    /** EditText for searching posts by title. */
     private EditText editSearch;
+    /** Logo image (optional decoration). */
     private ImageView logoImage;
 
+    /**
+     * Called when the Activity is created.
+     * <p>
+     * Initializes UI components, loads sample post data, sets up RecyclerView
+     * and bottom navigation, and configures search and filter functionality.
+     * </p>
+     *
+     * @param savedInstanceState Bundle containing saved state data.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_page);
 
-        // Initialize views
+        // Initialize views from layout
         recyclerFeed = findViewById(R.id.recyclerFeed);
         buttonNotification = findViewById(R.id.buttonNotification);
         buttonFilter = findViewById(R.id.buttonFilter);
         editSearch = findViewById(R.id.editSearch);
         logoImage = findViewById(R.id.logoImage);
 
-        // Set up RecyclerView
+        // Set up RecyclerView with a linear layout manager
         recyclerFeed.setLayoutManager(new LinearLayoutManager(this));
         recyclerFeed.setHasFixedSize(true);
 
-        // Initialize sample data
+        // Initialize sample post data
         allPosts = new ArrayList<>();
         allPosts.add(new Post("Welcome to VibeVerse!", "HAPPY", R.drawable.demo_image, new Date()));
-        allPosts.add(new Post("First Post", "EXCITED", R.drawable.demo_image, new Date(System.currentTimeMillis() - 86400000)));
+        allPosts.add(new Post("First Post", "EXCITED", R.drawable.demo_image,
+                new Date(System.currentTimeMillis() - 86400000))); // 1 day old post
         // Add more sample posts as needed
 
         // Sort posts by date (newest first)
         Collections.sort(allPosts, (post1, post2) -> post2.date.compareTo(post1.date));
 
-        // Set up adapter
+        // Initialize adapter with a copy of the sample data
         postAdapter = new PostAdapter(new ArrayList<>(allPosts));
         recyclerFeed.setAdapter(postAdapter);
 
-        // Set up notification button click listener
+        // Set up notification button click listener (stub)
         buttonNotification.setOnClickListener(v -> {
             // Handle notification button click
             // Add your notification logic here
         });
 
-        // Set up filter button click listener
-        buttonFilter.setOnClickListener(v -> FilterDialog.show(HomePage.this, this));
+        // Set up filter button to open the FilterDialog
+        buttonFilter.setOnClickListener(v -> FilterDialog.show(HomePage.this, HomePage.this));
 
-        // Set up search functionality
+        // Set up search functionality to filter posts as user types
         editSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 postAdapter.filter(s.toString());
             }
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s) { }
         });
 
-        // Navigation
+        // Set up bottom navigation using the NavigationHelper utility class
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         NavigationHelper.setupBottomNavigation(this, bottomNavigationView);
     }
 
+    /**
+     * Callback method from FilterDialog.FilterListener.
+     * <p>
+     * This method is called when the user applies filters in the FilterDialog.
+     * It invokes a client-side filter to update the displayed posts.
+     * </p>
+     *
+     * @param timeFilter   The time filter string (e.g., "last_24_hours").
+     * @param isHappy      True if "Happy" is selected.
+     * @param isSad        True if "Sad" is selected.
+     * @param isAngry      True if "Angry" is selected.
+     * @param isSurprised  True if "Surprised" is selected.
+     * @param isAfraid     True if "Afraid" is selected.
+     * @param isDisgusted  True if "Disgusted" is selected.
+     * @param isConfused   True if "Confused" is selected.
+     * @param isShameful   True if "Shameful" is selected.
+     */
     @Override
-    public void onFilterApplied(String timeFilter, boolean isHappy, boolean isSad, boolean isAfraid, boolean isConfused) {
-        applyFilters(timeFilter, isHappy, isSad, isAfraid, isConfused);
+    public void onFilterApplied(String timeFilter,
+                                boolean isHappy,
+                                boolean isSad,
+                                boolean isAngry,
+                                boolean isSurprised,
+                                boolean isAfraid,
+                                boolean isDisgusted,
+                                boolean isConfused,
+                                boolean isShameful) {
+        applyFilters(timeFilter,
+                isHappy, isSad, isAngry, isSurprised,
+                isAfraid, isDisgusted, isConfused, isShameful);
     }
 
-    private void applyFilters(String timeFilter, boolean isHappy, boolean isSad, boolean isAfraid, boolean isConfused) {
+    /**
+     * Applies local (client-side) filtering to the sample posts.
+     * <p>
+     * Filters posts based on the provided time filter and mood selections.
+     * Posts that do not fall within the specified time range or do not match the
+     * selected moods are excluded from the displayed list.
+     * </p>
+     *
+     * @param timeFilter   The time filter string.
+     * @param isHappy      True if "Happy" is selected.
+     * @param isSad        True if "Sad" is selected.
+     * @param isAngry      True if "Angry" is selected.
+     * @param isSurprised  True if "Surprised" is selected.
+     * @param isAfraid     True if "Afraid" is selected.
+     * @param isDisgusted  True if "Disgusted" is selected.
+     * @param isConfused   True if "Confused" is selected.
+     * @param isShameful   True if "Shameful" is selected.
+     */
+    private void applyFilters(String timeFilter,
+                              boolean isHappy,
+                              boolean isSad,
+                              boolean isAngry,
+                              boolean isSurprised,
+                              boolean isAfraid,
+                              boolean isDisgusted,
+                              boolean isConfused,
+                              boolean isShameful) {
+
         List<Post> filteredPosts = new ArrayList<>();
         long currentTime = System.currentTimeMillis();
 
@@ -108,43 +186,90 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
             long postTime = post.date.getTime();
             boolean isWithinTime = false;
 
+            // Apply time filter based on the provided filter string
             switch (timeFilter) {
                 case "last_24_hours":
-                    isWithinTime = (currentTime - postTime) <= 86400000;
+                    isWithinTime = (currentTime - postTime) <= 86400000L;
                     break;
                 case "3Days":
-                    isWithinTime = (currentTime - postTime) <= 259200000;
+                    isWithinTime = (currentTime - postTime) <= 259200000L;
                     break;
                 case "last_week":
-                    isWithinTime = (currentTime - postTime) <= 604800000;
+                    isWithinTime = (currentTime - postTime) <= 604800000L;
                     break;
                 case "last_month":
                     isWithinTime = (currentTime - postTime) <= 2592000000L;
                     break;
                 case "all_time":
+                default:
                     isWithinTime = true;
-                    break;
             }
 
-            if (isWithinTime) {
-                if ((isHappy && post.mood.equals("HAPPY")) ||
-                        (isSad && post.mood.equals("SAD")) ||
-                        (isAfraid && post.mood.equals("AFRAID")) ||
-                        (isConfused && post.mood.equals("CONFUSED")) ||
-                        (!isHappy && !isSad && !isAfraid && !isConfused)) {
-                    filteredPosts.add(post);
-                }
+            if (!isWithinTime) {
+                continue;
+            }
+
+            // Apply mood filter: check if the post's mood (in uppercase) matches any selected mood
+            boolean moodMatch = false;
+            String postMood = post.mood.toUpperCase(Locale.ROOT);
+
+            if (isHappy     && "HAPPY".equals(postMood))      moodMatch = true;
+            if (isSad       && "SAD".equals(postMood))        moodMatch = true;
+            if (isAngry     && "ANGRY".equals(postMood))      moodMatch = true;
+            if (isSurprised && "SURPRISED".equals(postMood))  moodMatch = true;
+            if (isAfraid    && "AFRAID".equals(postMood))     moodMatch = true;
+            if (isDisgusted && "DISGUSTED".equals(postMood))  moodMatch = true;
+            if (isConfused  && "CONFUSED".equals(postMood))   moodMatch = true;
+            if (isShameful  && "SHAMEFUL".equals(postMood))   moodMatch = true;
+
+            // If no mood checkboxes are selected, then show all posts
+            if (!isHappy && !isSad && !isAngry && !isSurprised &&
+                    !isAfraid && !isDisgusted && !isConfused && !isShameful) {
+                moodMatch = true;
+            }
+
+            if (moodMatch) {
+                filteredPosts.add(post);
             }
         }
+
         postAdapter.updatePosts(filteredPosts);
     }
 
+    /**
+     * Callback method from FilterDialog.FilterListener.
+     * <p>
+     * This method is required by the FilterListener interface but is not used in HomePage.
+     * </p>
+     *
+     * @param results The list of filtered MoodEvent objects.
+     */
+    @Override
+    public void onFilteredResults(List<MoodEvent> results) {
+        // Not used in HomePage; can remain empty
+    }
+
+    /**
+     * Simple Post class representing a sample post.
+     */
     private static class Post {
+        /** Title of the post. */
         String title;
+        /** Mood associated with the post (e.g., "HAPPY", "EXCITED"). */
         String mood;
+        /** Resource ID for an image associated with the post. */
         int imageResId;
+        /** Date the post was created. */
         Date date;
 
+        /**
+         * Constructs a new Post.
+         *
+         * @param title     The post title.
+         * @param mood      The mood associated with the post.
+         * @param imageResId The image resource ID.
+         * @param date      The creation date.
+         */
         Post(String title, String mood, int imageResId, Date date) {
             this.title = title;
             this.mood = mood;
@@ -153,28 +278,52 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         }
     }
 
+    /**
+     * RecyclerView Adapter for displaying Post objects.
+     */
     private class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
+        /** List of posts currently displayed. */
         private final List<Post> postList;
-        private List<Post> originalList;
-        private List<Post> currentList;
+        /** Original full list of posts. */
+        private final List<Post> originalList;
+        /** List used for filtering results. */
+        private final List<Post> currentList;
+        /** Formatter for displaying the post date and time. */
         private final SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy • hh:mm:ss a", Locale.US);
 
+        /**
+         * Constructs a new PostAdapter.
+         *
+         * @param postList The initial list of posts.
+         */
         PostAdapter(List<Post> postList) {
             this.postList = postList;
             this.originalList = new ArrayList<>(postList);
             this.currentList = new ArrayList<>(postList);
         }
 
+        /**
+         * Updates the adapter with a new list of posts.
+         *
+         * @param newPosts The new list of posts.
+         */
         public void updatePosts(List<Post> newPosts) {
             postList.clear();
             postList.addAll(newPosts);
             notifyDataSetChanged();
+
+            // Optionally update the original and current lists as well.
+            originalList.clear();
+            originalList.addAll(newPosts);
+            currentList.clear();
+            currentList.addAll(newPosts);
         }
 
         @NonNull
         @Override
         public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post, parent, false);
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item_post, parent, false);
             return new PostViewHolder(view);
         }
 
@@ -191,27 +340,51 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
             return postList.size();
         }
 
+        /**
+         * Filters the list of posts based on a query string.
+         * <p>
+         * The query is compared against the post titles.
+         * </p>
+         *
+         * @param query The search query.
+         */
         public void filter(String query) {
             query = query.toLowerCase().trim();
             currentList.clear();
+
             if (query.isEmpty()) {
+                // If query is empty, restore the full list.
                 currentList.addAll(originalList);
             } else {
+                // Otherwise, filter posts by matching the query with the title.
                 for (Post post : originalList) {
                     if (post.title.toLowerCase().contains(query)) {
                         currentList.add(post);
                     }
                 }
             }
+
             postList.clear();
             postList.addAll(currentList);
             notifyDataSetChanged();
         }
 
+        /**
+         * ViewHolder class for a Post item.
+         */
         class PostViewHolder extends RecyclerView.ViewHolder {
+            /** ImageView for the post image. */
             ImageView imagePost;
-            TextView textTitle, textSubtitle;
+            /** TextView for the post title. */
+            TextView textTitle;
+            /** TextView for the post subtitle. */
+            TextView textSubtitle;
 
+            /**
+             * Constructs a new PostViewHolder.
+             *
+             * @param itemView The view representing a single post.
+             */
             PostViewHolder(@NonNull View itemView) {
                 super(itemView);
                 imagePost = itemView.findViewById(R.id.imagePost);
