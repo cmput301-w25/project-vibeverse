@@ -58,9 +58,14 @@ public class MainActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
+//        button = findViewById(R.id.logout_button);
+//        textView = findViewById(R.id.userDetails);
+
+
         // Initialize UI elements
         button = findViewById(R.id.logout_button);
         textView = findViewById(R.id.userDetails);
+
         user = auth.getCurrentUser();
 
         if (user != null) {
@@ -90,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
             finish();
         }
 
+
         // Set up logout button click listener
         button.setOnClickListener(view -> {
             auth.signOut();
@@ -97,5 +103,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+
     }
 }

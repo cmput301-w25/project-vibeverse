@@ -81,6 +81,8 @@ public class UserDetails extends AppCompatActivity {
      * The currently authenticated FirebaseUser.
      */
     FirebaseUser user;
+    private TextView usernameValidationText;
+    private boolean isUsernameValid = false;
 
     /**
      * Request codes for image capture and selection.
@@ -133,6 +135,7 @@ public class UserDetails extends AppCompatActivity {
         continueButton = findViewById(R.id.continueButton);
         profilePicturePlaceholder = findViewById(R.id.profilePicturePlaceholder);
         profilePictureSelected = findViewById(R.id.profilePictureSelected);
+        usernameValidationText = findViewById(R.id.usernameValidationText);
 
         // Set up the profile picture button click listener
         FrameLayout btnProfilePicture = findViewById(R.id.btnProfilePicture);
@@ -167,6 +170,7 @@ public class UserDetails extends AppCompatActivity {
                 return view;
             }
 
+
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent) {
                 View view = super.getDropDownView(position, convertView, parent);
@@ -178,6 +182,15 @@ public class UserDetails extends AppCompatActivity {
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(adapter);
+
+
+        username.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus && !username.getText().toString().trim().isEmpty()) {
+                validateUsername(username.getText().toString().trim());
+            }
+        });
+
+
 
         // Set onClickListener for the continue button
         continueButton.setOnClickListener(new View.OnClickListener() {
@@ -196,6 +209,42 @@ public class UserDetails extends AppCompatActivity {
         });
     }
 
+
+    private void validateUsername(String usernameToCheck) {
+        if (usernameToCheck.isEmpty()) return;
+
+        // Show loading state
+        usernameValidationText.setText("Checking username...");
+        usernameValidationText.setTextColor(Color.GRAY);
+        usernameValidationText.setVisibility(View.VISIBLE);
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .whereEqualTo("username", usernameToCheck)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        if (task.getResult().isEmpty()) {
+                            // Username is available
+                            usernameValidationText.setText("✓ Username available");
+                            usernameValidationText.setTextColor(Color.GREEN);
+                            isUsernameValid = true;
+                        } else {
+                            // Username is already taken
+                            usernameValidationText.setText("✗ Username already taken");
+                            usernameValidationText.setTextColor(Color.RED);
+                            isUsernameValid = false;
+                        }
+                    } else {
+                        // Error checking username
+                        usernameValidationText.setText("✗ Error checking username");
+                        usernameValidationText.setTextColor(Color.RED);
+                        isUsernameValid = false;
+                    }
+                });
+    }
+
+
     /**
      * Handles the continue button click by validating input fields and saving user details to Firestore.
      * <p>
@@ -203,6 +252,7 @@ public class UserDetails extends AppCompatActivity {
      * collection in Firestore. On success, the activity navigates to MainActivity.
      * </p>
      */
+
     private void handleContinueButtonClick() {
         boolean allFieldsFilled = true;
 
@@ -213,6 +263,9 @@ public class UserDetails extends AppCompatActivity {
         }
         if (username.getText().toString().trim().isEmpty()) {
             username.setError("Required!");
+            allFieldsFilled = false;
+        } else if (!isUsernameValid) {
+            username.setError("Username already taken");
             allFieldsFilled = false;
         }
         if (bio.getText().toString().trim().isEmpty()) {
@@ -442,6 +495,7 @@ public class UserDetails extends AppCompatActivity {
             }
         }
     }
+
 
     private boolean hasCameraPermission() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
