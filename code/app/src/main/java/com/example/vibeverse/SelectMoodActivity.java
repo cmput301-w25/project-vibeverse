@@ -79,6 +79,7 @@ public class SelectMoodActivity extends AppCompatActivity {
     private static final int REQUEST_PICK_IMAGE = 2;
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
+    private long photoSizeKB;
     private Bitmap currentBitmap;
     private ImageView imgPlaceholder, imgSelected;
     private TextView imageHintText;
@@ -185,7 +186,7 @@ public class SelectMoodActivity extends AppCompatActivity {
                             // Using the existing Photograph constructor that matches your implementation
                             Photograph photograph = new Photograph(
                                     imageUri,
-                                    currentBitmap.getByteCount() / 1024, // Estimate file size in KB
+                                    photoSizeKB, // Estimate file size in KB
                                     currentBitmap,
                                     new Date(),
                                     "VibeVerse Location" // Default location - get location functionality not yet implemented
@@ -228,6 +229,8 @@ public class SelectMoodActivity extends AppCompatActivity {
         if (moodEvent.getPhotograph() != null) {
             moodData.put("hasPhoto", true);
             moodData.put("photoUri", moodEvent.getPhotoUri());
+
+
 
             moodData.put("photoDateTaken", moodEvent.getPhotograph().getDateTaken().getTime());
             moodData.put("photoLocation", moodEvent.getPhotograph().getLocation());
@@ -908,21 +911,27 @@ public class SelectMoodActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                ImageUtils.processImage(this, imageUri, (bitmap, downloadUrl, sizeKB) -> {
+                    photoSizeKB = sizeKB;
                     currentBitmap = bitmap;
                     imgPlaceholder.setVisibility(View.GONE);
                     imageHintText.setVisibility(View.GONE);
                     imgSelected.setVisibility(View.VISIBLE);
                     imgSelected.setImageBitmap(bitmap);
+                    imageUri = downloadUrl;
                 });
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                Log.d("SelectMoodActivity", "galleryPhotoUri: " + imageUri);
+                ImageUtils.processImage(this, imageUri, (bitmap, downloadUrl, sizeKB) -> {
+                    photoSizeKB = sizeKB;
                     currentBitmap = bitmap;
                     imgPlaceholder.setVisibility(View.GONE);
                     imageHintText.setVisibility(View.GONE);
                     imgSelected.setVisibility(View.VISIBLE);
                     imgSelected.setImageBitmap(bitmap);
+                    imageUri = downloadUrl;
+
                 });
             }
         }

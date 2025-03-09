@@ -12,6 +12,12 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +29,7 @@ public class ImageUtils {
 
     // Callback interface for when the user confirms the image preview.
     public interface ImageProcessCallback {
-        void onImageConfirmed(Bitmap bitmap, Uri imageUri);
+        void onImageConfirmed(Bitmap bitmap, Uri imageUri, long sizeKB);
     }
 
     /**
@@ -44,7 +50,7 @@ public class ImageUtils {
             byte[] imageBytes = baos.toByteArray();
             long sizeKB = imageBytes.length / 1024;
 
-            // Compress if needed (example threshold)
+            // Compress if needed
             if (sizeKB > 65536) {
                 bitmap = compressBitmap(bitmap);
                 baos.reset();
@@ -116,8 +122,28 @@ public class ImageUtils {
                 .setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        callback.onImageConfirmed(bitmap, imageUri);
-                        Toast.makeText(activity, "Image selected!", Toast.LENGTH_SHORT).show();
+                        StorageReference storageRef = FirebaseStorage.getInstance().getReference();
+                        StorageReference imageRef = storageRef.child("images/" + System.currentTimeMillis() + ".jpg");
+
+                        // Convert compressed bitmap to byte array
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+                        byte[] compressedData = baos.toByteArray();
+
+                        // Upload compressed image as byte array
+                        UploadTask uploadTask = imageRef.putBytes(compressedData);
+                        uploadTask.addOnSuccessListener(taskSnapshot -> {
+                            // Retrieve the download URL AFTER successful upload
+                            imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
+                                Uri uploadedImageUri = downloadUri; // Firebase Storage URL
+                                callback.onImageConfirmed(bitmap, uploadedImageUri, fileSizeKB);
+                                Toast.makeText(activity, "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
+                            }).addOnFailureListener(e -> {
+                                Toast.makeText(activity, "Failed to get download URL: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                            });
+                        }).addOnFailureListener(e -> {
+                            Toast.makeText(activity, "Image upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -128,4 +154,5 @@ public class ImageUtils {
                 })
                 .show();
     }
+
 }

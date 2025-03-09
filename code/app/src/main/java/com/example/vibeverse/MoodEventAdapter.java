@@ -83,6 +83,10 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
                 intent.putExtra("intensity", moodEvent.getIntensity());
                 intent.putExtra("timestamp", moodEvent.getTimestamp());
                 intent.putExtra("photoUri", moodEvent.getPhotoUri());
+                intent.putExtra("photoDateTaken", moodEvent.getPhotoDate());
+                intent.putExtra("photoLocation", moodEvent.getPhotoLocation());
+                intent.putExtra("photoSizeKB", moodEvent.getPhotoSize());
+
                 intent.putExtra("moodPosition", position);
                 ((ProfilePage) context).startActivityForResult(intent, ProfilePage.EDIT_MOOD_REQUEST_CODE);
                 return true;
