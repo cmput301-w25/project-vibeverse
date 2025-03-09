@@ -73,14 +73,6 @@
                 android:layout_marginTop="4dp">
 
                 <TextView
-                    android:id="@+id/textBioHeader"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="User Bio"
-                    android:textStyle="bold"
-                    android:textSize="14sp" />
-
-                <TextView
                     android:id="@+id/textBioContent"
                     android:layout_width="224dp"
                     android:layout_height="wrap_content"
