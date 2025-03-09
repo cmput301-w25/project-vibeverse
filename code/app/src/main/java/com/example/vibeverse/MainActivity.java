@@ -90,15 +90,5 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         }
-
-
-        // Set up logout button click listener
-        button.setOnClickListener(view -> {
-            auth.signOut();
-            Intent intent = new Intent(getApplicationContext(), Login.class);
-            startActivity(intent);
-            finish();
-        });
-
     }
 }
