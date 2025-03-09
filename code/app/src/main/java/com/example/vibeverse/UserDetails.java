@@ -52,6 +52,8 @@ public class UserDetails extends AppCompatActivity {
     private Button continueButton;
     FirebaseAuth auth;
     FirebaseUser user;
+    private TextView usernameValidationText;
+    private boolean isUsernameValid = false;
 
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -77,6 +79,7 @@ public class UserDetails extends AppCompatActivity {
 
         profilePicturePlaceholder = findViewById(R.id.profilePicturePlaceholder);
         profilePictureSelected = findViewById(R.id.profilePictureSelected);
+        usernameValidationText = findViewById(R.id.usernameValidationText);
 
         FrameLayout btnProfilePicture = findViewById(R.id.btnProfilePicture);
         btnProfilePicture.setOnClickListener(v -> showImagePickerDialog());
@@ -114,6 +117,7 @@ public class UserDetails extends AppCompatActivity {
                 return view;
             }
 
+
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent) {
                 View view = super.getDropDownView(position, convertView, parent);
@@ -126,6 +130,11 @@ public class UserDetails extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(adapter);
 
+        username.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus && !username.getText().toString().trim().isEmpty()) {
+                validateUsername(username.getText().toString().trim());
+            }
+        });
 
 
         // Set onClickListener for the continue button
@@ -145,6 +154,41 @@ public class UserDetails extends AppCompatActivity {
             }
         });
     }
+
+    private void validateUsername(String usernameToCheck) {
+        if (usernameToCheck.isEmpty()) return;
+
+        // Show loading state
+        usernameValidationText.setText("Checking username...");
+        usernameValidationText.setTextColor(Color.GRAY);
+        usernameValidationText.setVisibility(View.VISIBLE);
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .whereEqualTo("username", usernameToCheck)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        if (task.getResult().isEmpty()) {
+                            // Username is available
+                            usernameValidationText.setText("✓ Username available");
+                            usernameValidationText.setTextColor(Color.GREEN);
+                            isUsernameValid = true;
+                        } else {
+                            // Username is already taken
+                            usernameValidationText.setText("✗ Username already taken");
+                            usernameValidationText.setTextColor(Color.RED);
+                            isUsernameValid = false;
+                        }
+                    } else {
+                        // Error checking username
+                        usernameValidationText.setText("✗ Error checking username");
+                        usernameValidationText.setTextColor(Color.RED);
+                        isUsernameValid = false;
+                    }
+                });
+    }
+
     private void handleContinueButtonClick() {
         boolean allFieldsFilled = true;
 
@@ -155,6 +199,9 @@ public class UserDetails extends AppCompatActivity {
         }
         if (username.getText().toString().trim().isEmpty()) {
             username.setError("Required!");
+            allFieldsFilled = false;
+        } else if (!isUsernameValid) {
+            username.setError("Username already taken");
             allFieldsFilled = false;
         }
         if (bio.getText().toString().trim().isEmpty()) {
@@ -362,6 +409,7 @@ public class UserDetails extends AppCompatActivity {
             }
         }
     }
+
 
     private boolean hasCameraPermission() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
