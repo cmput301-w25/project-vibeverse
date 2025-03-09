@@ -1,8 +1,9 @@
 package com.example.vibeverse;
 
-import android.content.Intent;
+import static android.content.ContentValues.TAG;
+
 import android.net.Uri;
-import android.widget.Toast;
+import android.util.Log;
 
 import com.google.firebase.Timestamp;
 
@@ -16,71 +17,166 @@ import java.util.Map;
 /**
  * Represents a mood event recorded by the user.
  * <p>
- * Each MoodEvent contains the emotional state (with an emoji),
+ * Each MoodEvent contains details such as the emotional state (with an emoji),
  * an optional trigger, an optional social situation, a formatted timestamp,
- * an intensity level, and an optional photograph.
+ * an intensity level (default is 5), and an optional photograph.
+ * A MoodEvent can be converted to/from a Map for storage in Firestore.
  * </p>
  */
 public class MoodEvent implements Serializable {
-    private String emotionalState;
+    private String moodTitle;
+    private String moodEmoji;
     private String trigger;
+    private String reasonWhy;
+  
+    private String documentId; // Firestore document ID
     private String socialSituation;
     private String timestamp; // Formatted timestamp
     private int intensity = 5; // Default intensity set to middle value
     private Photograph photograph;
+    private Date date;
+    private String subtitle;
 
     /**
-     * Constructs a new MoodEvent without an associated photograph.
+     * Returns the emoji representing the mood.
      *
-     * @param emotionalState  The emotional state of the mood event.
-     * @param trigger         The trigger for the mood event (optional).
-     * @param socialSituation The social situation during the mood event (optional).
+     * @return The mood emoji.
      */
-    public MoodEvent(String emotionalState, String trigger, String socialSituation) {
-        this.emotionalState = emotionalState;
+    public String getMoodEmoji() {
+        return moodEmoji;
+    }
+
+    /**
+     * Sets the emoji representing the mood.
+     *
+     * @param moodEmoji The emoji to set.
+     */
+    public void setMoodEmoji(String moodEmoji) {
+        this.moodEmoji = moodEmoji;
+    }
+
+    /**
+     * Returns the Firestore document ID for this mood event.
+     *
+     * @return The document ID.
+     */
+    public String getDocumentId() {
+        return documentId;
+    }
+
+    /**
+     * Sets the Firestore document ID for this mood event.
+     *
+     * @param documentId The document ID to set.
+     */
+    public void setDocumentId(String documentId) {
+        this.documentId = documentId;
+    }
+
+    /**
+     * Returns the subtitle for this mood event.
+     *
+     * @return The subtitle string.
+     */
+    public String getSubtitle() {
+        return subtitle;
+    }
+
+    /**
+     * Sets the subtitle for this mood event.
+     *
+     * @param subtitle The subtitle to set.
+     */
+    public void setSubtitle(String subtitle) {
+        this.subtitle = subtitle;
+    }
+
+    /**
+     * Returns the date object representing when this mood event was created.
+     *
+     * @return The date of the mood event.
+     */
+    public Date getDate() {
+        return date;
+    }
+
+    /**
+     * Sets the date for this mood event.
+     *
+     * @param date The date to set.
+     */
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+
+    /**
+     * Constructs a new MoodEvent with the given mood title, emoji, trigger, and social situation.
+     * The timestamp is automatically set to the current date and time.
+     *
+     * @param moodTitle       The emotional state (e.g., "Happy").
+     * @param moodEmoji       The emoji representing the mood.
+     * @param reasonWhy       The reason for the mood.
+     * @param trigger         The trigger for the mood.
+     * @param socialSituation The social situation when the mood was recorded.
+     */
+    public MoodEvent(String moodTitle, String moodEmoji, String reasonWhy, String trigger, String socialSituation) {
+        this.reasonWhy = reasonWhy;
+        this.moodEmoji = moodEmoji;
+        this.moodTitle = moodTitle;
         this.trigger = trigger;
         this.socialSituation = socialSituation;
         this.timestamp = getCurrentFormattedTime();
     }
 
+
     /**
-     * Constructs a new MoodEvent with an associated photograph.
+     * Constructs a new MoodEvent with an associated Photograph.
      *
-     * @param emotionalState  The emotional state of the mood event.
-     * @param trigger         The trigger for the mood event (optional).
-     * @param socialSituation The social situation during the mood event (optional).
-     * @param photograph      The photograph associated with the mood event.
+     * @param moodTitle       The emotional state.
+     * @param moodEmoji       The emoji representing the mood.
+     * @param reasonWhy       The reason for the mood.
+     * @param trigger         The trigger for the mood.
+     * @param socialSituation The social situation.
+     * @param photograph      The Photograph associated with this mood event.
      */
-    public MoodEvent(String emotionalState, String trigger, String socialSituation, Photograph photograph) {
-        this.emotionalState = emotionalState;
+
+    public MoodEvent(String moodTitle, String moodEmoji, String reasonWhy,  String trigger, String socialSituation, Photograph photograph) {
+        this.reasonWhy = reasonWhy;
+        this.moodTitle = moodTitle;
+        this.moodEmoji = moodEmoji;
         this.trigger = trigger;
         this.socialSituation = socialSituation;
         this.timestamp = getCurrentFormattedTime();
         this.photograph = photograph;
     }
 
+    /**
+     * Converts this MoodEvent into a Map for storage in Firestore.
+     *
+     * @return A Map representation of this MoodEvent.
+     */
     public Map<String, Object> toMap() {
         Map<String, Object> moodMap = new HashMap<>();
-        moodMap.put("emotionalState", this.emotionalState);
+        moodMap.put("emotionalState", this.moodTitle);
         moodMap.put("trigger", this.trigger);
         moodMap.put("socialSituation", this.socialSituation);
         moodMap.put("timestamp", this.timestamp);
         moodMap.put("intensity", this.intensity);
+        moodMap.put("reasonWhy", this.reasonWhy);
 
-        // Handle emoji and mood text extraction
+        // Store emoji and mood title
         moodMap.put("emoji", getEmoji());
-        moodMap.put("mood", getMood());
+        moodMap.put("mood", getMoodTitle());
 
-        // Handle photograph if present
+        // Handle photograph data if present
         if (this.photograph != null) {
             moodMap.put("hasPhoto", true);
             moodMap.put("photoUri", getPhotoUri());
 
-            // Add additional photo metadata
             if (photograph.getDateTaken() != null) {
                 moodMap.put("photoDateTaken", photograph.getDateTaken().getTime());
             }
-
             moodMap.put("photoLocation", photograph.getLocation());
             moodMap.put("photoSizeKB", photograph.getFileSizeKB());
         } else {
@@ -89,31 +185,41 @@ public class MoodEvent implements Serializable {
 
         return moodMap;
     }
+
+    /**
+     * Creates a MoodEvent from a Map retrieved from Firestore.
+     *
+     * @param data The Map containing MoodEvent data.
+     * @return A new MoodEvent instance.
+     */
     public static MoodEvent fromMap(Map<String, Object> data) {
-        String emotionalState = (String) data.get("emotionalState");
+        String moodEmoji = (String) data.get("emoji");
+        String moodTitle = (String) data.get("mood");
         String trigger = (String) data.get("trigger");
         String socialSituation = (String) data.get("socialSituation");
+        String reasonWhy = (String) data.get("reasonWhy");
 
-        MoodEvent moodEvent = new MoodEvent(emotionalState, trigger, socialSituation);
+        Log.d("fromMapDebug", "photoUri field: " + data.get("photoUri"));
 
-        // Set the timestamp if it exists
+        MoodEvent moodEvent = new MoodEvent(moodTitle, moodEmoji, reasonWhy, trigger, socialSituation);
+
+        // Set the timestamp if available
         if (data.containsKey("timestamp")) {
             moodEvent.setTimestamp((String) data.get("timestamp"));
         }
 
-        // Set intensity if it exists
+        // Set intensity if available
         if (data.containsKey("intensity")) {
             moodEvent.setIntensity(((Long) data.get("intensity")).intValue());
         }
 
-        // Handle photograph if it exists
+        // Process photograph data if present
         if (data.containsKey("hasPhoto") && (Boolean) data.get("hasPhoto")) {
             String photoUri = (String) data.get("photoUri");
             if (photoUri != null && !photoUri.equals("N/A")) {
-                // Create a Photograph object with the available data
                 Uri uri = Uri.parse(photoUri);
+                Log.d("fromMapDebug", "photoUri after parse: " + photoUri);
 
-                // Get photo metadata if available
                 Date photoDate = new Date();
                 if (data.containsKey("photoDateTaken")) {
                     Object dateObj = data.get("photoDateTaken");
@@ -141,12 +247,13 @@ public class MoodEvent implements Serializable {
                     }
                 }
 
-                // Create photograph without bitmap (which can't be stored in Firestore)
+                // Create a Photograph object without bitmap data
                 Photograph photograph = new Photograph(uri, sizeKB, photoDate, location);
                 moodEvent.setPhotograph(photograph);
             }
         }
 
+        Log.d("fromMapDebug", "Returning MoodEvent with photoUri: " + moodEvent.getPhotoUri());
         return moodEvent;
     }
 
@@ -160,30 +267,28 @@ public class MoodEvent implements Serializable {
         return sdf.format(new Date());
     }
 
-
-
     /**
      * Returns the Photograph associated with this mood event.
      *
-     * @return The Photograph object, or null if none is set.
+     * @return The Photograph object, or null if no photograph is attached.
      */
     public Photograph getPhotograph() {
         return photograph;
     }
 
     /**
-     * Sets the emotional state for this mood event.
+     * Sets the emotional state (mood title) for this mood event.
      *
-     * @param emotionalState The new emotional state.
+     * @param moodTitle The mood title to set.
      */
-    public void setEmotionalState(String emotionalState) {
-        this.emotionalState = emotionalState;
+    public void setMoodTitle(String moodTitle) {
+        this.moodTitle = moodTitle;
     }
 
     /**
      * Sets the trigger for this mood event.
      *
-     * @param trigger The new trigger.
+     * @param trigger The trigger to set.
      */
     public void setTrigger(String trigger) {
         this.trigger = trigger;
@@ -192,16 +297,16 @@ public class MoodEvent implements Serializable {
     /**
      * Sets the social situation for this mood event.
      *
-     * @param socialSituation The new social situation.
+     * @param socialSituation The social situation to set.
      */
     public void setSocialSituation(String socialSituation) {
         this.socialSituation = socialSituation;
     }
 
     /**
-     * Sets the timestamp for this mood event.
+     * Sets the formatted timestamp for this mood event.
      *
-     * @param timestamp The new formatted timestamp.
+     * @param timestamp The timestamp string to set.
      */
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
@@ -210,14 +315,14 @@ public class MoodEvent implements Serializable {
     /**
      * Sets the Photograph associated with this mood event.
      *
-     * @param photograph The Photograph to set.
+     * @param photograph The Photograph to attach.
      */
     public void setPhotograph(Photograph photograph) {
         this.photograph = photograph;
     }
 
     /**
-     * Gets the intensity level of this mood.
+     * Returns the intensity level of this mood.
      *
      * @return The intensity level (0-10).
      */
@@ -226,77 +331,92 @@ public class MoodEvent implements Serializable {
     }
 
     /**
-     * Sets the intensity level of this mood.
+     * Sets the intensity level for this mood event.
      *
-     * @param intensity The intensity level (0-10).
+     * @param intensity The intensity level (0-10) to set.
      */
     public void setIntensity(int intensity) {
         this.intensity = intensity;
     }
 
+    public String getReasonWhy() {
+        return reasonWhy;
+    }
+
+    public void setReasonWhy(String reasonWhy) {
+        this.reasonWhy = reasonWhy;
+    }
+
     /**
-     * Returns the emotional state of this mood event.
+     * Returns the mood title (emotional state) of this mood event.
      *
-     * @return The emotional state.
+     * @return The mood title.
      */
-    public String getEmotionalState() { return emotionalState; }
+    public String getMoodTitle() { return moodTitle; }
 
     /**
      * Returns the trigger of this mood event.
      *
-     * @return The trigger.
+     * @return The trigger string.
      */
     public String getTrigger() { return trigger; }
 
     /**
      * Returns the social situation of this mood event.
      *
-     * @return The social situation.
+     * @return The social situation string.
      */
     public String getSocialSituation() { return socialSituation; }
 
     /**
      * Returns the formatted timestamp of when this mood event was created.
      *
-     * @return The timestamp.
+     * @return The timestamp string.
      */
     public String getTimestamp() { return timestamp; }
 
     /**
-     * Extracts the emoji from the emotional state string.
-     * Assumes the emotional state starts with an emoji followed by a space.
+     * Returns the emoji representing the mood.
+     * <p>
+     * This method extracts the emoji from the moodEmoji field.
+     * </p>
      *
-     * @return The emoji part of the emotional state.
+     * @return The mood emoji.
      */
     public String getEmoji() {
-        if (emotionalState != null && emotionalState.contains(" ")) {
-            return emotionalState.substring(0, emotionalState.indexOf(" "));
-        }
-        return "";
+        return this.moodEmoji;
     }
 
     /**
-     * Extracts the mood text from the emotional state string.
-     * Assumes the emotional state starts with an emoji followed by a space.
+     * Returns the photo URI as a string if a photograph is attached.
      *
-     * @return The mood text part of the emotional state.
-     */
-    public String getMood() {
-        if (emotionalState != null && emotionalState.contains(" ")) {
-            return emotionalState.substring(emotionalState.indexOf(" ") + 1);
-        }
-        return emotionalState;
-    }
-
-    /**
-     * Gets the photo URI as a string if a photograph is attached.
-     *
-     * @return The photo URI as a string, or "N/A" if no photograph is attached.
+     * @return The photo URI string, or "N/A" if no photograph is attached.
      */
     public String getPhotoUri() {
         if (photograph != null && photograph.getImageUri() != null) {
             return photograph.getImageUri().toString();
         }
         return "N/A";
+    }
+
+    public long getPhotoSize() {
+        if (photograph != null) {
+            return photograph.getFileSizeKB();
+        }
+        return 0;
+    }
+
+    public Date getPhotoDate() {
+        if (photograph != null) {
+            return photograph.getDateTaken();
+        }
+        return null;
+    }
+
+    public String getPhotoLocation() {
+        if (photograph != null) {
+            return photograph.getLocation();
+        }
+        return "Unknown";
     }
 }

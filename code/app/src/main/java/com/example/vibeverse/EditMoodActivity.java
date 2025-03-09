@@ -16,16 +16,19 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,15 +54,16 @@ import java.util.Map;
  * This activity uses the same layout as SelectMoodActivity for consistency.
  * It receives mood details from the calling activity (e.g., MainActivity),
  * displays the current values, and allows the user to update the mood,
- * trigger, social situation, and an optional image. When the user clicks
- * "Update Mood", the updated details are sent back to the caller.
+ * trigger, social situation, intensity, and an optional image.
+ * When the user clicks "Update Mood", the updated details are sent back to the caller.
  * </p>
  */
 public class EditMoodActivity extends AppCompatActivity {
 
     // UI Elements
     private TextView selectedMoodEmoji, selectedMoodText;
-    private EditText triggerInput, socialSituationInput;
+    private EditText triggerInput, reasonWhyInput;
+    private Spinner socialSituationInput;
     private SeekBar moodIntensitySlider;
     private Button updateButton;
     private View selectedMoodContainer;
@@ -84,6 +88,10 @@ public class EditMoodActivity extends AppCompatActivity {
     private static final int REQUEST_PICK_IMAGE = 2;
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
+
+    private long photoSizeKB;
+    private String photoDateTaken;
+    private String photoLocation;
     private Bitmap currentBitmap;
 
     /**
@@ -94,7 +102,8 @@ public class EditMoodActivity extends AppCompatActivity {
      * loads an image if available, and sets click listeners for updating mood and picking images.
      * </p>
      *
-     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down,
+     *                           this contains the data it most recently supplied.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +117,8 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedMoodContainer = findViewById(R.id.selectedMoodContainer);
         moodIntensitySlider = findViewById(R.id.moodIntensitySlider);
         triggerInput = findViewById(R.id.triggerInput);
-        socialSituationInput = findViewById(R.id.socialSituationInput);
+        reasonWhyInput = findViewById(R.id.reasonWhyInput);
+        socialSituationInput = findViewById(R.id.socialSituationSpinner);
         updateButton = findViewById(R.id.continueButton); // Reuse the same button ID
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
@@ -126,7 +136,7 @@ public class EditMoodActivity extends AppCompatActivity {
         // Add to the top of the main container
         mainContainer.addView(toolbar, 0);
 
-        // Instead of adding another TextView, find if one already exists
+        // Instead of adding another TextView, check if one already exists
         boolean textAlreadyExists = false;
         for (int i = 0; i < mainContainer.getChildCount(); i++) {
             View child = mainContainer.getChildAt(i);
@@ -152,7 +162,6 @@ public class EditMoodActivity extends AppCompatActivity {
             chooseTextView.setTypeface(null, Typeface.BOLD);
             chooseTextView.setGravity(Gravity.CENTER); // Center justify
             chooseTextView.setPadding(0, dpToPx(16), 0, dpToPx(20));
-
             // Add this text view right after the toolbar
             mainContainer.addView(chooseTextView, 1);
         }
@@ -160,7 +169,7 @@ public class EditMoodActivity extends AppCompatActivity {
         // Change the button text to "Update Mood" for clarity
         updateButton.setText("Update Mood");
 
-        // Set consistent typeface
+        // Set consistent typeface and text sizes
         selectedMoodText.setTypeface(null, Typeface.BOLD);
         selectedMoodEmoji.setTextSize(TypedValue.COMPLEX_UNIT_SP, 64);
         selectedMoodText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
@@ -174,14 +183,18 @@ public class EditMoodActivity extends AppCompatActivity {
         // Clone the drawable for each input to avoid shared state issues
         GradientDrawable triggerBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
         GradientDrawable socialBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
+        GradientDrawable reasonWhyBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
+
 
         triggerInput.setBackground(triggerBg);
         socialSituationInput.setBackground(socialBg);
+        reasonWhyInput.setBackground(reasonWhyBg);
 
         // Set padding for the input fields
         int paddingPx = (int) dpToPx(12);
         triggerInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         socialSituationInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        reasonWhyInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
         // Add labels above input fields for clarity
         TextView triggerLabel = new TextView(this);
@@ -198,10 +211,24 @@ public class EditMoodActivity extends AppCompatActivity {
         socialLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         socialLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
 
-        // Get the parent container
+        TextView reasonWhyLabel = new TextView(this);
+        reasonWhyLabel.setText("Reason why you feel this way");
+        reasonWhyLabel.setTextColor(Color.WHITE);
+        reasonWhyLabel.setTextColor(Color.WHITE);
+        reasonWhyLabel.setTypeface(null, Typeface.BOLD);
+        reasonWhyLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        reasonWhyLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
+      
+      // Get the parent container and add the labels before the respective inputs
+
+
+
+        int reasonWhyIndex = mainContainer.indexOfChild(reasonWhyInput);
+        mainContainer.addView(reasonWhyLabel, reasonWhyIndex);
+
+
         int triggerIndex = mainContainer.indexOfChild(triggerInput);
         mainContainer.addView(triggerLabel, triggerIndex);
-
         int socialIndex = mainContainer.indexOfChild(socialSituationInput);
         mainContainer.addView(socialLabel, socialIndex);
 
@@ -242,7 +269,6 @@ public class EditMoodActivity extends AppCompatActivity {
             btnTestImage.setForeground(getDrawable(android.R.drawable.list_selector_background));
         }
 
-        // Load mood data
         initializeMoodColors();
         initializeMoodEmojis();
 
@@ -255,31 +281,50 @@ public class EditMoodActivity extends AppCompatActivity {
 
         String timestamp = intent.getStringExtra("timestamp");
         String trigger = intent.getStringExtra("trigger");
+        String reasonWhy = intent.getStringExtra("reasonWhy");
         String socialSituation = intent.getStringExtra("socialSituation");
         String currentPhotoUri = intent.getStringExtra("photoUri");
+
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.social_situation_options,
+                android.R.layout.simple_spinner_item
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        socialSituationInput.setAdapter(adapter);
+
+
+        photoDateTaken = intent.getStringExtra("photoDateTaken");
+        photoLocation = intent.getStringExtra("photoLocation");
+        photoSizeKB = intent.getLongExtra("photoSizeKB", 0);
+
 
         // Get the intensity value from the intent (using default of 5 if not found)
         int intensity = intent.getIntExtra("intensity", 5);
 
-        // Set UI fields
+        // Set UI fields with the retrieved values
         selectedMoodText.setText(selectedMood);
         selectedMoodEmoji.setText(selectedEmoji);
         triggerInput.setText(trigger);
-        socialSituationInput.setText(socialSituation);
+        reasonWhyInput.setText(reasonWhy);
+        if (socialSituation != null) {
+            int spinnerPosition = adapter.getPosition(socialSituation);
+            socialSituationInput.setSelection(spinnerPosition);
+        }
 
         // Apply the refined gradient background for consistency
         applyGradientBackground(selectedColor);
 
-        // Make sure selectedMoodContainer has a GradientDrawable background
+        // Ensure selectedMoodContainer has a GradientDrawable background
         GradientDrawable moodContainerBg = new GradientDrawable();
         moodContainerBg.setColor(selectedColor);
         moodContainerBg.setCornerRadius(dpToPx(12));
         selectedMoodContainer.setBackground(moodContainerBg);
 
-        // Now set the intensity slider value (after background is properly set)
+        // Set the intensity slider value
         moodIntensitySlider.setProgress(intensity);
 
-        // Manually initialize the intensity display and effects
+        // Initialize the intensity display text
         if (intensityDisplay != null) {
             StringBuilder intensityBuilder = new StringBuilder();
             for (int i = 0; i <= 10; i++) {
@@ -292,12 +337,12 @@ public class EditMoodActivity extends AppCompatActivity {
             intensityDisplay.setText(intensityBuilder.toString());
         }
 
-        // Set emoji scale
+        // Adjust emoji scale based on intensity
         float emojiScale = 0.7f + (intensity / 10f * 0.6f);
         selectedMoodEmoji.setScaleX(emojiScale);
         selectedMoodEmoji.setScaleY(emojiScale);
 
-        // Update text intensity prefix
+        // Update mood text based on intensity
         if (intensity <= 3) {
             selectedMoodText.setText("Slightly " + selectedMood);
         } else if (intensity <= 7) {
@@ -306,8 +351,7 @@ public class EditMoodActivity extends AppCompatActivity {
             selectedMoodText.setText("Very " + selectedMood);
         }
 
-        // Style the update button to be more professional
-        // Create a rounded corner background for the button
+        // Style the update button
         GradientDrawable buttonBg = new GradientDrawable();
         buttonBg.setCornerRadius(dpToPx(24));
         buttonBg.setColor(Color.parseColor("#5C4B99"));  // Use consistent purple color
@@ -316,7 +360,6 @@ public class EditMoodActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             updateButton.setElevation(dpToPx(4));
         }
-
         updateButton.setBackground(buttonBg);
         updateButton.setPadding(
                 (int) dpToPx(24),
@@ -327,7 +370,7 @@ public class EditMoodActivity extends AppCompatActivity {
         updateButton.setTextColor(Color.WHITE);
         updateButton.setTypeface(null, Typeface.BOLD);
 
-        // If there's an existing photo, load it with Glide
+        // Load existing photo if available
         currentImageUri = currentPhotoUri;
         if (currentPhotoUri != null && !currentPhotoUri.equals("N/A")) {
             Glide.with(this)
@@ -338,36 +381,62 @@ public class EditMoodActivity extends AppCompatActivity {
             imgPlaceholder.setVisibility(View.GONE);
         }
 
-        // Add fade-in animation for the mood container
+        // Fade-in animation for the mood container
         selectedMoodContainer.setAlpha(0f);
         selectedMoodContainer.animate()
                 .alpha(1f)
                 .setDuration(300)
                 .start();
 
-        // Image picker button
+        // Set click listener for image picker button
         btnTestImage.setOnClickListener(v -> showImagePickerDialog());
 
-        // Handle the update button click with animation
+        // Set click listener for the update button with animation
         updateButton.setOnClickListener(view -> {
+
+
+            String newreasonWhy = reasonWhyInput.getText().toString().trim();
+
+            // Validate character count
+            if (newreasonWhy.length() > 20) {
+                reasonWhyInput.setError("Reason why must be 20 characters or less.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
+
+            // Validate word count
+            String[] words = newreasonWhy.split("\\s+");
+            if (words.length > 3) {
+                reasonWhyInput.setError("Reason why must be 3 words or less.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
+
             // Show updating toast
             Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
-
-            // Create a subtle animation before finishing
             mainContainer.animate()
                     .alpha(0.8f)
                     .setDuration(200)
                     .withEndAction(() -> {
+
+
+
                         // Original code for handling the update
+
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("updatedMood", selectedMood);
                         resultIntent.putExtra("updatedEmoji", selectedEmoji);
+                        resultIntent.putExtra("updatedReasonWhy", reasonWhyInput.getText().toString().trim());
                         resultIntent.putExtra("updatedTrigger", triggerInput.getText().toString().trim());
-                        resultIntent.putExtra("updatedSocialSituation", socialSituationInput.getText().toString().trim());
+                        resultIntent.putExtra("updatedSocialSituation", socialSituationInput.getSelectedItem().toString().trim());
                         resultIntent.putExtra("timestamp", new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault()).format(new Date()));
                         resultIntent.putExtra("moodPosition", moodPosition);
                         resultIntent.putExtra("updatedPhotoUri", (currentImageUri != null) ? currentImageUri : "N/A");
                         resultIntent.putExtra("updatedIntensity", moodIntensitySlider.getProgress());
+                        resultIntent.putExtra("updatedphotoDateTaken", photoDateTaken);
+                        resultIntent.putExtra("updatedphotoLocation", photoLocation);
+                        resultIntent.putExtra("updatedphotoSizeKB", photoSizeKB);
+
 
                         setResult(RESULT_OK, resultIntent);
                         finish();
@@ -377,23 +446,18 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Applies a gradient background to the main container, starting from a neutral top (#FAFAFA)
-     * and transitioning through lighter and darker shades of the base mood color for a professional look.
+     * Applies a gradient background to the main container using the base mood color.
      *
-     * @param baseColor The base color representing the mood.
+     * @param baseColor The base mood color.
      */
     private void applyGradientBackground(int baseColor) {
-        // Create more subtle, professional gradients
-        int lighterColor = ColorUtils.blendColors(baseColor, Color.WHITE, 0.7f);
-        int mediumColor = ColorUtils.blendColors(baseColor, Color.WHITE, 0.3f);
-
-        // More professional gradient with smoother transitions
+        int lighterColor = blendColors(baseColor, Color.WHITE, 0.7f);
+        int mediumColor = blendColors(baseColor, Color.WHITE, 0.3f);
         GradientDrawable gradient = new GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{Color.parseColor("#2D2D3A"), lighterColor, mediumColor, baseColor}
         );
         gradient.setCornerRadius(0f);
-
         TransitionManager.beginDelayedTransition(mainContainer);
         mainContainer.setBackground(gradient);
     }
@@ -402,7 +466,7 @@ public class EditMoodActivity extends AppCompatActivity {
      * Adjusts the brightness of a given color by a specified factor.
      *
      * @param color  The original color.
-     * @param factor The factor to multiply each RGB component (e.g., >1 for brighter, <1 for darker).
+     * @param factor The multiplier for brightness.
      * @return The adjusted color.
      */
     private int adjustColorBrightness(int color, float factor) {
@@ -413,10 +477,10 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Utility method to convert dp to pixels
+     * Converts dp (density-independent pixels) to actual pixel units.
      *
-     * @param dp The dp value to convert
-     * @return The equivalent value in pixels
+     * @param dp The dp value.
+     * @return The equivalent pixel value.
      */
     private int dpToPx(float dp) {
         return Math.round(TypedValue.applyDimension(
@@ -427,7 +491,7 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes the mood colors used to style the UI based on the selected mood.
+     * Initializes the mood colors map.
      */
     private void initializeMoodColors() {
         moodColors.put("Happy", Color.parseColor("#FBC02D"));      // Warm yellow
@@ -441,7 +505,7 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Initializes the mood emojis associated with each mood string.
+     * Initializes the mood emojis map.
      */
     private void initializeMoodEmojis() {
         moodEmojis.put("Happy", "😃");
@@ -455,7 +519,7 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Sets up the mood intensity slider with visual feedback effects
+     * Sets up the mood intensity slider with dynamic visual feedback.
      */
     private void setupMoodIntensitySlider() {
         // Create a slider label
@@ -490,7 +554,7 @@ public class EditMoodActivity extends AppCompatActivity {
         minLabel.setTextColor(Color.WHITE);
         minLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
 
-        // Create intensity display text that will change with slider
+        // Create intensity display text that updates with slider changes
         intensityDisplay = new TextView(this);
         intensityDisplay.setText("●●●●●○○○○○");
         intensityDisplay.setTextColor(Color.WHITE);
@@ -503,7 +567,7 @@ public class EditMoodActivity extends AppCompatActivity {
         maxLabel.setTextColor(Color.WHITE);
         maxLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
 
-        // Set up layout parameters
+        // Set up layout parameters for labels
         LinearLayout.LayoutParams minParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -529,31 +593,27 @@ public class EditMoodActivity extends AppCompatActivity {
         minMaxContainer.addView(intensityDisplay);
         minMaxContainer.addView(maxLabel);
 
-        // Add views to container
+        // Add slider components to the container and reattach to parent
         sliderContainer.addView(sliderLabel);
         sliderContainer.addView(moodIntensitySlider);
         sliderContainer.addView(minMaxContainer);
-
-        // Add the container back to the parent
         sliderParent.addView(sliderContainer, sliderIndex);
 
-        // Create a pulse animation for the selected mood container
+        // Create a pulse animation for the mood container
         ObjectAnimator pulseAnimator = ObjectAnimator.ofFloat(selectedMoodContainer, "scaleX", 1f, 1.05f);
         pulseAnimator.setDuration(300);
         pulseAnimator.setRepeatCount(1);
         pulseAnimator.setRepeatMode(ValueAnimator.REVERSE);
 
-        // Create another animator for Y scale
         ObjectAnimator pulseAnimatorY = ObjectAnimator.ofFloat(selectedMoodContainer, "scaleY", 1f, 1.05f);
         pulseAnimatorY.setDuration(300);
         pulseAnimatorY.setRepeatCount(1);
         pulseAnimatorY.setRepeatMode(ValueAnimator.REVERSE);
 
-        // Combine into animation set
         AnimatorSet pulseSet = new AnimatorSet();
         pulseSet.playTogether(pulseAnimator, pulseAnimatorY);
 
-        // Set up listener for the slider to update visual elements
+        // Listener to update intensity effects as slider changes
         moodIntensitySlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -562,7 +622,7 @@ public class EditMoodActivity extends AppCompatActivity {
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                // Optional: Add effect when user starts touching slider
+                // Optional behavior when touch starts
             }
 
             @Override
@@ -574,34 +634,34 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Applies visual effects based on the intensity level
+     * Applies UI changes based on the selected mood intensity.
+     *
+     * @param progress The current intensity value (0-10).
      */
     private void applyIntensityEffects(int progress) {
-        // Update intensity display dots
+        // Update intensity display text
         updateIntensityDisplay(intensityDisplay, progress);
 
-        // Dynamically adjust emoji size based on intensity
+        // Adjust emoji size dynamically
         float emojiScale = 0.7f + (progress / 10f * 0.6f); // Scale from 0.7 to 1.3
         selectedMoodEmoji.setScaleX(emojiScale);
         selectedMoodEmoji.setScaleY(emojiScale);
 
-        // Change color intensity of the mood display
+        // Adjust background color based on intensity
         int adjustedColor = adjustColorIntensity(selectedColor, progress);
 
-        // Check the current background drawable type to avoid ClassCastException
+        // Update the mood container background color
         if (!(selectedMoodContainer.getBackground() instanceof GradientDrawable)) {
-            // Create a new GradientDrawable if the current background isn't one
             GradientDrawable newBg = new GradientDrawable();
             newBg.setColor(adjustedColor);
             newBg.setCornerRadius(dpToPx(12));
             selectedMoodContainer.setBackground(newBg);
         } else {
-            // Safe to cast since we checked
             GradientDrawable moodContainerBg = (GradientDrawable) selectedMoodContainer.getBackground();
             moodContainerBg.setColor(adjustedColor);
         }
 
-        // Update text display based on intensity
+        // Update mood text to reflect intensity
         if (progress <= 3) {
             selectedMoodText.setText("Slightly " + selectedMood);
         } else if (progress <= 7) {
@@ -612,18 +672,14 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Updates the visual intensity display based on slider progress
+     * Updates the intensity display (dots) based on the slider progress.
      *
-     * @param intensityDisplay The TextView showing intensity
-     * @param progress The current slider progress
+     * @param intensityDisplay The TextView showing intensity representation.
+     * @param progress         The current slider progress (0-10).
      */
     private void updateIntensityDisplay(TextView intensityDisplay, int progress) {
         if (intensityDisplay == null) return;
-
-        // Create a dynamic visual representation of intensity
         StringBuilder intensityBuilder = new StringBuilder();
-
-        // Use filled and empty circles to represent intensity
         for (int i = 0; i <= 10; i++) {
             if (i <= progress) {
                 intensityBuilder.append("●"); // Filled circle for active levels
@@ -631,26 +687,22 @@ public class EditMoodActivity extends AppCompatActivity {
                 intensityBuilder.append("○"); // Empty circle for inactive levels
             }
         }
-
         intensityDisplay.setText(intensityBuilder.toString());
-
-        // Animate the text change
         intensityDisplay.setAlpha(0.7f);
         intensityDisplay.animate().alpha(1.0f).setDuration(200).start();
     }
 
     /**
-     * Adjusts color intensity based on slider position
+     * Adjusts the base color based on the selected intensity.
      *
-     * @param baseColor The original mood color
-     * @param intensity The intensity value (0-10)
-     * @return An adjusted color based on intensity
+     * @param baseColor The original mood color.
+     * @param intensity The intensity value (0-10).
+     * @return The color adjusted for intensity.
      */
     private int adjustColorIntensity(int baseColor, int intensity) {
-        // For low intensity, blend with gray to reduce saturation
         if (intensity < 5) {
             float blendRatio = 0.5f + (intensity / 10f); // 0.5 to 1.0
-            return ColorUtils.blendColors(baseColor, Color.GRAY, blendRatio);
+            return blendColors(baseColor, Color.GRAY, blendRatio);
         }
         // For high intensity, make more vibrant/darker
         else if (intensity > 5) {
@@ -665,31 +717,26 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Increases or decreases the saturation of a color
+     * Adjusts the saturation of the given color.
      *
-     * @param color The original color
-     * @param factor Factor to adjust saturation by (>1 for more saturation, <1 for less)
-     * @return The adjusted color
+     * @param color  The original color.
+     * @param factor The factor to adjust saturation (>1 for increased, <1 for decreased).
+     * @return The color with adjusted saturation.
      */
     private int adjustColorSaturation(int color, float factor) {
         float[] hsv = new float[3];
         Color.colorToHSV(color, hsv);
-
-        // Adjust saturation (component 1)
         hsv[1] = Math.min(1f, hsv[1] * factor);
-
-        // Optionally adjust value/brightness (component 2) for more dramatic effect
         hsv[2] = Math.max(0f, Math.min(1f, hsv[2] * (factor > 1 ? 0.9f : 1.1f)));
-
         return Color.HSVToColor(hsv);
     }
 
     /**
-     * Called when permission requests complete.
+     * Called when permission results are returned.
      *
-     * @param requestCode  The request code passed in requestPermissions().
+     * @param requestCode  The permission request code.
      * @param permissions  The requested permissions.
-     * @param grantResults The grant results for the corresponding permissions.
+     * @param grantResults The results for the corresponding permissions.
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -705,13 +752,10 @@ public class EditMoodActivity extends AppCompatActivity {
 
     /**
      * Handles results from camera or gallery intents.
-     * <p>
-     * Processes the selected image using ImageUtils and updates the UI with the new image.
-     * </p>
      *
-     * @param requestCode The request code identifying the image action.
-     * @param resultCode  The result code returned by the child activity.
-     * @param data        The Intent data returned, if any.
+     * @param requestCode The request code identifying the action.
+     * @param resultCode  The result code from the child activity.
+     * @param data        The intent data returned (if any).
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -719,7 +763,8 @@ public class EditMoodActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 // For camera, imageUri is already set
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
+                    photoSizeKB = sizeKB;
                     currentBitmap = bitmap;
                     currentImageUri = uri.toString();
                     imgPlaceholder.setVisibility(View.GONE);
@@ -736,11 +781,12 @@ public class EditMoodActivity extends AppCompatActivity {
                 });
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
+                    photoSizeKB = sizeKB;
                     currentBitmap = bitmap;
                     currentImageUri = uri.toString();
                     imgPlaceholder.setVisibility(View.GONE);
-                    // Also hide the hint text when image is selected
+                    // Hide hint text
                     for (int i = 0; i < ((ViewGroup) imgPlaceholder.getParent()).getChildCount(); i++) {
                         View child = ((ViewGroup) imgPlaceholder.getParent()).getChildAt(i);
                         if (child instanceof TextView) {
@@ -756,7 +802,7 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Displays a dialog for the user to select an image source (camera or gallery).
+     * Displays a dialog for the user to choose an image source or remove the current photo.
      */
     private void showImagePickerDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -771,7 +817,7 @@ public class EditMoodActivity extends AppCompatActivity {
                         currentImageUri = "N/A";
                         imgSelected.setVisibility(View.GONE);
                         imgPlaceholder.setVisibility(View.VISIBLE);
-                        // Show the hint text again
+                        // Show hint text again
                         for (int i = 0; i < ((ViewGroup) imgPlaceholder.getParent()).getChildCount(); i++) {
                             View child = ((ViewGroup) imgPlaceholder.getParent()).getChildAt(i);
                             if (child instanceof TextView) {
@@ -786,7 +832,7 @@ public class EditMoodActivity extends AppCompatActivity {
 
     /**
      * Dispatches an intent to capture an image using the device camera.
-     * Creates a temporary file for the photo and requests necessary permissions.
+     * Creates a temporary file and requests necessary permissions.
      */
     private void dispatchTakePictureIntent() {
         requestPermissions();
@@ -815,7 +861,7 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Dispatches an intent to pick an image from the device gallery.
+     * Dispatches an intent to pick an image from the gallery.
      */
     private void dispatchPickImageIntent() {
         Intent pickIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -823,14 +869,13 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Requests the necessary permissions (Camera and Storage) at runtime for Android M and above.
+     * Requests necessary permissions (Camera and Storage) for Android M and above.
      */
     private void requestPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
                     checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
                     checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
                 requestPermissions(new String[]{
                         Manifest.permission.CAMERA,
                         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -840,16 +885,21 @@ public class EditMoodActivity extends AppCompatActivity {
         }
     }
 
+
     /**
-     * Utility class for color manipulation
+     * Blends two colors together using the specified ratio.
+     *
+     * @param color1 The first color.
+     * @param color2 The second color.
+     * @param ratio  The blending ratio (0.0 to 1.0).
+     * @return The resulting blended color.
      */
-    private static class ColorUtils {
-        public static int blendColors(int color1, int color2, float ratio) {
-            final float inverseRatio = 1f - ratio;
-            float r = (Color.red(color1) * ratio) + (Color.red(color2) * inverseRatio);
-            float g = (Color.green(color1) * ratio) + (Color.green(color2) * inverseRatio);
-            float b = (Color.blue(color1) * ratio) + (Color.blue(color2) * inverseRatio);
-            return Color.rgb((int) r, (int) g, (int) b);
-        }
+    public static int blendColors(int color1, int color2, float ratio) {
+        final float inverseRatio = 1f - ratio;
+        float r = (Color.red(color1) * ratio) + (Color.red(color2) * inverseRatio);
+        float g = (Color.green(color1) * ratio) + (Color.green(color2) * inverseRatio);
+        float b = (Color.blue(color1) * ratio) + (Color.blue(color2) * inverseRatio);
+        return Color.rgb((int) r, (int) g, (int) b);
     }
+
 }

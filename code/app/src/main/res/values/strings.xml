@@ -28,6 +28,14 @@
         <item>Others</item>
     </string-array>
 
+    <string-array name="social_situation_options">
+        <item>None</item>
+        <item>Alone</item>
+        <item>With one other person</item>
+        <item>With two to several people</item>
+        <item>With a crowd</item>
+    </string-array>
+
     <string name="select_gender">Select Gender</string>
     <string name="full_name">Full Name</string>
     <string name="username">Username</string>
