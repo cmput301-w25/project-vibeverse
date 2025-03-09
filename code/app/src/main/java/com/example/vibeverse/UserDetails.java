@@ -92,7 +92,11 @@ public class UserDetails extends AppCompatActivity {
      * URI of the selected profile picture.
      */
     private Uri imageUri;
-    /**
+  
+    private long fileSizeKB;
+
+  
+   /**
      * Bitmap of the selected profile picture.
      */
     private Bitmap currentBitmap;
@@ -235,7 +239,21 @@ public class UserDetails extends AppCompatActivity {
             userData.put("gender", genderSpinner.getSelectedItem().toString());
             userData.put("email", user.getEmail());
 
-            // Save data to Firestore
+
+            if (imageUri != null) {
+                userData.put("hasProfilePic", true);
+                userData.put("profilePicUri", imageUri.toString());
+                userData.put("profilePicSizeKB", fileSizeKB);
+
+            }
+
+            else{
+                userData.put("hasProfilePic", false);
+            }
+
+
+
+            // Get Firestore instance and save data
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             db.collection("users").document(user.getUid())
                     .set(userData)
@@ -403,7 +421,9 @@ public class UserDetails extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
+                    fileSizeKB = sizeKB;
+                    imageUri = uri;
                     currentBitmap = bitmap;
                     profilePicturePlaceholder.setVisibility(View.GONE);
                     profilePictureSelected.setVisibility(View.VISIBLE);
@@ -411,7 +431,9 @@ public class UserDetails extends AppCompatActivity {
                 });
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
+                    fileSizeKB = sizeKB;
+                    imageUri = uri;
                     currentBitmap = bitmap;
                     profilePicturePlaceholder.setVisibility(View.GONE);
                     profilePictureSelected.setVisibility(View.VISIBLE);

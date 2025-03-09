@@ -155,13 +155,6 @@
                         android:orientation="horizontal"
                         android:gravity="center_vertical">
 
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_more_vert"
-                            android:contentDescription="Trigger icon"
-                            app:tint="#424242"/>
-
                         <TextView
                             android:id="@+id/triggerLabel"
                             android:layout_width="wrap_content"
@@ -192,19 +185,12 @@
                         android:gravity="center_vertical"
                         android:layout_marginTop="12dp">
 
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_more_vert"
-                            android:contentDescription="Social icon"
-                            app:tint="#424242"/>
-
                         <TextView
                             android:id="@+id/socialLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="Social:"
+                            android:text="Social Situation:"
                             android:textColor="#212121"
                             android:textSize="15sp"
                             android:textStyle="bold"/>

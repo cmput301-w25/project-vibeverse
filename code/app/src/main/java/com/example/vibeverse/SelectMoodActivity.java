@@ -30,6 +30,7 @@ import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,7 +63,8 @@ public class SelectMoodActivity extends AppCompatActivity {
     // UI Elements
     private TextView selectedMoodEmoji, selectedMoodText;
     private SeekBar moodIntensitySlider;
-    private EditText triggerInput, socialSituationInput;
+    private EditText triggerInput, reasonWhyInput;
+    private Spinner socialSituationInput;
     private Button continueButton;
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Container for gradient background and transitions
@@ -79,6 +81,7 @@ public class SelectMoodActivity extends AppCompatActivity {
     private static final int REQUEST_PICK_IMAGE = 2;
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
+    private long photoSizeKB;
     private Bitmap currentBitmap;
     private ImageView imgPlaceholder, imgSelected;
     private TextView imageHintText;
@@ -105,10 +108,12 @@ public class SelectMoodActivity extends AppCompatActivity {
         selectedMoodContainer = findViewById(R.id.selectedMoodContainer);
         moodIntensitySlider = findViewById(R.id.moodIntensitySlider);
         triggerInput = findViewById(R.id.triggerInput);
-        socialSituationInput = findViewById(R.id.socialSituationInput);
+        socialSituationInput = findViewById(R.id.socialSituationSpinner);
         continueButton = findViewById(R.id.continueButton);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
         imgSelected = findViewById(R.id.imgSelected);
+        reasonWhyInput = findViewById(R.id.reasonWhyInput);
+
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -173,7 +178,23 @@ public class SelectMoodActivity extends AppCompatActivity {
                     .withEndAction(() -> {
                         Log.d("SelectMoodActivity", "onClick: selectedEmoji after animation = " + selectedEmoji);
                         String trigger = triggerInput.getText().toString().trim();
-                        String socialSituation = socialSituationInput.getText().toString().trim();
+                        String socialSituation = socialSituationInput.getSelectedItem().toString().trim();
+                        String reasonWhy = reasonWhyInput.getText().toString().trim();
+
+
+                        // Error handling for reasonWhy input
+                        if (reasonWhy.length() > 20) {
+                            reasonWhyInput.setError("Reason why must be 20 characters or less.");
+                            reasonWhyInput.requestFocus();
+                            return;
+                        }
+
+                        String[] words = reasonWhy.split("\\s+");
+                        if (words.length > 3) {
+                            reasonWhyInput.setError("Reason why must be 3 words or less.");
+                            reasonWhyInput.requestFocus();
+                            return;
+                        }
 
                         // Store the intensity value in the MoodEvent
                         int intensity = moodIntensitySlider.getProgress();
@@ -184,18 +205,20 @@ public class SelectMoodActivity extends AppCompatActivity {
                             // Using the existing Photograph constructor that matches your implementation
                             Photograph photograph = new Photograph(
                                     imageUri,
-                                    currentBitmap.getByteCount() / 1024, // Estimate file size in KB
+                                    photoSizeKB, // Estimate file size in KB
                                     currentBitmap,
                                     new Date(),
                                     "VibeVerse Location" // Default location - get location functionality not yet implemented
                             );
 
-                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, trigger, socialSituation, photograph);
+
+
+                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, trigger, socialSituation, photograph);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
                         } else {
                             Log.d("SelectMoodActivity", "onClick: Emoji before assignment= " + selectedEmoji);
-                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, trigger, socialSituation);
+                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, trigger, socialSituation);
                             Log.d("SelectMoodActivity", "onClick: Emoji after assignment= " + moodEvent.getEmoji());
                             Log.d("SelectMoodActivity", "onClick: Title after assignment= " + moodEvent.getMoodTitle());
                             // Add intensity to the mood event
@@ -226,6 +249,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         moodData.put("socialSituation", moodEvent.getSocialSituation());
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("intensity", moodEvent.getIntensity());
+        moodData.put("reasonWhy", moodEvent.getReasonWhy());
 
         // Handle photograph if present
         if (moodEvent.getPhotograph() != null) {
@@ -505,13 +529,17 @@ public class SelectMoodActivity extends AppCompatActivity {
 
         GradientDrawable triggerBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
         GradientDrawable socialBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
+        GradientDrawable reasonWhyBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
+
 
         triggerInput.setBackground(triggerBg);
         socialSituationInput.setBackground(socialBg);
+        reasonWhyInput.setBackground(reasonWhyBg);
 
         int paddingPx = (int) dpToPx(12);
         triggerInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         socialSituationInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        reasonWhyInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
         TextView triggerLabel = new TextView(this);
         triggerLabel.setText("What triggered this mood?");
@@ -527,14 +555,27 @@ public class SelectMoodActivity extends AppCompatActivity {
         socialLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         socialLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
 
+        TextView reasonWhyLabel = new TextView(this);
+        reasonWhyLabel.setText("Reason why you feel this way");
+        reasonWhyLabel.setTextColor(Color.WHITE);
+        reasonWhyLabel.setTextColor(Color.WHITE);
+        reasonWhyLabel.setTypeface(null, Typeface.BOLD);
+        reasonWhyLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        reasonWhyLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
+
+
+        // Get the parent container
+        int reasonWhyIndex = mainContainer.indexOfChild(reasonWhyInput);
+        mainContainer.addView(reasonWhyLabel, reasonWhyIndex);
+      
         int triggerIndex = mainContainer.indexOfChild(triggerInput);
         mainContainer.addView(triggerLabel, triggerIndex);
 
         int socialIndex = mainContainer.indexOfChild(socialSituationInput);
         mainContainer.addView(socialLabel, socialIndex);
 
+
         triggerInput.setHint("What caused this feeling? (Optional)");
-        socialSituationInput.setHint("Were you alone or with others? (Optional)");
     }
 
     /**
@@ -844,21 +885,27 @@ public class SelectMoodActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                ImageUtils.processImage(this, imageUri, (bitmap, downloadUrl, sizeKB) -> {
+                    photoSizeKB = sizeKB;
                     currentBitmap = bitmap;
                     imgPlaceholder.setVisibility(View.GONE);
                     imageHintText.setVisibility(View.GONE);
                     imgSelected.setVisibility(View.VISIBLE);
                     imgSelected.setImageBitmap(bitmap);
+                    imageUri = downloadUrl;
                 });
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                Log.d("SelectMoodActivity", "galleryPhotoUri: " + imageUri);
+                ImageUtils.processImage(this, imageUri, (bitmap, downloadUrl, sizeKB) -> {
+                    photoSizeKB = sizeKB;
                     currentBitmap = bitmap;
                     imgPlaceholder.setVisibility(View.GONE);
                     imageHintText.setVisibility(View.GONE);
                     imgSelected.setVisibility(View.VISIBLE);
                     imgSelected.setImageBitmap(bitmap);
+                    imageUri = downloadUrl;
+
                 });
             }
         }

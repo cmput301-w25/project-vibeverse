@@ -16,16 +16,19 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,7 +62,8 @@ public class EditMoodActivity extends AppCompatActivity {
 
     // UI Elements
     private TextView selectedMoodEmoji, selectedMoodText;
-    private EditText triggerInput, socialSituationInput;
+    private EditText triggerInput, reasonWhyInput;
+    private Spinner socialSituationInput;
     private SeekBar moodIntensitySlider;
     private Button updateButton;
     private View selectedMoodContainer;
@@ -84,6 +88,10 @@ public class EditMoodActivity extends AppCompatActivity {
     private static final int REQUEST_PICK_IMAGE = 2;
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
+
+    private long photoSizeKB;
+    private String photoDateTaken;
+    private String photoLocation;
     private Bitmap currentBitmap;
 
     /**
@@ -109,7 +117,8 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedMoodContainer = findViewById(R.id.selectedMoodContainer);
         moodIntensitySlider = findViewById(R.id.moodIntensitySlider);
         triggerInput = findViewById(R.id.triggerInput);
-        socialSituationInput = findViewById(R.id.socialSituationInput);
+        reasonWhyInput = findViewById(R.id.reasonWhyInput);
+        socialSituationInput = findViewById(R.id.socialSituationSpinner);
         updateButton = findViewById(R.id.continueButton); // Reuse the same button ID
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
@@ -174,14 +183,18 @@ public class EditMoodActivity extends AppCompatActivity {
         // Clone the drawable for each input to avoid shared state issues
         GradientDrawable triggerBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
         GradientDrawable socialBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
+        GradientDrawable reasonWhyBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
+
 
         triggerInput.setBackground(triggerBg);
         socialSituationInput.setBackground(socialBg);
+        reasonWhyInput.setBackground(reasonWhyBg);
 
         // Set padding for the input fields
         int paddingPx = (int) dpToPx(12);
         triggerInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         socialSituationInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+        reasonWhyInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
         // Add labels above input fields for clarity
         TextView triggerLabel = new TextView(this);
@@ -198,7 +211,22 @@ public class EditMoodActivity extends AppCompatActivity {
         socialLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         socialLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
 
-        // Get the parent container and add the labels before the respective inputs
+        TextView reasonWhyLabel = new TextView(this);
+        reasonWhyLabel.setText("Reason why you feel this way");
+        reasonWhyLabel.setTextColor(Color.WHITE);
+        reasonWhyLabel.setTextColor(Color.WHITE);
+        reasonWhyLabel.setTypeface(null, Typeface.BOLD);
+        reasonWhyLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        reasonWhyLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
+      
+      // Get the parent container and add the labels before the respective inputs
+
+
+
+        int reasonWhyIndex = mainContainer.indexOfChild(reasonWhyInput);
+        mainContainer.addView(reasonWhyLabel, reasonWhyIndex);
+
+
         int triggerIndex = mainContainer.indexOfChild(triggerInput);
         mainContainer.addView(triggerLabel, triggerIndex);
         int socialIndex = mainContainer.indexOfChild(socialSituationInput);
@@ -253,8 +281,23 @@ public class EditMoodActivity extends AppCompatActivity {
 
         String timestamp = intent.getStringExtra("timestamp");
         String trigger = intent.getStringExtra("trigger");
+        String reasonWhy = intent.getStringExtra("reasonWhy");
         String socialSituation = intent.getStringExtra("socialSituation");
         String currentPhotoUri = intent.getStringExtra("photoUri");
+
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.social_situation_options,
+                android.R.layout.simple_spinner_item
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        socialSituationInput.setAdapter(adapter);
+
+
+        photoDateTaken = intent.getStringExtra("photoDateTaken");
+        photoLocation = intent.getStringExtra("photoLocation");
+        photoSizeKB = intent.getLongExtra("photoSizeKB", 0);
+
 
         // Get the intensity value from the intent (using default of 5 if not found)
         int intensity = intent.getIntExtra("intensity", 5);
@@ -263,7 +306,11 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedMoodText.setText(selectedMood);
         selectedMoodEmoji.setText(selectedEmoji);
         triggerInput.setText(trigger);
-        socialSituationInput.setText(socialSituation);
+        reasonWhyInput.setText(reasonWhy);
+        if (socialSituation != null) {
+            int spinnerPosition = adapter.getPosition(socialSituation);
+            socialSituationInput.setSelection(spinnerPosition);
+        }
 
         // Apply the refined gradient background for consistency
         applyGradientBackground(selectedColor);
@@ -346,21 +393,51 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Set click listener for the update button with animation
         updateButton.setOnClickListener(view -> {
+
+
+            String newreasonWhy = reasonWhyInput.getText().toString().trim();
+
+            // Validate character count
+            if (newreasonWhy.length() > 20) {
+                reasonWhyInput.setError("Reason why must be 20 characters or less.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
+
+            // Validate word count
+            String[] words = newreasonWhy.split("\\s+");
+            if (words.length > 3) {
+                reasonWhyInput.setError("Reason why must be 3 words or less.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
+
+            // Show updating toast
             Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
             mainContainer.animate()
                     .alpha(0.8f)
                     .setDuration(200)
                     .withEndAction(() -> {
-                        // Prepare updated mood details to return
+
+
+
+                        // Original code for handling the update
+
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("updatedMood", selectedMood);
                         resultIntent.putExtra("updatedEmoji", selectedEmoji);
+                        resultIntent.putExtra("updatedReasonWhy", reasonWhyInput.getText().toString().trim());
                         resultIntent.putExtra("updatedTrigger", triggerInput.getText().toString().trim());
-                        resultIntent.putExtra("updatedSocialSituation", socialSituationInput.getText().toString().trim());
+                        resultIntent.putExtra("updatedSocialSituation", socialSituationInput.getSelectedItem().toString().trim());
                         resultIntent.putExtra("timestamp", new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault()).format(new Date()));
                         resultIntent.putExtra("moodPosition", moodPosition);
                         resultIntent.putExtra("updatedPhotoUri", (currentImageUri != null) ? currentImageUri : "N/A");
                         resultIntent.putExtra("updatedIntensity", moodIntensitySlider.getProgress());
+                        resultIntent.putExtra("updatedphotoDateTaken", photoDateTaken);
+                        resultIntent.putExtra("updatedphotoLocation", photoLocation);
+                        resultIntent.putExtra("updatedphotoSizeKB", photoSizeKB);
+
+
                         setResult(RESULT_OK, resultIntent);
                         finish();
                     })
@@ -686,7 +763,8 @@ public class EditMoodActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 // For camera, imageUri is already set
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
+                    photoSizeKB = sizeKB;
                     currentBitmap = bitmap;
                     currentImageUri = uri.toString();
                     imgPlaceholder.setVisibility(View.GONE);
@@ -703,7 +781,8 @@ public class EditMoodActivity extends AppCompatActivity {
                 });
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
-                ImageUtils.processImage(this, imageUri, (bitmap, uri) -> {
+                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
+                    photoSizeKB = sizeKB;
                     currentBitmap = bitmap;
                     currentImageUri = uri.toString();
                     imgPlaceholder.setVisibility(View.GONE);

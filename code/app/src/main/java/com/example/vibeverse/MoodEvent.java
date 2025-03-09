@@ -27,6 +27,8 @@ public class MoodEvent implements Serializable {
     private String moodTitle;
     private String moodEmoji;
     private String trigger;
+    private String reasonWhy;
+  
     private String documentId; // Firestore document ID
     private String socialSituation;
     private String timestamp; // Formatted timestamp
@@ -107,16 +109,19 @@ public class MoodEvent implements Serializable {
         this.date = date;
     }
 
+
     /**
      * Constructs a new MoodEvent with the given mood title, emoji, trigger, and social situation.
      * The timestamp is automatically set to the current date and time.
      *
      * @param moodTitle       The emotional state (e.g., "Happy").
      * @param moodEmoji       The emoji representing the mood.
+     * @param reasonWhy       The reason for the mood.
      * @param trigger         The trigger for the mood.
      * @param socialSituation The social situation when the mood was recorded.
      */
-    public MoodEvent(String moodTitle, String moodEmoji, String trigger, String socialSituation) {
+    public MoodEvent(String moodTitle, String moodEmoji, String reasonWhy, String trigger, String socialSituation) {
+        this.reasonWhy = reasonWhy;
         this.moodEmoji = moodEmoji;
         this.moodTitle = moodTitle;
         this.trigger = trigger;
@@ -124,16 +129,20 @@ public class MoodEvent implements Serializable {
         this.timestamp = getCurrentFormattedTime();
     }
 
+
     /**
      * Constructs a new MoodEvent with an associated Photograph.
      *
      * @param moodTitle       The emotional state.
      * @param moodEmoji       The emoji representing the mood.
+     * @param reasonWhy       The reason for the mood.
      * @param trigger         The trigger for the mood.
      * @param socialSituation The social situation.
      * @param photograph      The Photograph associated with this mood event.
      */
-    public MoodEvent(String moodTitle, String moodEmoji, String trigger, String socialSituation, Photograph photograph) {
+
+    public MoodEvent(String moodTitle, String moodEmoji, String reasonWhy,  String trigger, String socialSituation, Photograph photograph) {
+        this.reasonWhy = reasonWhy;
         this.moodTitle = moodTitle;
         this.moodEmoji = moodEmoji;
         this.trigger = trigger;
@@ -154,6 +163,7 @@ public class MoodEvent implements Serializable {
         moodMap.put("socialSituation", this.socialSituation);
         moodMap.put("timestamp", this.timestamp);
         moodMap.put("intensity", this.intensity);
+        moodMap.put("reasonWhy", this.reasonWhy);
 
         // Store emoji and mood title
         moodMap.put("emoji", getEmoji());
@@ -187,10 +197,11 @@ public class MoodEvent implements Serializable {
         String moodTitle = (String) data.get("mood");
         String trigger = (String) data.get("trigger");
         String socialSituation = (String) data.get("socialSituation");
+        String reasonWhy = (String) data.get("reasonWhy");
 
         Log.d("fromMapDebug", "photoUri field: " + data.get("photoUri"));
 
-        MoodEvent moodEvent = new MoodEvent(moodTitle, moodEmoji, trigger, socialSituation);
+        MoodEvent moodEvent = new MoodEvent(moodTitle, moodEmoji, reasonWhy, trigger, socialSituation);
 
         // Set the timestamp if available
         if (data.containsKey("timestamp")) {
@@ -328,6 +339,14 @@ public class MoodEvent implements Serializable {
         this.intensity = intensity;
     }
 
+    public String getReasonWhy() {
+        return reasonWhy;
+    }
+
+    public void setReasonWhy(String reasonWhy) {
+        this.reasonWhy = reasonWhy;
+    }
+
     /**
      * Returns the mood title (emotional state) of this mood event.
      *
@@ -378,5 +397,26 @@ public class MoodEvent implements Serializable {
             return photograph.getImageUri().toString();
         }
         return "N/A";
+    }
+
+    public long getPhotoSize() {
+        if (photograph != null) {
+            return photograph.getFileSizeKB();
+        }
+        return 0;
+    }
+
+    public Date getPhotoDate() {
+        if (photograph != null) {
+            return photograph.getDateTaken();
+        }
+        return null;
+    }
+
+    public String getPhotoLocation() {
+        if (photograph != null) {
+            return photograph.getLocation();
+        }
+        return "Unknown";
     }
 }
