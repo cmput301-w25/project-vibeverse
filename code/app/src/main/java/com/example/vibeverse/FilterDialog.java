@@ -12,10 +12,12 @@ import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,10 +25,36 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * FilterDialog provides a dialog-based UI for filtering mood events.
+ * <p>
+ * Users can select a time range and various mood checkboxes (Happy, Sad, Angry, Surprised,
+ * Afraid, Disgusted, Confused, Shameful). When the user applies the filters, the dialog calls
+ * back via the {@link FilterListener} interface. It immediately notifies the caller via
+ * {@link FilterListener#onFilterApplied(String, boolean, boolean, boolean, boolean, boolean, boolean, boolean, boolean)}
+ * and then fetches and further filters mood events from Firestore. The final filtered results are
+ * returned via {@link FilterListener#onFilteredResults(List)}.
+ * </p>
+ */
 public class FilterDialog {
 
+    /**
+     * Callback interface to communicate filter actions.
+     */
     public interface FilterListener {
-        // Updated method signature to include all 9 parameters
+        /**
+         * Called immediately when the user applies filters.
+         *
+         * @param timeFilter   The time filter string (e.g., "last_24_hours", "3Days", "last_week", "last_month", or "all_time").
+         * @param isHappy      True if "Happy" is selected.
+         * @param isSad        True if "Sad" is selected.
+         * @param isAngry      True if "Angry" is selected.
+         * @param isSurprised  True if "Surprised" is selected.
+         * @param isAfraid     True if "Afraid" is selected.
+         * @param isDisgusted  True if "Disgusted" is selected.
+         * @param isConfused   True if "Confused" is selected.
+         * @param isShameful   True if "Shameful" is selected.
+         */
         void onFilterApplied(String timeFilter,
                              boolean isHappy,
                              boolean isSad,
@@ -37,9 +65,20 @@ public class FilterDialog {
                              boolean isConfused,
                              boolean isShameful);
 
+        /**
+         * Called after Firestore fetching and filtering is complete.
+         *
+         * @param results The final list of filtered {@link MoodEvent} objects.
+         */
         void onFilteredResults(List<MoodEvent> results);
     }
 
+    /**
+     * Displays the filter dialog.
+     *
+     * @param context  The context in which the dialog should be shown.
+     * @param listener The listener that will receive filter callbacks.
+     */
     public static void show(Context context, FilterListener listener) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -52,6 +91,7 @@ public class FilterDialog {
             );
         }
 
+        // Find radio buttons for time filter selection.
         RadioGroup radioGroupTime = dialog.findViewById(R.id.radioGroupTime);
         RadioButton radioLast24 = dialog.findViewById(R.id.radioLast24);
         RadioButton radioLast3Days = dialog.findViewById(R.id.radioLast3Days);
@@ -59,6 +99,7 @@ public class FilterDialog {
         RadioButton radioLastMonth = dialog.findViewById(R.id.radioLastMonth);
         RadioButton radioAllTime = dialog.findViewById(R.id.radioAllTime);
 
+        // Find checkboxes for mood selection.
         CheckBox checkHappy     = dialog.findViewById(R.id.checkHappy);
         CheckBox checkSad       = dialog.findViewById(R.id.checkSad);
         CheckBox checkAngry     = dialog.findViewById(R.id.checkAngry);
@@ -68,6 +109,7 @@ public class FilterDialog {
         CheckBox checkConfused  = dialog.findViewById(R.id.checkConfused);
         CheckBox checkShameful  = dialog.findViewById(R.id.checkShameful);
 
+        // Find the apply filters button.
         Button buttonApplyFilters = dialog.findViewById(R.id.buttonApplyFilters);
         buttonApplyFilters.setOnClickListener(v -> {
             String timeFilter = "all_time";
@@ -93,14 +135,14 @@ public class FilterDialog {
             boolean isConfused  = checkConfused.isChecked();
             boolean isShameful  = checkShameful.isChecked();
 
-            // Call onFilterApplied (if you need local logic in the activity)
+            // Notify the listener immediately with the selected filter options.
             listener.onFilterApplied(
                     timeFilter,
                     isHappy, isSad, isAngry, isSurprised,
                     isAfraid, isDisgusted, isConfused, isShameful
             );
 
-            // Perform the Firestore fetch + filter, then return results
+            // Fetch and filter moods from Firestore and return the results.
             fetchAndFilterMoods(
                     context, listener, timeFilter,
                     isHappy, isSad, isAngry, isSurprised,
@@ -113,6 +155,21 @@ public class FilterDialog {
         dialog.show();
     }
 
+    /**
+     * Fetches moods from Firestore, applies time and mood filters, and returns the results.
+     *
+     * @param context     The context.
+     * @param listener    The FilterListener to return the filtered results.
+     * @param timeFilter  The time filter string.
+     * @param isHappy     True if "Happy" is selected.
+     * @param isSad       True if "Sad" is selected.
+     * @param isAngry     True if "Angry" is selected.
+     * @param isSurprised True if "Surprised" is selected.
+     * @param isAfraid    True if "Afraid" is selected.
+     * @param isDisgusted True if "Disgusted" is selected.
+     * @param isConfused  True if "Confused" is selected.
+     * @param isShameful  True if "Shameful" is selected.
+     */
     private static void fetchAndFilterMoods(
             Context context,
             FilterListener listener,
@@ -144,6 +201,7 @@ public class FilterDialog {
                     SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
                     long now = System.currentTimeMillis();
 
+                    // Iterate over each document and apply filters.
                     for (QueryDocumentSnapshot doc : snapshots) {
                         MoodEvent m = MoodEvent.fromMap(doc.getData());
                         if (m.getTimestamp() == null) continue;
@@ -178,7 +236,7 @@ public class FilterDialog {
                         }
                         if (!inTime) continue;
 
-                        // Mood filter check
+                        // Mood filter check: convert mood title to uppercase for comparison.
                         String title = m.getMoodTitle() != null
                                 ? m.getMoodTitle().toUpperCase(Locale.ROOT)
                                 : "";
@@ -193,7 +251,7 @@ public class FilterDialog {
                         if (isConfused  && "CONFUSED".equals(title))   moodMatch = true;
                         if (isShameful  && "SHAMEFUL".equals(title))   moodMatch = true;
 
-                        // If no checkboxes are selected, show all
+                        // If no mood checkboxes are selected, then match all moods.
                         if (!isHappy && !isSad && !isAngry && !isSurprised &&
                                 !isAfraid && !isDisgusted && !isConfused && !isShameful) {
                             moodMatch = true;
@@ -204,7 +262,7 @@ public class FilterDialog {
                         }
                     }
 
-                    // Return final filtered list
+                    // Return the final filtered list via callback.
                     listener.onFilteredResults(filtered);
                 })
                 .addOnFailureListener(e ->
