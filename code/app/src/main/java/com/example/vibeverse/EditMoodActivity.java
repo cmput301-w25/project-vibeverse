@@ -451,8 +451,8 @@ public class EditMoodActivity extends AppCompatActivity {
      * @param baseColor The base mood color.
      */
     private void applyGradientBackground(int baseColor) {
-        int lighterColor = ColorUtils.blendColors(baseColor, Color.WHITE, 0.7f);
-        int mediumColor = ColorUtils.blendColors(baseColor, Color.WHITE, 0.3f);
+        int lighterColor = blendColors(baseColor, Color.WHITE, 0.7f);
+        int mediumColor = blendColors(baseColor, Color.WHITE, 0.3f);
         GradientDrawable gradient = new GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[]{Color.parseColor("#2D2D3A"), lighterColor, mediumColor, baseColor}
@@ -702,7 +702,7 @@ public class EditMoodActivity extends AppCompatActivity {
     private int adjustColorIntensity(int baseColor, int intensity) {
         if (intensity < 5) {
             float blendRatio = 0.5f + (intensity / 10f); // 0.5 to 1.0
-            return ColorUtils.blendColors(baseColor, Color.GRAY, blendRatio);
+            return blendColors(baseColor, Color.GRAY, blendRatio);
         }
         // For high intensity, make more vibrant/darker
         else if (intensity > 5) {
@@ -885,24 +885,21 @@ public class EditMoodActivity extends AppCompatActivity {
         }
     }
 
+
     /**
-     * Utility class for color blending operations.
+     * Blends two colors together using the specified ratio.
+     *
+     * @param color1 The first color.
+     * @param color2 The second color.
+     * @param ratio  The blending ratio (0.0 to 1.0).
+     * @return The resulting blended color.
      */
-    private static class ColorUtils {
-        /**
-         * Blends two colors together using the specified ratio.
-         *
-         * @param color1 The first color.
-         * @param color2 The second color.
-         * @param ratio  The blending ratio (0.0 to 1.0).
-         * @return The resulting blended color.
-         */
-        public static int blendColors(int color1, int color2, float ratio) {
-            final float inverseRatio = 1f - ratio;
-            float r = (Color.red(color1) * ratio) + (Color.red(color2) * inverseRatio);
-            float g = (Color.green(color1) * ratio) + (Color.green(color2) * inverseRatio);
-            float b = (Color.blue(color1) * ratio) + (Color.blue(color2) * inverseRatio);
-            return Color.rgb((int) r, (int) g, (int) b);
-        }
+    public static int blendColors(int color1, int color2, float ratio) {
+        final float inverseRatio = 1f - ratio;
+        float r = (Color.red(color1) * ratio) + (Color.red(color2) * inverseRatio);
+        float g = (Color.green(color1) * ratio) + (Color.green(color2) * inverseRatio);
+        float b = (Color.blue(color1) * ratio) + (Color.blue(color2) * inverseRatio);
+        return Color.rgb((int) r, (int) g, (int) b);
     }
+
 }
