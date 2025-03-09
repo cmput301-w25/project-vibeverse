@@ -1,5 +1,7 @@
 package com.example.vibeverse;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CancellationSignal;
@@ -38,12 +40,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.concurrent.Executors;
 
-public class Login extends AppCompatActivity {
 
-    private static final String TAG = "GoogleLogin";
-    EditText editTextEmail, editTextPassword;
-    Button buttonLogin;
-    MaterialButton googleSignInButton;
 
 /**
  * Login activity handles user authentication using Firebase.
@@ -56,13 +53,12 @@ public class Login extends AppCompatActivity {
  */
 public class Login extends AppCompatActivity {
 
-    /** Input field for the user's email address. */
-    TextInputEditText editTextEmail;
-    /** Input field for the user's password. */
-    TextInputEditText editTextPassword;
+    /** Input field for the user's email address and password. */
+    EditText editTextEmail, editTextPassword;
     /** Button that triggers the login process. */
     Button buttonLogin;
     /** Firebase authentication instance. */
+    MaterialButton googleSignInButton;
 
     FirebaseAuth mAuth;
     /** Progress bar shown during the login process. */

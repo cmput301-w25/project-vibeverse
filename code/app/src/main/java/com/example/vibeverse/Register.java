@@ -52,7 +52,7 @@ public class Register extends AppCompatActivity {
    /** Input field for the user's email address. */
     EditText editTextEmail;
    /** Input field for the user's password. */
-    Edit Text editTextPassword;
+    EditText editTextPassword;
    /** Button to register a new account. */
     Button buttonRegister;
     MaterialButton googleSignUpButton;

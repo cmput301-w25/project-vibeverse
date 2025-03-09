@@ -62,10 +62,6 @@ public class MainActivity extends AppCompatActivity {
 //        textView = findViewById(R.id.userDetails);
 
 
-        // Initialize UI elements
-        button = findViewById(R.id.logout_button);
-        textView = findViewById(R.id.userDetails);
-
         user = auth.getCurrentUser();
 
         if (user != null) {
