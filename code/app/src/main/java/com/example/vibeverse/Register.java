@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,7 +40,7 @@ import java.util.concurrent.Executors;
 public class Register extends AppCompatActivity {
 
     private static final String TAG = "GoogleSignUp";
-    TextInputEditText editTextEmail, editTextPassword;
+    EditText editTextEmail, editTextPassword;
     Button buttonRegister;
     MaterialButton googleSignUpButton;
     FirebaseAuth mAuth;
@@ -122,8 +123,12 @@ public class Register extends AppCompatActivity {
                                     finish();
                                 } else {
                                     // If sign in fails, display a message to the user.
-                                    Toast.makeText(Register.this, "Authentication failed.",
-                                            Toast.LENGTH_SHORT).show();
+                                    String errorMessage = "Authentication failed";
+                                    Exception exception = task.getException();
+                                    if (exception != null) {
+                                        errorMessage = exception.getMessage();
+                                    }
+                                    Toast.makeText(Register.this, errorMessage, Toast.LENGTH_LONG).show();
                                 }
                             }
                         });
@@ -226,7 +231,12 @@ public class Register extends AppCompatActivity {
                         } else {
                             // If sign in fails, display a message to the user
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
-                            Toast.makeText(Register.this, "Authentication failed", Toast.LENGTH_SHORT).show();
+                            String errorMessage = "Authentication failed";
+                            Exception exception = task.getException();
+                            if (exception != null) {
+                                errorMessage = exception.getMessage();
+                            }
+                            Toast.makeText(Register.this, errorMessage, Toast.LENGTH_LONG).show();
                         }
                     });
                 });

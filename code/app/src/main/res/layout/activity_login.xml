@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="@color/white">
+    android:background="@color/off_white">
 
     <LinearLayout
         android:id="@+id/main"
@@ -20,7 +20,7 @@
             android:id="@+id/logo"
             android:layout_width="188dp"
             android:layout_height="153dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="48dp"
             android:contentDescription="@string/app_logo"
             android:src="@drawable/vslogo" />
 
@@ -29,7 +29,7 @@
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="48dp"
             android:layout_marginBottom="16dp"
             android:backgroundTint="@color/google_blue"
             android:padding="12dp"
@@ -45,7 +45,7 @@
             style="@style/Widget.MaterialComponents.Button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="32dp"
             android:backgroundTint="@color/black"
             android:padding="12dp"
             android:text="@string/XSignInText"
@@ -58,7 +58,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="32dp"
             android:text="OR"
             android:textSize="16sp" />
 
@@ -96,7 +96,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="32dp">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/login_button"
@@ -111,7 +111,6 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
             android:gravity="center"
             android:orientation="vertical">
 
