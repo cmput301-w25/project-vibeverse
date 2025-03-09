@@ -49,6 +49,7 @@ dependencies {
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
     implementation ("com.firebaseui:firebase-ui-auth:7.2.0")
+    implementation(files("${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar")) // For Javadocs
 
     // Add the dependency for the Firebase Authentication library
     // When using the BoM, you don't specify versions in Firebase library dependencies
