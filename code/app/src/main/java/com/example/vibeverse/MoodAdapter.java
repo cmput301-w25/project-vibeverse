@@ -13,8 +13,9 @@ import java.util.List;
 /**
  * MoodAdapter is a custom adapter for displaying mood entries in a ListView.
  * <p>
- * Each mood entry is represented as a String. The adapter provides options to delete
- * or edit a mood entry via the {@link OnMoodActionListener} interface.
+ * Each mood entry is represented as a String. This adapter provides functionality
+ * to display the list of moods and also offers callbacks for editing or deleting a mood
+ * entry via the {@link OnMoodActionListener} interface.
  * </p>
  */
 public class MoodAdapter extends BaseAdapter {
@@ -23,6 +24,9 @@ public class MoodAdapter extends BaseAdapter {
     private List<String> moodList;
     private OnMoodActionListener moodActionListener;
 
+    /**
+     * Interface for handling actions on mood entries.
+     */
     public interface OnMoodActionListener {
         /**
          * Called when a mood entry is requested to be deleted.
@@ -36,7 +40,7 @@ public class MoodAdapter extends BaseAdapter {
          *
          * @param position The position of the mood entry to edit.
          */
-        void onMoodEdit(int position);  // Added method for editing
+        void onMoodEdit(int position);
     }
 
     /**
@@ -55,7 +59,7 @@ public class MoodAdapter extends BaseAdapter {
     /**
      * Returns the number of mood entries in the list.
      *
-     * @return The size of the mood list.
+     * @return The number of mood entries.
      */
     @Override
     public int getCount() {
@@ -87,16 +91,16 @@ public class MoodAdapter extends BaseAdapter {
     /**
      * Provides a view for an AdapterView (ListView).
      * <p>
-     * The view is inflated from {@code R.layout.list_item_mood}. It displays the mood entry and
-     * includes a delete button. Clicking on the delete button triggers the {@link OnMoodActionListener#onMoodDelete(int)}
-     * callback, while clicking anywhere else in the view triggers the {@link OnMoodActionListener#onMoodEdit(int)}
-     * callback.
+     * The view is inflated from {@code R.layout.list_item_mood} and displays the mood entry.
+     * It includes a delete button; clicking the delete button triggers the
+     * {@link OnMoodActionListener#onMoodDelete(int)} callback, whereas clicking anywhere
+     * else in the view triggers the {@link OnMoodActionListener#onMoodEdit(int)} callback.
      * </p>
      *
      * @param position    The position of the mood entry within the adapter's data set.
      * @param convertView The old view to reuse, if possible.
      * @param parent      The parent that this view will eventually be attached to.
-     * @return A View corresponding to the mood entry at the specified position.
+     * @return A view corresponding to the mood entry at the specified position.
      */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -109,10 +113,10 @@ public class MoodAdapter extends BaseAdapter {
 
         moodTextView.setText(moodList.get(position));
 
-        // Handle delete button
+        // Handle delete button click
         deleteButton.setOnClickListener(v -> moodActionListener.onMoodDelete(position));
 
-        // Allow editing when clicking anywhere *except* the delete button
+        // Allow editing when clicking anywhere except the delete button
         convertView.setOnClickListener(v -> moodActionListener.onMoodEdit(position));
 
         return convertView;
