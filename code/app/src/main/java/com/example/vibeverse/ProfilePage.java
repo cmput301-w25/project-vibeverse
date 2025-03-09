@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -58,6 +59,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private MoodEventAdapter moodEventAdapter;
     private List<MoodEvent> allMoodEvents;
     private EditText editSearch;
+
+    private TextView textName, textUsername, textBioContent;
+    private ImageView profilePicture;
 
     private Button logoutButton;
     private BottomNavigationView bottomNavigationView;
@@ -89,7 +93,18 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 userId = java.util.UUID.randomUUID().toString();
                 prefs.edit().putString("device_id", userId).apply();
             }
+
+
         }
+
+        // **Find your TextViews & ImageView from XML**
+        textName = findViewById(R.id.textName);
+        textUsername = findViewById(R.id.textUsername);
+        textBioContent = findViewById(R.id.textBioContent);
+        profilePicture = findViewById(R.id.profilePicture);
+
+        // Then call a helper method to load the profile
+        loadUserProfile();
         // Logout button
         logoutButton = findViewById(R.id.buttonLogout);
 
@@ -244,6 +259,44 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                         progressLoading.setVisibility(View.GONE);
                     }
                     Toast.makeText(ProfilePage.this, "Error loading moods: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+
+    private void loadUserProfile() {
+        // Make sure you have the correct path: "users" -> document(userId)
+        db.collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Read the fields from the Firestore document
+                        String fullName = documentSnapshot.getString("fullName");
+                        String username = documentSnapshot.getString("username");
+                        String bio = documentSnapshot.getString("bio");
+                        String profilePicUri = documentSnapshot.getString("profilePicUri");
+
+                        // Populate the TextViews
+                        if (fullName != null) textName.setText(fullName);
+                        if (username != null) textUsername.setText(username);
+                        if (bio != null) textBioContent.setText(bio);
+
+                        // If you have a profile picture URL, load it using Glide (or Picasso).
+                        if (profilePicUri != null && !profilePicUri.isEmpty()) {
+                            // Make sure you have Glide in your Gradle dependencies
+                            // implementation 'com.github.bumptech.glide:glide:4.14.2'
+                            Glide.with(ProfilePage.this)
+                                    .load(profilePicUri)
+                                    .placeholder(R.drawable.user_icon) // fallback placeholder
+                                    .error(R.drawable.user_icon)       // error placeholder
+                                    .into(profilePicture);
+                        }
+                    } else {
+                        Toast.makeText(ProfilePage.this, "User profile does not exist.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ProfilePage.this, "Failed to load user profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
