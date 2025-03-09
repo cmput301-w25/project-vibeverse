@@ -62,10 +62,6 @@ public class MainActivity extends AppCompatActivity {
 //        textView = findViewById(R.id.userDetails);
 
 
-        // Initialize UI elements
-        button = findViewById(R.id.logout_button);
-        textView = findViewById(R.id.userDetails);
-
         user = auth.getCurrentUser();
 
         if (user != null) {
@@ -94,15 +90,5 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         }
-
-
-        // Set up logout button click listener
-        button.setOnClickListener(view -> {
-            auth.signOut();
-            Intent intent = new Intent(getApplicationContext(), Login.class);
-            startActivity(intent);
-            finish();
-        });
-
     }
 }
