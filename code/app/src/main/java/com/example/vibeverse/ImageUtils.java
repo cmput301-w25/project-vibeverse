@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -88,11 +89,14 @@ public class ImageUtils {
             // The final compressed byte array is guaranteed to be below 65,536 bytes
             long newSizeInBytes = imageBytes.length;
 
+            // Decode the compressed image bytes to a Bitmap.
+            Bitmap compressedBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+
             Date dateTaken = new Date(); // current date for demo purposes
             String location = "Test Location"; // Replace with an actual location if available
 
-            // Pass the compressed bitmap and the final byte array to the preview dialog
-            showPreviewDialog(activity, currentBitmap, imageBytes, imageUri, newSizeInBytes, dateTaken, location, callback);
+            // Pass the compressed bitmap (not the original) and the final byte array to the preview dialog
+            showPreviewDialog(activity, compressedBitmap, imageBytes, imageUri, newSizeInBytes, dateTaken, location, callback);
 
         } catch (IOException e) {
             e.printStackTrace();
