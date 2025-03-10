@@ -64,7 +64,21 @@ dependencies {
     implementation ("de.hdodenhof:circleimageview:3.1.0")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
-    
+
+    androidTestImplementation ("androidx.test.espresso:espresso-contrib:3.5.1")
+    androidTestImplementation ("org.mockito:mockito-core:4.0.0")
+    androidTestImplementation ("org.mockito:mockito-android:4.0.0")
+
+    // For RecyclerView testing
+    debugImplementation ("androidx.fragment:fragment-testing:1.6.2")
+
+    // For mocking
+    testImplementation ("org.mockito:mockito-inline:4.0.0")
+
+    // For instrumentation tests
+    androidTestImplementation ("androidx.test:runner:1.5.2")
+    androidTestImplementation ("androidx.test:rules:1.5.0")
+
 
 
 }
