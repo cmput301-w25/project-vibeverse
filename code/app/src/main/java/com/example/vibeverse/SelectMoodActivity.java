@@ -84,7 +84,7 @@ public class SelectMoodActivity extends AppCompatActivity {
     private static final int REQUEST_PICK_IMAGE = 2;
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
-    private long photoSizeKB;
+    private long photoSize;
     private Bitmap currentBitmap;
     private ImageView imgPlaceholder, imgSelected;
     private TextView imageHintText;
@@ -216,7 +216,7 @@ public class SelectMoodActivity extends AppCompatActivity {
                             // Using the existing Photograph constructor that matches your implementation
                             Photograph photograph = new Photograph(
                                     imageUri,
-                                    photoSizeKB, // Estimate file size in KB
+                                    photoSize, // Estimate file size in KB
                                     currentBitmap,
                                     new Date(),
                                     "VibeVerse Location" // Default location - get location functionality not yet implemented
@@ -274,7 +274,7 @@ public class SelectMoodActivity extends AppCompatActivity {
             moodData.put("photoUri", moodEvent.getPhotoUri());
             moodData.put("photoDateTaken", moodEvent.getPhotograph().getDateTaken().getTime());
             moodData.put("photoLocation", moodEvent.getPhotograph().getLocation());
-            moodData.put("photoSizeKB", moodEvent.getPhotograph().getFileSizeKB());
+            moodData.put("photoSize", moodEvent.getPhotograph().getFileSize());
         } else {
             moodData.put("hasPhoto", false);
         }
@@ -906,7 +906,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 ImageUtils.processImage(this, imageUri, (bitmap, downloadUrl, sizeKB) -> {
-                    photoSizeKB = sizeKB;
+                    photoSize = sizeKB;
                     currentBitmap = bitmap;
                     imgPlaceholder.setVisibility(View.GONE);
                     imageHintText.setVisibility(View.GONE);
@@ -918,7 +918,7 @@ public class SelectMoodActivity extends AppCompatActivity {
                 imageUri = data.getData();
                 Log.d("SelectMoodActivity", "galleryPhotoUri: " + imageUri);
                 ImageUtils.processImage(this, imageUri, (bitmap, downloadUrl, sizeKB) -> {
-                    photoSizeKB = sizeKB;
+                    photoSize = sizeKB;
                     currentBitmap = bitmap;
                     imgPlaceholder.setVisibility(View.GONE);
                     imageHintText.setVisibility(View.GONE);

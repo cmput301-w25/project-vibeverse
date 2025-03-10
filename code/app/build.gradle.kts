@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
@@ -49,6 +50,8 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     testImplementation ("org.robolectric:robolectric:4.9")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
     implementation ("com.firebaseui:firebase-ui-auth:7.2.0")
@@ -97,3 +100,13 @@ dependencies {
 
 }
 
+tasks.register<Javadoc>("javadoc") {
+    // Convert the main source set directories to a FileTree.
+    source = files(android.sourceSets["main"].java.srcDirs).asFileTree
+
+    // Add the Android SDK JAR to the classpath.
+    classpath += files("${android.sdkDirectory}/platforms/android-${android.compileSdk}/android.jar")
+
+    // Use the setter method to configure the output directory.
+    setDestinationDir(file("$buildDir/docs/javadoc"))
+}

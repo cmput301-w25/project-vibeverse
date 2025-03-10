@@ -16,7 +16,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -38,7 +37,6 @@ import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.button.MaterialButton;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,7 +89,7 @@ public class EditMoodActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
 
-    private long photoSizeKB;
+    private long photoSize;
     private String photoDateTaken;
     private String photoLocation;
     private Bitmap currentBitmap;
@@ -301,7 +299,7 @@ public class EditMoodActivity extends AppCompatActivity {
 
         photoDateTaken = intent.getStringExtra("photoDateTaken");
         photoLocation = intent.getStringExtra("photoLocation");
-        photoSizeKB = intent.getLongExtra("photoSizeKB", 0);
+        photoSize = intent.getLongExtra("photoSizeKB", 0);
 
 
         // Get the intensity value from the intent (using default of 5 if not found)
@@ -449,7 +447,7 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedIntensity", moodIntensitySlider.getProgress());
                         resultIntent.putExtra("updatedphotoDateTaken", photoDateTaken);
                         resultIntent.putExtra("updatedphotoLocation", photoLocation);
-                        resultIntent.putExtra("updatedphotoSizeKB", photoSizeKB);
+                        resultIntent.putExtra("updatedphotoSizeKB", photoSize);
 
 
                         setResult(RESULT_OK, resultIntent);
@@ -784,7 +782,7 @@ public class EditMoodActivity extends AppCompatActivity {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 // For camera, imageUri is already set
                 ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    photoSizeKB = sizeKB;
+                    photoSize = sizeKB;
                     currentBitmap = bitmap;
                     currentImageUri = uri.toString();
                     imgPlaceholder.setVisibility(View.GONE);
@@ -802,7 +800,7 @@ public class EditMoodActivity extends AppCompatActivity {
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
                 ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    photoSizeKB = sizeKB;
+                    photoSize = sizeKB;
                     currentBitmap = bitmap;
                     currentImageUri = uri.toString();
                     imgPlaceholder.setVisibility(View.GONE);

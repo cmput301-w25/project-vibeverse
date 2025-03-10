@@ -95,7 +95,7 @@ public class UserDetails extends AppCompatActivity {
      */
     private Uri imageUri;
 
-    private long fileSizeKB;
+    private long fileSize;
 
 
     /**
@@ -305,7 +305,7 @@ public class UserDetails extends AppCompatActivity {
             if (imageUri != null) {
                 userData.put("hasProfilePic", true);
                 userData.put("profilePicUri", imageUri.toString());
-                userData.put("profilePicSizeKB", fileSizeKB);
+                userData.put("profilePicSizeKB", fileSize);
 
             } else {
                 userData.put("hasProfilePic", false);
@@ -481,7 +481,7 @@ public class UserDetails extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    fileSizeKB = sizeKB;
+                    fileSize = sizeKB;
                     imageUri = uri;
                     currentBitmap = bitmap;
                     profilePicturePlaceholder.setVisibility(View.GONE);
@@ -491,7 +491,7 @@ public class UserDetails extends AppCompatActivity {
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
                 ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    fileSizeKB = sizeKB;
+                    fileSize = sizeKB;
                     imageUri = uri;
                     currentBitmap = bitmap;
                     profilePicturePlaceholder.setVisibility(View.GONE);

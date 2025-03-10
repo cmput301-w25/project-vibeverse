@@ -45,9 +45,9 @@ public class ImageUtils {
          *
          * @param bitmap   The processed Bitmap.
          * @param imageUri The URI of the image.
-         * @param sizeKB The size of the image in KB.
+         * @param size The size of the image .
          */
-        void onImageConfirmed(Bitmap bitmap, Uri imageUri, long sizeKB);
+        void onImageConfirmed(Bitmap bitmap, Uri imageUri, long size);
 
     }
 
@@ -63,26 +63,36 @@ public class ImageUtils {
         try {
             Bitmap bitmap = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), imageUri);
 
-            // Estimate file size
+            // Initialize compression settings
+            int quality = 100;
+            Bitmap currentBitmap = bitmap;
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            currentBitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
             byte[] imageBytes = baos.toByteArray();
-            long sizeKB = imageBytes.length / 1024;
 
-            // Compress if needed
-            if (sizeKB > 65536) {
-                bitmap = compressBitmap(bitmap);
+            // Iteratively compress until the image is below 65,536 bytes
+            while (imageBytes.length > 65536) {
+                // Lower the quality in steps of 5 if possible
+                if (quality > 10) {
+                    quality -= 5;
+                } else {
+                    // If quality is too low, scale down the image and reset quality
+                    currentBitmap = compressBitmap(currentBitmap);
+                    quality = 100;
+                }
                 baos.reset();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
+                currentBitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
                 imageBytes = baos.toByteArray();
-                sizeKB = imageBytes.length / 1024;
             }
+
+            // The final compressed byte array is guaranteed to be below 65,536 bytes
+            long newSizeInBytes = imageBytes.length;
 
             Date dateTaken = new Date(); // current date for demo purposes
             String location = "Test Location"; // Replace with an actual location if available
 
-            // Show preview dialog for confirmation
-            showPreviewDialog(activity, bitmap, imageUri, sizeKB, dateTaken, location, callback);
+            // Pass the compressed bitmap and the final byte array to the preview dialog
+            showPreviewDialog(activity, currentBitmap, imageBytes, imageUri, newSizeInBytes, dateTaken, location, callback);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -118,19 +128,21 @@ public class ImageUtils {
         return File.createTempFile(imageFileName, ".jpg", storageDir);
     }
 
+
     /**
      * Shows a preview dialog containing the processed image. When the user confirms,
      * the provided callback is invoked.
      *
-     * @param activity   The Activity context.
-     * @param bitmap     The processed Bitmap.
-     * @param imageUri   The URI of the image.
-     * @param fileSizeKB Estimated file size in KB.
-     * @param dateTaken  The date the image was taken.
-     * @param location   The location information.
-     * @param callback   Callback to be invoked on confirmation.
+     * @param activity       The Activity context.
+     * @param bitmap         The processed Bitmap.
+     * @param imageBytes     The final compressed image bytes (guaranteed to be below 65,536 bytes).
+     * @param imageUri       The URI of the image.
+     * @param fileSizeBytes  The size of the image in bytes.
+     * @param dateTaken      The date the image was taken.
+     * @param location       The location information.
+     * @param callback       Callback to be invoked on confirmation.
      */
-    public static void showPreviewDialog(final Activity activity, final Bitmap bitmap, final Uri imageUri, final long fileSizeKB, final Date dateTaken, final String location, final ImageProcessCallback callback) {
+    public static void showPreviewDialog(final Activity activity, final Bitmap bitmap, final byte[] imageBytes, final Uri imageUri, final long fileSizeBytes, final Date dateTaken, final String location, final ImageProcessCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         View dialogView = activity.getLayoutInflater().inflate(R.layout.image_preview_dialog, null);
         ImageView previewImageView = dialogView.findViewById(R.id.previewImageView);
@@ -144,18 +156,13 @@ public class ImageUtils {
                         StorageReference storageRef = FirebaseStorage.getInstance().getReference();
                         StorageReference imageRef = storageRef.child("images/" + System.currentTimeMillis() + ".jpg");
 
-                        // Convert compressed bitmap to byte array
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-                        byte[] compressedData = baos.toByteArray();
-
-                        // Upload compressed image as byte array
-                        UploadTask uploadTask = imageRef.putBytes(compressedData);
+                        // Upload the already compressed image bytes that are below 65,536 bytes
+                        UploadTask uploadTask = imageRef.putBytes(imageBytes);
                         uploadTask.addOnSuccessListener(taskSnapshot -> {
                             // Retrieve the download URL AFTER successful upload
                             imageRef.getDownloadUrl().addOnSuccessListener(downloadUri -> {
                                 Uri uploadedImageUri = downloadUri; // Firebase Storage URL
-                                callback.onImageConfirmed(bitmap, uploadedImageUri, fileSizeKB);
+                                callback.onImageConfirmed(bitmap, uploadedImageUri, fileSizeBytes);
                                 Toast.makeText(activity, "Image uploaded successfully!", Toast.LENGTH_SHORT).show();
                             }).addOnFailureListener(e -> {
                                 Toast.makeText(activity, "Failed to get download URL: " + e.getMessage(), Toast.LENGTH_SHORT).show();
