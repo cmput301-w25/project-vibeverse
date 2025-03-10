@@ -50,6 +50,8 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     testImplementation ("org.robolectric:robolectric:4.9")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
     implementation ("com.firebaseui:firebase-ui-auth:7.2.0")
