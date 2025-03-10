@@ -39,7 +39,7 @@ public class UserDetailsTest {
 
         // Image data
         public String imageUri;
-        public long fileSizeKB;
+        public long fileSize;
 
         // Input validation errors
         public String fullNameError;
@@ -134,7 +134,7 @@ public class UserDetailsTest {
             if (imageUri != null) {
                 savedUserData.put("hasProfilePic", true);
                 savedUserData.put("profilePicUri", imageUri);
-                savedUserData.put("profilePicSizeKB", fileSizeKB);
+                savedUserData.put("profilePicSizeKB", fileSize);
             } else {
                 savedUserData.put("hasProfilePic", false);
             }
@@ -182,7 +182,7 @@ public class UserDetailsTest {
          */
         private void setImageData(String imageUriString, long size) {
             imageUri = imageUriString;
-            fileSizeKB = size;
+            fileSize = size;
             profilePicturePlaceholderVisible = false;
             profilePictureSelectedVisible = true;
         }
@@ -360,7 +360,7 @@ public class UserDetailsTest {
 
         // Verify
         assertEquals("content://media/photo.jpg", userDetailsLogic.imageUri);
-        assertEquals(1024, userDetailsLogic.fileSizeKB);
+        assertEquals(1024, userDetailsLogic.fileSize);
         assertFalse("Placeholder should be hidden", userDetailsLogic.profilePicturePlaceholderVisible);
         assertTrue("Selected image should be visible", userDetailsLogic.profilePictureSelectedVisible);
     }

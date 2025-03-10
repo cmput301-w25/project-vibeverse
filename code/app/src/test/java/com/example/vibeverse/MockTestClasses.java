@@ -34,7 +34,7 @@ class mockUri implements Serializable {
 class mockPhotograph implements Serializable {
     private mockUri imageUri;
     private String imageUriString;
-    private long fileSizeKB;
+    private long fileSize;
     private Object bitmap; // Replaced Bitmap with Object for mock
     private Date dateTaken;
     private String location;
@@ -42,10 +42,10 @@ class mockPhotograph implements Serializable {
     /**
      * Constructs a Photograph with a bitmap (mock version)
      */
-    public mockPhotograph(mockUri imageMockUri, long fileSizeKB, Object bitmap, Date dateTaken, String location) {
+    public mockPhotograph(mockUri imageMockUri, long fileSize, Object bitmap, Date dateTaken, String location) {
         this.imageUri = imageMockUri;
         this.imageUriString = imageMockUri != null ? imageMockUri.toString() : null;
-        this.fileSizeKB = fileSizeKB;
+        this.fileSize = fileSize;
         this.bitmap = bitmap;
         this.dateTaken = dateTaken;
         this.location = location;
@@ -54,19 +54,19 @@ class mockPhotograph implements Serializable {
     /**
      * Constructs a Photograph without a bitmap (mock version)
      */
-    public mockPhotograph(mockUri imageMockUri, long fileSizeKB, Date dateTaken, String location) {
+    public mockPhotograph(mockUri imageMockUri, long fileSize, Date dateTaken, String location) {
         this.imageUri = imageMockUri;
         this.imageUriString = imageMockUri != null ? imageMockUri.toString() : null;
-        this.fileSizeKB = fileSizeKB;
+        this.fileSize = fileSize;
         this.dateTaken = dateTaken;
         this.location = location;
     }
 
     // For testing only - constructor that accepts a String uri
-    public mockPhotograph(String imageUriString, long fileSizeKB, Date dateTaken, String location) {
+    public mockPhotograph(String imageUriString, long fileSize, Date dateTaken, String location) {
         this.imageUri = imageUriString != null ? mockUri.parse(imageUriString) : null;
         this.imageUriString = imageUriString;
-        this.fileSizeKB = fileSizeKB;
+        this.fileSize = fileSize;
         this.dateTaken = dateTaken;
         this.location = location;
     }
@@ -82,8 +82,8 @@ class mockPhotograph implements Serializable {
         }
     }
 
-    public void setFileSizeKB(long fileSizeKB) {
-        this.fileSizeKB = fileSizeKB;
+    public void setFileSize(long fileSize) {
+        this.fileSize = fileSize;
     }
 
     public void setBitmap(Object bitmap) {
@@ -107,8 +107,8 @@ class mockPhotograph implements Serializable {
         return imageUri;
     }
 
-    public long getFileSizeKB() {
-        return fileSizeKB;
+    public long getFileSize() {
+        return fileSize;
     }
 
     public Object getBitmap() {
@@ -123,23 +123,5 @@ class mockPhotograph implements Serializable {
         return location;
     }
 
-    public String getFormattedDetails() {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-        String dateStr = dateTaken != null ? sdf.format(dateTaken) : "Date unknown";
-        String locationStr = location != null ? location : "Location unknown";
 
-        String sizeStr;
-        if (fileSizeKB >= 1024) {
-            float sizeMB = fileSizeKB / 1024f;
-            sizeStr = String.format(Locale.getDefault(), "%.2f MB", sizeMB);
-        } else {
-            sizeStr = fileSizeKB + " KB";
-        }
-
-        return String.format(Locale.getDefault(),
-                "Date: %s\nSize: %s\nLocation: %s",
-                dateStr,
-                sizeStr,
-                locationStr);
-    }
 }

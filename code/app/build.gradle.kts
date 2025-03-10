@@ -1,3 +1,4 @@
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
@@ -97,3 +98,13 @@ dependencies {
 
 }
 
+tasks.register<Javadoc>("javadoc") {
+    // Convert the main source set directories to a FileTree.
+    source = files(android.sourceSets["main"].java.srcDirs).asFileTree
+
+    // Add the Android SDK JAR to the classpath.
+    classpath += files("${android.sdkDirectory}/platforms/android-${android.compileSdk}/android.jar")
+
+    // Use the setter method to configure the output directory.
+    setDestinationDir(file("$buildDir/docs/javadoc"))
+}
