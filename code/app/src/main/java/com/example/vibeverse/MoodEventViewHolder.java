@@ -103,7 +103,5 @@ public class MoodEventViewHolder extends RecyclerView.ViewHolder {
         triggerContainer = itemView.findViewById(R.id.triggerContainer);
         socialContainer = itemView.findViewById(R.id.socialContainer);
 
-        // Material button for like action
-        buttonLike = itemView.findViewById(R.id.buttonLike);
     }
 }

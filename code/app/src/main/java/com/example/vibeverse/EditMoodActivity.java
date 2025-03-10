@@ -66,6 +66,8 @@ public class EditMoodActivity extends AppCompatActivity {
     private Spinner socialSituationInput;
     private SeekBar moodIntensitySlider;
     private Button updateButton;
+
+    private ImageView backButton;
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Main screen background container
     private TextView intensityDisplay;
@@ -120,6 +122,7 @@ public class EditMoodActivity extends AppCompatActivity {
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         updateButton = findViewById(R.id.continueButton); // Reuse the same button ID
+        backButton = findViewById(R.id.backArrow);
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
 
@@ -168,6 +171,8 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Change the button text to "Update Mood" for clarity
         updateButton.setText("Update Mood");
+        updateButton.setBackgroundTintList(null);
+
 
         // Set consistent typeface and text sizes
         selectedMoodText.setTypeface(null, Typeface.BOLD);
@@ -356,6 +361,8 @@ public class EditMoodActivity extends AppCompatActivity {
         buttonBg.setCornerRadius(dpToPx(24));
         buttonBg.setColor(Color.parseColor("#5C4B99"));  // Use consistent purple color
 
+
+
         // Apply elevation for a modern look
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             updateButton.setElevation(dpToPx(4));
@@ -396,6 +403,13 @@ public class EditMoodActivity extends AppCompatActivity {
 
 
             String newreasonWhy = reasonWhyInput.getText().toString().trim();
+
+            // Check if reasonWhy is empty
+            if (newreasonWhy.isEmpty()) {
+                reasonWhyInput.setError("Reason why is required.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
 
             // Validate character count
             if (newreasonWhy.length() > 20) {
@@ -442,6 +456,12 @@ public class EditMoodActivity extends AppCompatActivity {
                         finish();
                     })
                     .start();
+        });
+        backButton.setOnClickListener(v -> {
+            Intent goBackIntent = new Intent(EditMoodActivity.this, ProfilePage.class);
+            goBackIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
+            startActivity(goBackIntent);
+            finish();
         });
     }
 
