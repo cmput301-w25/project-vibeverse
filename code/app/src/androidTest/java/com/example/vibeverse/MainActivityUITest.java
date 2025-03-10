@@ -1,6 +1,7 @@
 package com.example.vibeverse;
 
-public class ProfilePageTest {
+
+public class MainActivityUITest {
 
 
 }
