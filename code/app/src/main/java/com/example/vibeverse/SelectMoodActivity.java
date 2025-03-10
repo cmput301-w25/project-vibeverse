@@ -330,10 +330,12 @@ public class SelectMoodActivity extends AppCompatActivity {
      * Sets up the continue button with professional styling.
      */
     private void setupContinueButton() {
-        int buttonColor = Color.parseColor("#5C4B99");  // Deep purple color
+        int buttonColor = Color.BLACK;
+        continueButton.setBackgroundTintList(null);
         GradientDrawable buttonBg = new GradientDrawable();
         buttonBg.setCornerRadius(dpToPx(24));
         buttonBg.setColor(buttonColor);
+        continueButton.setBackgroundTintList(null);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             continueButton.setElevation(dpToPx(4));
@@ -752,6 +754,7 @@ public class SelectMoodActivity extends AppCompatActivity {
 
         applyGradientBackground(selectedColor);
         moodIntensitySlider.setProgressTintList(ColorStateList.valueOf(selectedColor));
+        setupContinueButton();
     }
 
     /**

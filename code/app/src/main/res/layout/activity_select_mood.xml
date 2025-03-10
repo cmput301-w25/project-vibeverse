@@ -169,7 +169,7 @@
         android:layout_height="wrap_content"
         android:text="@string/continue_text"
         android:textSize="18sp"
-        android:backgroundTint="#D94C4C"
+        android:backgroundTint="#000000"
         android:textColor="@android:color/white"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"/>

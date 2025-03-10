@@ -171,6 +171,8 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Change the button text to "Update Mood" for clarity
         updateButton.setText("Update Mood");
+        updateButton.setBackgroundTintList(null);
+
 
         // Set consistent typeface and text sizes
         selectedMoodText.setTypeface(null, Typeface.BOLD);
@@ -358,6 +360,8 @@ public class EditMoodActivity extends AppCompatActivity {
         GradientDrawable buttonBg = new GradientDrawable();
         buttonBg.setCornerRadius(dpToPx(24));
         buttonBg.setColor(Color.parseColor("#5C4B99"));  // Use consistent purple color
+
+
 
         // Apply elevation for a modern look
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
