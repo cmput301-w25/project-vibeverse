@@ -66,6 +66,9 @@ public class SelectMoodActivity extends AppCompatActivity {
     private EditText triggerInput, reasonWhyInput;
     private Spinner socialSituationInput;
     private Button continueButton;
+
+    private Button backButton;
+
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Container for gradient background and transitions
 
@@ -110,6 +113,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         triggerInput = findViewById(R.id.triggerInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         continueButton = findViewById(R.id.continueButton);
+        backButton = findViewById(R.id.goBackButton);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
         imgSelected = findViewById(R.id.imgSelected);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
@@ -181,6 +185,13 @@ public class SelectMoodActivity extends AppCompatActivity {
                         String socialSituation = socialSituationInput.getSelectedItem().toString().trim();
                         String reasonWhy = reasonWhyInput.getText().toString().trim();
 
+                        // Check if reasonWhy is empty
+                        if (reasonWhy.isEmpty()) {
+                            reasonWhyInput.setError("Reason why is required.");
+                            reasonWhyInput.requestFocus();
+                            return;
+                        }
+
 
                         // Error handling for reasonWhy input
                         if (reasonWhy.length() > 20) {
@@ -229,6 +240,12 @@ public class SelectMoodActivity extends AppCompatActivity {
                         saveMoodToFirestore(moodEvent);
                     })
                     .start();
+        });
+        backButton.setOnClickListener(v -> {
+            Intent intent = new Intent(SelectMoodActivity.this, ProfilePage.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
+            startActivity(intent);
+            finish();
         });
     }
 

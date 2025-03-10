@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
     <!-- Scrollable content -->
     <ScrollView
         android:layout_width="match_parent"
@@ -153,6 +154,17 @@
     </ScrollView>
 
     <!-- Floating Continue Button pinned at bottom right -->
+    <Button
+        android:id="@+id/goBackButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go Back"
+        android:textSize="18sp"
+        android:backgroundTint="#D94C4C"
+        android:textColor="@android:color/white"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp" />
+
     <Button
         android:id="@+id/continueButton"
         android:layout_width="wrap_content"

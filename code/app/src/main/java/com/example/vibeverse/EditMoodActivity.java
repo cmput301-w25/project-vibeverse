@@ -66,6 +66,8 @@ public class EditMoodActivity extends AppCompatActivity {
     private Spinner socialSituationInput;
     private SeekBar moodIntensitySlider;
     private Button updateButton;
+
+    private Button backButton;
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Main screen background container
     private TextView intensityDisplay;
@@ -120,6 +122,7 @@ public class EditMoodActivity extends AppCompatActivity {
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         updateButton = findViewById(R.id.continueButton); // Reuse the same button ID
+        backButton = findViewById(R.id.goBackButton);
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
 
@@ -397,6 +400,13 @@ public class EditMoodActivity extends AppCompatActivity {
 
             String newreasonWhy = reasonWhyInput.getText().toString().trim();
 
+            // Check if reasonWhy is empty
+            if (newreasonWhy.isEmpty()) {
+                reasonWhyInput.setError("Reason why is required.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
+
             // Validate character count
             if (newreasonWhy.length() > 20) {
                 reasonWhyInput.setError("Reason why must be 20 characters or less.");
@@ -442,6 +452,12 @@ public class EditMoodActivity extends AppCompatActivity {
                         finish();
                     })
                     .start();
+        });
+        backButton.setOnClickListener(v -> {
+            Intent goBackIntent = new Intent(EditMoodActivity.this, ProfilePage.class);
+            goBackIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
+            startActivity(goBackIntent);
+            finish();
         });
     }
 

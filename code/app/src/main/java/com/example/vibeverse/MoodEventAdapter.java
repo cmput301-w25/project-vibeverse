@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -329,7 +330,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
      * @param moodEvent The MoodEvent object.
      */
     private void showPostMenu(View view, int position, MoodEvent moodEvent) {
-        PopupMenu popup = new PopupMenu(context, view);
+        Context wrapper = new ContextThemeWrapper(context, R.style.CustomPopupMenu);
+        PopupMenu popup = new PopupMenu(wrapper, view);
         Menu menu = popup.getMenu();
         menu.add(0, 1, 0, "Edit");
         menu.add(0, 2, 0, "Delete");
