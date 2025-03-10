@@ -1,5 +1,7 @@
 package com.example.vibeverse;
 
+import static com.example.vibeverse.EditMoodActivity.blendColors;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -106,24 +108,6 @@ public class EditMoodActivityTest {
      * A copy of the ColorUtils class from EditMoodActivity
      * to allow for testability without Android dependencies.
      */
-    private static class TestColorUtils {
-        public static int blendColors(int color1, int color2, float ratio) {
-            final float inverseRatio = 1f - ratio;
-            int r1 = (color1 >> 16) & 0xFF;
-            int g1 = (color1 >> 8) & 0xFF;
-            int b1 = color1 & 0xFF;
-
-            int r2 = (color2 >> 16) & 0xFF;
-            int g2 = (color2 >> 8) & 0xFF;
-            int b2 = color2 & 0xFF;
-
-            float r = (r1 * ratio) + (r2 * inverseRatio);
-            float g = (g1 * ratio) + (g2 * inverseRatio);
-            float b = (b1 * ratio) + (b2 * inverseRatio);
-
-            return (((int) r) << 16) | (((int) g) << 8) | ((int) b);
-        }
-    }
 
     @Test
     public void testBlendColorsEqualMix() {
@@ -132,7 +116,7 @@ public class EditMoodActivityTest {
         int green = 0x00FF00; // (0, 255, 0)
         float ratio = 0.5f;
 
-        int result = TestColorUtils.blendColors(red, green, ratio);
+        int result = blendColors(red, green, ratio);
 
         // Expected: (127.5, 127.5, 0) which rounds to (127, 127, 0) -> 0x7F7F00
         int expectedR = 127;
@@ -150,7 +134,7 @@ public class EditMoodActivityTest {
         int green = 0x00FF00; // (0, 255, 0)
         float ratio = 1.0f;
 
-        int result = TestColorUtils.blendColors(red, green, ratio);
+        int result = blendColors(red, green, ratio);
 
         // Should be exactly the first color
         assertEquals(red, result);
@@ -163,7 +147,7 @@ public class EditMoodActivityTest {
         int green = 0x00FF00; // (0, 255, 0)
         float ratio = 0.0f;
 
-        int result = TestColorUtils.blendColors(red, green, ratio);
+        int result = blendColors(red, green, ratio);
 
         // Should be exactly the second color
         assertEquals(green, result);
@@ -176,7 +160,7 @@ public class EditMoodActivityTest {
         int teal = 0x008080;    // (0, 128, 128)
         float ratio = 0.75f;    // 75% purple, 25% teal
 
-        int result = TestColorUtils.blendColors(purple, teal, ratio);
+        int result = blendColors(purple, teal, ratio);
 
         // Expected: 0.75 * (128, 0, 128) + 0.25 * (0, 128, 128)
         // = (96, 32, 128)

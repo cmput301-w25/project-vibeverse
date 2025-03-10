@@ -9,15 +9,15 @@ import java.util.Locale;
  * Mock version of Uri for unit tests
  * This replaces android.net.Uri to avoid Android dependencies in unit tests
  */
-class Uri implements Serializable {
+class mockUri implements Serializable {
     private final String uriString;
 
-    private Uri(String uriString) {
+    private mockUri(String uriString) {
         this.uriString = uriString;
     }
 
-    public static Uri parse(String uriString) {
-        return new Uri(uriString);
+    public static mockUri parse(String uriString) {
+        return new mockUri(uriString);
     }
 
     @Override
@@ -31,8 +31,8 @@ class Uri implements Serializable {
  * This is a direct implementation that matches the real Photograph class's interface
  * but avoids dependencies on Android-specific classes (like real Bitmap)
  */
-class Photograph implements Serializable {
-    private Uri imageUri;
+class mockPhotograph implements Serializable {
+    private mockUri imageUri;
     private String imageUriString;
     private long fileSizeKB;
     private Object bitmap; // Replaced Bitmap with Object for mock
@@ -42,9 +42,9 @@ class Photograph implements Serializable {
     /**
      * Constructs a Photograph with a bitmap (mock version)
      */
-    public Photograph(Uri imageUri, long fileSizeKB, Object bitmap, Date dateTaken, String location) {
-        this.imageUri = imageUri;
-        this.imageUriString = imageUri != null ? imageUri.toString() : null;
+    public mockPhotograph(mockUri imageMockUri, long fileSizeKB, Object bitmap, Date dateTaken, String location) {
+        this.imageUri = imageMockUri;
+        this.imageUriString = imageMockUri != null ? imageMockUri.toString() : null;
         this.fileSizeKB = fileSizeKB;
         this.bitmap = bitmap;
         this.dateTaken = dateTaken;
@@ -54,17 +54,17 @@ class Photograph implements Serializable {
     /**
      * Constructs a Photograph without a bitmap (mock version)
      */
-    public Photograph(Uri imageUri, long fileSizeKB, Date dateTaken, String location) {
-        this.imageUri = imageUri;
-        this.imageUriString = imageUri != null ? imageUri.toString() : null;
+    public mockPhotograph(mockUri imageMockUri, long fileSizeKB, Date dateTaken, String location) {
+        this.imageUri = imageMockUri;
+        this.imageUriString = imageMockUri != null ? imageMockUri.toString() : null;
         this.fileSizeKB = fileSizeKB;
         this.dateTaken = dateTaken;
         this.location = location;
     }
 
     // For testing only - constructor that accepts a String uri
-    public Photograph(String imageUriString, long fileSizeKB, Date dateTaken, String location) {
-        this.imageUri = imageUriString != null ? Uri.parse(imageUriString) : null;
+    public mockPhotograph(String imageUriString, long fileSizeKB, Date dateTaken, String location) {
+        this.imageUri = imageUriString != null ? mockUri.parse(imageUriString) : null;
         this.imageUriString = imageUriString;
         this.fileSizeKB = fileSizeKB;
         this.dateTaken = dateTaken;
@@ -78,7 +78,7 @@ class Photograph implements Serializable {
     public void setImageUriString(String imageUriString) {
         this.imageUriString = imageUriString;
         if (imageUriString != null) {
-            this.imageUri = Uri.parse(imageUriString);
+            this.imageUri = mockUri.parse(imageUriString);
         }
     }
 
@@ -98,12 +98,12 @@ class Photograph implements Serializable {
         this.location = location;
     }
 
-    public void setImageUri(Uri imageUri) {
-        this.imageUri = imageUri;
-        this.imageUriString = imageUri != null ? imageUri.toString() : null;
+    public void setImageUri(mockUri imageMockUri) {
+        this.imageUri = imageMockUri;
+        this.imageUriString = imageMockUri != null ? imageMockUri.toString() : null;
     }
 
-    public Uri getImageUri() {
+    public mockUri getImageUri() {
         return imageUri;
     }
 

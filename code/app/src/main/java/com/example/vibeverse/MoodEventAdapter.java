@@ -383,9 +383,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
             currentList.addAll(originalList);
         } else {
             for (MoodEvent moodEvent : originalList) {
-                boolean titleMatches = moodEvent.getTrigger() != null && moodEvent.getTrigger().toLowerCase().contains(query);
-                boolean subtitleMatches = moodEvent.getSubtitle() != null && moodEvent.getSubtitle().toLowerCase().contains(query);
-                if (titleMatches || subtitleMatches) {
+                boolean titleMatches = moodEvent.getReasonWhy() != null && moodEvent.getReasonWhy().toLowerCase().contains(query);
+                if (titleMatches) {
                     currentList.add(moodEvent);
                 }
             }
