@@ -32,6 +32,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
 }
 
 dependencies {
@@ -47,11 +48,24 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    testImplementation ("org.robolectric:robolectric:4.9")
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
     implementation ("com.firebaseui:firebase-ui-auth:7.2.0")
 
     implementation("de.hdodenhof:circleimageview:3.1.0")
+    // JUnit for unit tests.
+    testImplementation("junit:junit:4.13.2")
+
+    // Mockito core (you can use a version that suits your project).
+    testImplementation("org.mockito:mockito-core:3.+")
+
+    // PowerMock dependencies to allow mocking of static/final methods.
+    testImplementation ("org.powermock:powermock-module-junit4:2.0.9")
+    testImplementation ("org.powermock:powermock-api-mockito2:2.0.9")
+
+    // (Optional) If you need inline mocking for final classes/methods with Mockito:
+    // testImplementation 'org.mockito:mockito-inline:3.+'
 
     // Add the dependency for the Firebase Authentication library
     // When using the BoM, you don't specify versions in Firebase library dependencies
@@ -82,3 +96,4 @@ dependencies {
 
 
 }
+
