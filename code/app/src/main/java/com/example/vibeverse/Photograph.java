@@ -12,9 +12,9 @@ import java.util.Locale;
  * Represents a photograph associated with a mood event.
  * <p>
  * This class stores information about an image including its URI,
- * file size, bitmap, the date it was taken, and an optional location.
- * It implements {@link Serializable} so that Photograph instances can be
- * passed between activities via Intents.
+ * file size (in kilobytes), an optional bitmap, the date the image was taken,
+ * and an optional location. It implements {@link Serializable} so that instances
+ * can be passed between activities via Intents.
  * </p>
  */
 public class Photograph implements Serializable {
@@ -42,12 +42,10 @@ public class Photograph implements Serializable {
         this.location = location;
     }
 
-
-
     /**
      * Constructs a Photograph without a bitmap.
      * <p>
-     * The imageUri is stored as a string.
+     * The image URI is stored as a string.
      * </p>
      *
      * @param imageUri   The URI of the image.
@@ -62,9 +60,6 @@ public class Photograph implements Serializable {
         this.dateTaken = dateTaken;
         this.location = location;
     }
-
-
-
 
     /**
      * Returns the image URI as a string.
@@ -159,7 +154,7 @@ public class Photograph implements Serializable {
     /**
      * Returns the date when the image was taken.
      *
-     * @return The date taken.
+     * @return The date the image was taken.
      */
     public Date getDateTaken() {
         return dateTaken;
