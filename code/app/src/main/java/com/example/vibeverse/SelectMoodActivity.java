@@ -66,6 +66,9 @@ public class SelectMoodActivity extends AppCompatActivity {
     private EditText triggerInput, reasonWhyInput;
     private Spinner socialSituationInput;
     private Button continueButton;
+
+    private ImageView backButton;
+
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Container for gradient background and transitions
 
@@ -81,7 +84,7 @@ public class SelectMoodActivity extends AppCompatActivity {
     private static final int REQUEST_PICK_IMAGE = 2;
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
-    private long photoSizeKB;
+    private long photoSize;
     private Bitmap currentBitmap;
     private ImageView imgPlaceholder, imgSelected;
     private TextView imageHintText;
@@ -110,6 +113,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         triggerInput = findViewById(R.id.triggerInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         continueButton = findViewById(R.id.continueButton);
+        backButton = findViewById(R.id.backArrow);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
         imgSelected = findViewById(R.id.imgSelected);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
@@ -181,6 +185,13 @@ public class SelectMoodActivity extends AppCompatActivity {
                         String socialSituation = socialSituationInput.getSelectedItem().toString().trim();
                         String reasonWhy = reasonWhyInput.getText().toString().trim();
 
+                        // Check if reasonWhy is empty
+                        if (reasonWhy.isEmpty()) {
+                            reasonWhyInput.setError("Reason why is required.");
+                            reasonWhyInput.requestFocus();
+                            return;
+                        }
+
 
                         // Error handling for reasonWhy input
                         if (reasonWhy.length() > 20) {
@@ -205,7 +216,7 @@ public class SelectMoodActivity extends AppCompatActivity {
                             // Using the existing Photograph constructor that matches your implementation
                             Photograph photograph = new Photograph(
                                     imageUri,
-                                    photoSizeKB, // Estimate file size in KB
+                                    photoSize, // Estimate file size in KB
                                     currentBitmap,
                                     new Date(),
                                     "VibeVerse Location" // Default location - get location functionality not yet implemented
@@ -229,6 +240,12 @@ public class SelectMoodActivity extends AppCompatActivity {
                         saveMoodToFirestore(moodEvent);
                     })
                     .start();
+        });
+        backButton.setOnClickListener(v -> {
+            Intent intent = new Intent(SelectMoodActivity.this, ProfilePage.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
+            startActivity(intent);
+            finish();
         });
     }
 
@@ -257,7 +274,7 @@ public class SelectMoodActivity extends AppCompatActivity {
             moodData.put("photoUri", moodEvent.getPhotoUri());
             moodData.put("photoDateTaken", moodEvent.getPhotograph().getDateTaken().getTime());
             moodData.put("photoLocation", moodEvent.getPhotograph().getLocation());
-            moodData.put("photoSizeKB", moodEvent.getPhotograph().getFileSizeKB());
+            moodData.put("photoSize", moodEvent.getPhotograph().getFileSize());
         } else {
             moodData.put("hasPhoto", false);
         }
@@ -313,10 +330,12 @@ public class SelectMoodActivity extends AppCompatActivity {
      * Sets up the continue button with professional styling.
      */
     private void setupContinueButton() {
-        int buttonColor = Color.parseColor("#5C4B99");  // Deep purple color
+        int buttonColor = Color.BLACK;
+        continueButton.setBackgroundTintList(null);
         GradientDrawable buttonBg = new GradientDrawable();
         buttonBg.setCornerRadius(dpToPx(24));
         buttonBg.setColor(buttonColor);
+        continueButton.setBackgroundTintList(null);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             continueButton.setElevation(dpToPx(4));
@@ -735,6 +754,7 @@ public class SelectMoodActivity extends AppCompatActivity {
 
         applyGradientBackground(selectedColor);
         moodIntensitySlider.setProgressTintList(ColorStateList.valueOf(selectedColor));
+        setupContinueButton();
     }
 
     /**
@@ -886,7 +906,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 ImageUtils.processImage(this, imageUri, (bitmap, downloadUrl, sizeKB) -> {
-                    photoSizeKB = sizeKB;
+                    photoSize = sizeKB;
                     currentBitmap = bitmap;
                     imgPlaceholder.setVisibility(View.GONE);
                     imageHintText.setVisibility(View.GONE);
@@ -898,7 +918,7 @@ public class SelectMoodActivity extends AppCompatActivity {
                 imageUri = data.getData();
                 Log.d("SelectMoodActivity", "galleryPhotoUri: " + imageUri);
                 ImageUtils.processImage(this, imageUri, (bitmap, downloadUrl, sizeKB) -> {
-                    photoSizeKB = sizeKB;
+                    photoSize = sizeKB;
                     currentBitmap = bitmap;
                     imgPlaceholder.setVisibility(View.GONE);
                     imageHintText.setVisibility(View.GONE);

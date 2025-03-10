@@ -16,7 +16,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -38,7 +37,6 @@ import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.button.MaterialButton;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,6 +64,8 @@ public class EditMoodActivity extends AppCompatActivity {
     private Spinner socialSituationInput;
     private SeekBar moodIntensitySlider;
     private Button updateButton;
+
+    private ImageView backButton;
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Main screen background container
     private TextView intensityDisplay;
@@ -89,7 +89,7 @@ public class EditMoodActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 100;
     private Uri imageUri;
 
-    private long photoSizeKB;
+    private long photoSize;
     private String photoDateTaken;
     private String photoLocation;
     private Bitmap currentBitmap;
@@ -120,6 +120,7 @@ public class EditMoodActivity extends AppCompatActivity {
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         updateButton = findViewById(R.id.continueButton); // Reuse the same button ID
+        backButton = findViewById(R.id.backArrow);
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
 
@@ -168,6 +169,8 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Change the button text to "Update Mood" for clarity
         updateButton.setText("Update Mood");
+        updateButton.setBackgroundTintList(null);
+
 
         // Set consistent typeface and text sizes
         selectedMoodText.setTypeface(null, Typeface.BOLD);
@@ -296,7 +299,7 @@ public class EditMoodActivity extends AppCompatActivity {
 
         photoDateTaken = intent.getStringExtra("photoDateTaken");
         photoLocation = intent.getStringExtra("photoLocation");
-        photoSizeKB = intent.getLongExtra("photoSizeKB", 0);
+        photoSize = intent.getLongExtra("photoSizeKB", 0);
 
 
         // Get the intensity value from the intent (using default of 5 if not found)
@@ -356,6 +359,8 @@ public class EditMoodActivity extends AppCompatActivity {
         buttonBg.setCornerRadius(dpToPx(24));
         buttonBg.setColor(Color.parseColor("#5C4B99"));  // Use consistent purple color
 
+
+
         // Apply elevation for a modern look
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             updateButton.setElevation(dpToPx(4));
@@ -397,6 +402,13 @@ public class EditMoodActivity extends AppCompatActivity {
 
             String newreasonWhy = reasonWhyInput.getText().toString().trim();
 
+            // Check if reasonWhy is empty
+            if (newreasonWhy.isEmpty()) {
+                reasonWhyInput.setError("Reason why is required.");
+                reasonWhyInput.requestFocus();
+                return;
+            }
+
             // Validate character count
             if (newreasonWhy.length() > 20) {
                 reasonWhyInput.setError("Reason why must be 20 characters or less.");
@@ -435,13 +447,19 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedIntensity", moodIntensitySlider.getProgress());
                         resultIntent.putExtra("updatedphotoDateTaken", photoDateTaken);
                         resultIntent.putExtra("updatedphotoLocation", photoLocation);
-                        resultIntent.putExtra("updatedphotoSizeKB", photoSizeKB);
+                        resultIntent.putExtra("updatedphotoSizeKB", photoSize);
 
 
                         setResult(RESULT_OK, resultIntent);
                         finish();
                     })
                     .start();
+        });
+        backButton.setOnClickListener(v -> {
+            Intent goBackIntent = new Intent(EditMoodActivity.this, ProfilePage.class);
+            goBackIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
+            startActivity(goBackIntent);
+            finish();
         });
     }
 
@@ -764,7 +782,7 @@ public class EditMoodActivity extends AppCompatActivity {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 // For camera, imageUri is already set
                 ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    photoSizeKB = sizeKB;
+                    photoSize = sizeKB;
                     currentBitmap = bitmap;
                     currentImageUri = uri.toString();
                     imgPlaceholder.setVisibility(View.GONE);
@@ -782,7 +800,7 @@ public class EditMoodActivity extends AppCompatActivity {
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
                 ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    photoSizeKB = sizeKB;
+                    photoSize = sizeKB;
                     currentBitmap = bitmap;
                     currentImageUri = uri.toString();
                     imgPlaceholder.setVisibility(View.GONE);

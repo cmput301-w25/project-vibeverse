@@ -19,6 +19,18 @@
             android:padding="16dp"
             android:background="#4B2C39">
 
+            <!-- Back Arrow Above Title -->
+            <ImageView
+                android:id="@+id/backArrow"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="16dp"
+                android:src="@drawable/ic_back_arrow"
+                android:contentDescription="Back"
+                android:clickable="true"
+                android:focusable="true" />
+
             <!-- Title -->
             <TextView
                 android:layout_width="wrap_content"
@@ -147,8 +159,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp" />
 
-
-
         </LinearLayout>
     </ScrollView>
 
@@ -159,9 +169,8 @@
         android:layout_height="wrap_content"
         android:text="@string/continue_text"
         android:textSize="18sp"
-        android:backgroundTint="#D94C4C"
+        android:backgroundTint="#000000"
         android:textColor="@android:color/white"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"/>
-
 </FrameLayout>

@@ -94,11 +94,11 @@ public class UserDetails extends AppCompatActivity {
      * URI of the selected profile picture.
      */
     private Uri imageUri;
-  
-    private long fileSizeKB;
 
-  
-   /**
+    private long fileSize;
+
+
+    /**
      * Bitmap of the selected profile picture.
      */
     private Bitmap currentBitmap;
@@ -111,6 +111,10 @@ public class UserDetails extends AppCompatActivity {
      */
     private ImageView profilePictureSelected;
 
+    private interface UsernameSuggestionCallback {
+        void onSuggestionGenerated(String suggestion);
+    }
+
     /**
      * Called when the activity is created.
      * <p>
@@ -121,6 +125,8 @@ public class UserDetails extends AppCompatActivity {
      *
      * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
      */
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -145,7 +151,7 @@ public class UserDetails extends AppCompatActivity {
         user = auth.getCurrentUser();
         if (user != null) {
             String userDetails = "User ID: " + user.getUid() + "\nEmail: " + user.getEmail();
-            }
+        }
 
 
         // Set the hint for the Date of Birth field
@@ -191,7 +197,6 @@ public class UserDetails extends AppCompatActivity {
         });
 
 
-
         // Set onClickListener for the continue button
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -231,9 +236,13 @@ public class UserDetails extends AppCompatActivity {
                             isUsernameValid = true;
                         } else {
                             // Username is already taken
-                            usernameValidationText.setText("✗ Username already taken");
-                            usernameValidationText.setTextColor(Color.RED);
                             isUsernameValid = false;
+                            // Generate a unique username suggestion
+                            generateUniqueUsernameSuggestion(usernameToCheck, suggestion -> {
+                                String message = "Username already taken. Try " + suggestion + "?";
+                                usernameValidationText.setText(message);
+                                usernameValidationText.setTextColor(Color.RED);
+                            });
                         }
                     } else {
                         // Error checking username
@@ -296,14 +305,11 @@ public class UserDetails extends AppCompatActivity {
             if (imageUri != null) {
                 userData.put("hasProfilePic", true);
                 userData.put("profilePicUri", imageUri.toString());
-                userData.put("profilePicSizeKB", fileSizeKB);
+                userData.put("profilePicSizeKB", fileSize);
 
-            }
-
-            else{
+            } else {
                 userData.put("hasProfilePic", false);
             }
-
 
 
             // Get Firestore instance and save data
@@ -475,7 +481,7 @@ public class UserDetails extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    fileSizeKB = sizeKB;
+                    fileSize = sizeKB;
                     imageUri = uri;
                     currentBitmap = bitmap;
                     profilePicturePlaceholder.setVisibility(View.GONE);
@@ -485,7 +491,7 @@ public class UserDetails extends AppCompatActivity {
             } else if (requestCode == REQUEST_PICK_IMAGE) {
                 imageUri = data.getData();
                 ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    fileSizeKB = sizeKB;
+                    fileSize = sizeKB;
                     imageUri = uri;
                     currentBitmap = bitmap;
                     profilePicturePlaceholder.setVisibility(View.GONE);
@@ -510,5 +516,36 @@ public class UserDetails extends AppCompatActivity {
                     checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
         }
         return true;
+    }
+
+    /**
+     * Recursively generates a unique username suggestion by appending a random number.
+     *
+     * @param originalUsername the original username entered by the user.
+     * @param callback         a callback to return the generated suggestion.
+     */
+    private void generateUniqueUsernameSuggestion(String originalUsername, UsernameSuggestionCallback callback) {
+        final FirebaseFirestore db = FirebaseFirestore.getInstance();
+        // Generate a suggestion by appending a random number (e.g., between 0 and 999)
+        String suggestion = originalUsername + ((int) (Math.random() * 1000));
+
+        // Check if this suggestion is already taken
+        db.collection("users")
+                .whereEqualTo("username", suggestion)
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        if (task.getResult().isEmpty()) {
+                            // Suggestion is unique
+                            callback.onSuggestionGenerated(suggestion);
+                        } else {
+                            // If taken, try generating another suggestion
+                            generateUniqueUsernameSuggestion(originalUsername, callback);
+                        }
+                    } else {
+                        // In case of an error, return the suggestion anyway
+                        callback.onSuggestionGenerated(suggestion);
+                    }
+                });
     }
 }
