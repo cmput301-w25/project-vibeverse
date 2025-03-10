@@ -67,7 +67,7 @@ public class EditMoodActivity extends AppCompatActivity {
     private SeekBar moodIntensitySlider;
     private Button updateButton;
 
-    private Button backButton;
+    private ImageView backButton;
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Main screen background container
     private TextView intensityDisplay;
@@ -122,7 +122,7 @@ public class EditMoodActivity extends AppCompatActivity {
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         updateButton = findViewById(R.id.continueButton); // Reuse the same button ID
-        backButton = findViewById(R.id.goBackButton);
+        backButton = findViewById(R.id.backArrow);
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
 

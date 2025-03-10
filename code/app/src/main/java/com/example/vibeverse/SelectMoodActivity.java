@@ -67,7 +67,7 @@ public class SelectMoodActivity extends AppCompatActivity {
     private Spinner socialSituationInput;
     private Button continueButton;
 
-    private Button backButton;
+    private ImageView backButton;
 
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Container for gradient background and transitions
@@ -113,7 +113,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         triggerInput = findViewById(R.id.triggerInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         continueButton = findViewById(R.id.continueButton);
-        backButton = findViewById(R.id.goBackButton);
+        backButton = findViewById(R.id.backArrow);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
         imgSelected = findViewById(R.id.imgSelected);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
