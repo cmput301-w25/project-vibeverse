@@ -230,21 +230,6 @@
             </androidx.cardview.widget.CardView>
 
             <!-- Actions Section with modern button style -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/buttonLike"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginTop="20dp"
-                android:minWidth="100dp"
-                android:text="Like"
-                android:textColor="@android:color/white"
-                android:textSize="14sp"
-                android:letterSpacing="0.05"
-                app:backgroundTint="#000000"
-                app:cornerRadius="20dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/imageContainer"
-                app:elevation="2dp"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>

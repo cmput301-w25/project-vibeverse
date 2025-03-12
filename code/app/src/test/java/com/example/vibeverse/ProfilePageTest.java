@@ -6,7 +6,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.Serializable;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -64,7 +63,7 @@ public class ProfilePageTest {
     static class Photograph implements Serializable {
         private Uri imageUri;
         private String imageUriString;
-        private long fileSizeKB;
+        private long fileSize;
         private Object bitmap; // Replaced Bitmap with Object for mock
         private Date dateTaken;
         private String location;
@@ -72,10 +71,10 @@ public class ProfilePageTest {
         /**
          * Constructs a Photograph with a bitmap (mock version)
          */
-        public Photograph(Uri imageUri, long fileSizeKB, Object bitmap, Date dateTaken, String location) {
+        public Photograph(Uri imageUri, long fileSize, Object bitmap, Date dateTaken, String location) {
             this.imageUri = imageUri;
             this.imageUriString = imageUri != null ? imageUri.toString() : null;
-            this.fileSizeKB = fileSizeKB;
+            this.fileSize = fileSize;
             this.bitmap = bitmap;
             this.dateTaken = dateTaken;
             this.location = location;
@@ -84,19 +83,19 @@ public class ProfilePageTest {
         /**
          * Constructs a Photograph without a bitmap (mock version)
          */
-        public Photograph(Uri imageUri, long fileSizeKB, Date dateTaken, String location) {
+        public Photograph(Uri imageUri, long fileSize, Date dateTaken, String location) {
             this.imageUri = imageUri;
             this.imageUriString = imageUri != null ? imageUri.toString() : null;
-            this.fileSizeKB = fileSizeKB;
+            this.fileSize = fileSize;
             this.dateTaken = dateTaken;
             this.location = location;
         }
 
         // For testing only - constructor that accepts a String uri
-        public Photograph(String imageUriString, long fileSizeKB, Date dateTaken, String location) {
+        public Photograph(String imageUriString, long fileSize, Date dateTaken, String location) {
             this.imageUri = imageUriString != null ? Uri.parse(imageUriString) : null;
             this.imageUriString = imageUriString;
-            this.fileSizeKB = fileSizeKB;
+            this.fileSize = fileSize;
             this.dateTaken = dateTaken;
             this.location = location;
         }
@@ -112,8 +111,8 @@ public class ProfilePageTest {
             }
         }
 
-        public void setFileSizeKB(long fileSizeKB) {
-            this.fileSizeKB = fileSizeKB;
+        public void setFileSize(long fileSize) {
+            this.fileSize = fileSize;
         }
 
         public void setBitmap(Object bitmap) {
@@ -137,8 +136,8 @@ public class ProfilePageTest {
             return imageUri;
         }
 
-        public long getFileSizeKB() {
-            return fileSizeKB;
+        public long getFileSize() {
+            return fileSize;
         }
 
         public Object getBitmap() {
@@ -152,26 +151,7 @@ public class ProfilePageTest {
         public String getLocation() {
             return location;
         }
-
-        public String getFormattedDetails() {
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-            String dateStr = dateTaken != null ? sdf.format(dateTaken) : "Date unknown";
-            String locationStr = location != null ? location : "Location unknown";
-
-            String sizeStr;
-            if (fileSizeKB >= 1024) {
-                float sizeMB = fileSizeKB / 1024f;
-                sizeStr = String.format(Locale.getDefault(), "%.2f MB", sizeMB);
-            } else {
-                sizeStr = fileSizeKB + " KB";
-            }
-
-            return String.format(Locale.getDefault(),
-                    "Date: %s\nSize: %s\nLocation: %s",
-                    dateStr,
-                    sizeStr,
-                    locationStr);
-        }
+        
     }
 
     /**

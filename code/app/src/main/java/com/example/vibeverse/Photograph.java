@@ -4,9 +4,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 /**
  * Represents a photograph associated with a mood event.
@@ -20,7 +18,7 @@ import java.util.Locale;
 public class Photograph implements Serializable {
     private Uri imageUri;
     private String imageUriString;
-    private long fileSizeKB;
+    private long fileSize;
     private Bitmap bitmap;
     private Date dateTaken;
     private String location;
@@ -29,14 +27,14 @@ public class Photograph implements Serializable {
      * Constructs a Photograph with a bitmap.
      *
      * @param imageUri   The URI of the image.
-     * @param fileSizeKB The size of the image file in kilobytes.
+     * @param fileSize The size of the image file in kilobytes.
      * @param bitmap     The bitmap of the image.
      * @param dateTaken  The date when the image was taken.
      * @param location   The location where the image was taken.
      */
-    public Photograph(Uri imageUri, long fileSizeKB, Bitmap bitmap, Date dateTaken, String location) {
+    public Photograph(Uri imageUri, long fileSize, Bitmap bitmap, Date dateTaken, String location) {
         this.imageUri = imageUri;
-        this.fileSizeKB = fileSizeKB;
+        this.fileSize = fileSize;
         this.bitmap = bitmap;
         this.dateTaken = dateTaken;
         this.location = location;
@@ -49,14 +47,14 @@ public class Photograph implements Serializable {
      * </p>
      *
      * @param imageUri   The URI of the image.
-     * @param fileSizeKB The size of the image file in kilobytes.
+     * @param fileSize The size of the image file in kilobytes.
      * @param dateTaken  The date when the image was taken.
      * @param location   The location where the image was taken.
      */
-    public Photograph(Uri imageUri, long fileSizeKB, Date dateTaken, String location) {
+    public Photograph(Uri imageUri, long fileSize, Date dateTaken, String location) {
         this.imageUri = imageUri;
         this.imageUriString = imageUri.toString();
-        this.fileSizeKB = fileSizeKB;
+        this.fileSize = fileSize;
         this.dateTaken = dateTaken;
         this.location = location;
     }
@@ -82,10 +80,10 @@ public class Photograph implements Serializable {
     /**
      * Sets the file size of the image in kilobytes.
      *
-     * @param fileSizeKB The file size in KB.
+     * @param fileSize The file size
      */
-    public void setFileSizeKB(long fileSizeKB) {
-        this.fileSizeKB = fileSizeKB;
+    public void setFileSize(long fileSize) {
+        this.fileSize = fileSize;
     }
 
     /**
@@ -136,10 +134,10 @@ public class Photograph implements Serializable {
     /**
      * Returns the file size of the image in kilobytes.
      *
-     * @return The file size in KB.
+     * @return The file size.
      */
-    public long getFileSizeKB() {
-        return fileSizeKB;
+    public long getFileSize() {
+        return fileSize;
     }
 
     /**
@@ -169,29 +167,5 @@ public class Photograph implements Serializable {
         return location;
     }
 
-    /**
-     * Returns formatted details about the photograph, including the date, file size, and location.
-     *
-     * @return A formatted string containing the image details.
-     */
-    public String getFormattedDetails() {
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault());
-        String dateStr = dateTaken != null ? sdf.format(dateTaken) : "Date unknown";
-        String locationStr = location != null ? location : "Location unknown";
 
-        // Format size to be more readable
-        String sizeStr;
-        if (fileSizeKB >= 1024) {
-            float sizeMB = fileSizeKB / 1024f;
-            sizeStr = String.format(Locale.getDefault(), "%.2f MB", sizeMB);
-        } else {
-            sizeStr = fileSizeKB + " KB";
-        }
-
-        return String.format(Locale.getDefault(),
-                "Date: %s\nSize: %s\nLocation: %s",
-                dateStr,
-                sizeStr,
-                locationStr);
-    }
 }

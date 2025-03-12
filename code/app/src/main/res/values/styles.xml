@@ -13,4 +13,12 @@
         <item name="android:textColor">@android:color/white</item>
         <item name="cornerRadius">18dp</item>
     </style>
+    <style name="CustomPopupMenu" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@drawable/custom_popup_background</item>
+        <item name="popupMenuBackground">@drawable/custom_popup_background</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+    </style>
+
+
+
 </resources>

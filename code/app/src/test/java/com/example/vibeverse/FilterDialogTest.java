@@ -7,6 +7,8 @@ import org.junit.runners.JUnit4;
 
 import static org.junit.Assert.*;
 
+import java.util.List;
+
 /**
  * Unit tests for the FilterDialog's logic.
  *
@@ -22,18 +24,39 @@ public class FilterDialogTest {
         public String appliedTimeFilter;
         public boolean appliedHappy;
         public boolean appliedSad;
+        public boolean appliedAngry;
+        public boolean appliedSurprised;
         public boolean appliedAfraid;
+        public boolean appliedDisgusted;
         public boolean appliedConfused;
+        public boolean appliedShameful;
         public boolean filterAppliedCalled = false;
 
         @Override
-        public void onFilterApplied(String timeFilter, boolean isHappy, boolean isSad, boolean isAfraid, boolean isConfused) {
+        public void onFilterApplied(String timeFilter,
+                                    boolean isHappy,
+                                    boolean isSad,
+                                    boolean isAngry,
+                                    boolean isSurprised,
+                                    boolean isAfraid,
+                                    boolean isDisgusted,
+                                    boolean isConfused,
+                                    boolean isShameful) {
             this.appliedTimeFilter = timeFilter;
             this.appliedHappy = isHappy;
             this.appliedSad = isSad;
+            this.appliedAngry = isAngry;
+            this.appliedSurprised = isSurprised;
             this.appliedAfraid = isAfraid;
+            this.appliedDisgusted = isDisgusted;
             this.appliedConfused = isConfused;
+            this.appliedShameful = isShameful;
             this.filterAppliedCalled = true;
+        }
+
+        @Override
+        public void onFilteredResults(List<MoodEvent> results) {
+            // Implement if needed.
         }
     }
 
@@ -41,71 +64,54 @@ public class FilterDialogTest {
      * Test implementation of the filter dialog logic without Android dependencies
      */
     private static class FilterDialogLogic {
-        // Filter settings
+        // Updated filter settings including the new mood filters
         private String selectedTimeFilter = "";
         private boolean isHappySelected = false;
         private boolean isSadSelected = false;
+        private boolean isAngrySelected = false;
+        private boolean isSurprisedSelected = false;
         private boolean isAfraidSelected = false;
+        private boolean isDisgustedSelected = false;
         private boolean isConfusedSelected = false;
+        private boolean isShamefulSelected = false;
 
-        /**
-         * Simulates selecting a time filter radio button
-         */
+        // Simulate selecting a time filter
         public void selectTimeFilter(String timeFilter) {
             this.selectedTimeFilter = timeFilter;
         }
 
-        /**
-         * Simulates checking the Happy emotion checkbox
-         */
-        public void setHappySelected(boolean selected) {
-            this.isHappySelected = selected;
-        }
+        // Simulate checking mood checkboxes
+        public void setHappySelected(boolean selected) { this.isHappySelected = selected; }
+        public void setSadSelected(boolean selected) { this.isSadSelected = selected; }
+        public void setAngrySelected(boolean selected) { this.isAngrySelected = selected; }
+        public void setSurprisedSelected(boolean selected) { this.isSurprisedSelected = selected; }
+        public void setAfraidSelected(boolean selected) { this.isAfraidSelected = selected; }
+        public void setDisgustedSelected(boolean selected) { this.isDisgustedSelected = selected; }
+        public void setConfusedSelected(boolean selected) { this.isConfusedSelected = selected; }
+        public void setShamefulSelected(boolean selected) { this.isShamefulSelected = selected; }
 
-        /**
-         * Simulates checking the Sad emotion checkbox
-         */
-        public void setSadSelected(boolean selected) {
-            this.isSadSelected = selected;
-        }
-
-        /**
-         * Simulates checking the Afraid emotion checkbox
-         */
-        public void setAfraidSelected(boolean selected) {
-            this.isAfraidSelected = selected;
-        }
-
-        /**
-         * Simulates checking the Confused emotion checkbox
-         */
-        public void setConfusedSelected(boolean selected) {
-            this.isConfusedSelected = selected;
-        }
-
-        /**
-         * Simulates clicking the Apply Filters button
-         */
         public void applyFilters(TestFilterListener listener) {
             String timeFilter = selectedTimeFilter;
             boolean isHappy = isHappySelected;
             boolean isSad = isSadSelected;
+            boolean isAngry = isAngrySelected;
+            boolean isSurprised = isSurprisedSelected;
             boolean isAfraid = isAfraidSelected;
+            boolean isDisgusted = isDisgustedSelected;
             boolean isConfused = isConfusedSelected;
+            boolean isShameful = isShamefulSelected;
 
-            // Apply the filter logic from the original FilterDialog class
-            if (timeFilter.isEmpty() && !isHappy && !isSad && !isAfraid && !isConfused) {
-                // If no filters are selected, apply all filters (show everything)
-                listener.onFilterApplied("all_time", true, true, true, true);
-            }
-            else if (timeFilter.isEmpty() && (isHappy || isSad || isAfraid || isConfused)) {
-                // If only emotion filters are selected, use "all_time" for time
+            // If no filters are selected, then apply all filters
+            if (timeFilter.isEmpty() && !isHappy && !isSad && !isAngry && !isSurprised &&
+                    !isAfraid && !isDisgusted && !isConfused && !isShameful) {
+                listener.onFilterApplied("all_time", true, true, true, true, true, true, true, true);
+            } else if (timeFilter.isEmpty()) {
+                // Use "all_time" when only mood filters are selected.
                 timeFilter = "all_time";
-                listener.onFilterApplied(timeFilter, isHappy, isSad, isAfraid, isConfused);
-            }
-            else {
-                // Use the selected filters
-                listener.onFilterApplied(timeFilter, isHappy, isSad, isAfraid, isConfused);
+                listener.onFilterApplied(timeFilter, isHappy, isSad, isAngry, isSurprised, isAfraid, isDisgusted, isConfused, isShameful);
+            } else {
+                // Use the selected time filter and mood checkboxes.
+                listener.onFilterApplied(timeFilter, isHappy, isSad, isAngry, isSurprised, isAfraid, isDisgusted, isConfused, isShameful);
             }
         }
     }
