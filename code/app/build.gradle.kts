@@ -2,6 +2,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 android {
@@ -18,6 +19,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -32,6 +34,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        viewBinding = true
     }
 
 }
@@ -95,6 +100,7 @@ dependencies {
     // For instrumentation tests
     androidTestImplementation ("androidx.test:runner:1.5.2")
     androidTestImplementation ("androidx.test:rules:1.5.0")
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
 
 
 
