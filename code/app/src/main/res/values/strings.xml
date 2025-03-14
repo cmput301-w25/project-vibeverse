@@ -59,4 +59,5 @@
     <string name="following">Following</string>
     <string name="follows">Follows</string>
     <string name="search">Search...</string>
+    <string name="title_activity_maps">MapsActivity</string>
 </resources>
