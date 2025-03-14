@@ -37,17 +37,40 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.concurrent.Executors;
 
+/**
+ * Register activity handles user registration using Firebase Authentication.
+ * <p>
+ * The activity provides fields for the user to enter an email and password,
+ * and a button to create a new account. It also includes a link to navigate
+ * to the Login screen if the user already has an account.
+ * </p>
+ */
+
 public class Register extends AppCompatActivity {
 
     private static final String TAG = "GoogleSignUp";
-    EditText editTextEmail, editTextPassword;
+   /** Input field for the user's email address. */
+    EditText editTextEmail;
+   /** Input field for the user's password. */
+    EditText editTextPassword;
+   /** Button to register a new account. */
     Button buttonRegister;
     MaterialButton googleSignUpButton;
+    /** FirebaseAuth instance for handling authentication. */
     FirebaseAuth mAuth;
+    /** ProgressBar displayed during registration. */
     ProgressBar progressBar;
+    /** TextView that provides a link to the login screen. */
     TextView textViewLogin;
     CredentialManager credentialManager;
 
+    /**
+     * Called when the activity is starting.
+     * <p>
+     * If a user is already authenticated, this method checks Firestore to see if the user's details exist.
+     * If details are found, the user is redirected to MainActivity; otherwise, to UserDetails.
+     * </p>
+     */
     @Override
     public void onStart() {
         super.onStart();
@@ -71,6 +94,15 @@ public class Register extends AppCompatActivity {
         }
     }
 
+    /**
+     * Called when the activity is created.
+     * <p>
+     * Initializes the UI components for registration, sets up click listeners
+     * for registration and navigation to the login screen, and handles user input validation.
+     * </p>
+     *
+     * @param savedInstanceState A Bundle containing the activity's previously frozen state, if any.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,6 +116,7 @@ public class Register extends AppCompatActivity {
         textViewLogin = findViewById(R.id.loginNow);
         googleSignUpButton = findViewById(R.id.google_sign_up);
 
+        // Set click listener to navigate to the Login activity.
         textViewLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -93,6 +126,7 @@ public class Register extends AppCompatActivity {
             }
         });
 
+        // Set click listener for the registration button.
         buttonRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -100,11 +134,13 @@ public class Register extends AppCompatActivity {
                 String email = String.valueOf(editTextEmail.getText());
                 String password = String.valueOf(editTextPassword.getText());
 
+                // Validate email input.
                 if (TextUtils.isEmpty(email)) {
                     Toast.makeText(Register.this, "Please enter your email", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
+                // Validate password input.
                 if (TextUtils.isEmpty(password)) {
                     Toast.makeText(Register.this, "Please enter your password", Toast.LENGTH_SHORT).show();
                     return;

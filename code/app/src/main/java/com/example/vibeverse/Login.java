@@ -1,5 +1,7 @@
 package com.example.vibeverse;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CancellationSignal;
@@ -35,25 +37,50 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+
 import java.util.concurrent.Executors;
 
+
+
+/**
+ * Login activity handles user authentication using Firebase.
+ * <p>
+ * This activity provides input fields for the user to enter an email and password.
+ * If the user is already authenticated, it redirects them either to HomePage
+ * or UserDetails (if additional user information is needed).
+ * On login attempt, it validates inputs and uses FirebaseAuth to sign in.
+ * </p>
+ */
 public class Login extends AppCompatActivity {
 
-    private static final String TAG = "GoogleLogin";
+    /** Input field for the user's email address and password. */
     EditText editTextEmail, editTextPassword;
+    /** Button that triggers the login process. */
     Button buttonLogin;
+    /** Firebase authentication instance. */
     MaterialButton googleSignInButton;
+
     FirebaseAuth mAuth;
+    /** Progress bar shown during the login process. */
     ProgressBar progressBar;
+    /** TextView that directs the user to registration if needed. */
     TextView textViewLogin;
     CredentialManager credentialManager;
 
+    /**
+     * Called when the activity is starting.
+     * <p>
+     * If the user is already authenticated, this method checks if user details
+     * exist in Firestore. If so, it redirects to HomePage; otherwise, it opens
+     * the UserDetails activity. Finally, it finishes this activity.
+     * </p>
+     */
     @Override
     public void onStart() {
         super.onStart();
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser != null) {
+        if (currentUser != null) {
             FirebaseFirestore.getInstance()
                     .collection("users")
                     .document(currentUser.getUid())
@@ -61,7 +88,7 @@ public class Login extends AppCompatActivity {
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
                             if (task.getResult().exists()) {
-                                startActivity(new Intent(getApplicationContext(), ProfilePage.class));
+                                startActivity(new Intent(getApplicationContext(), HomePage.class));
                             } else {
                                 startActivity(new Intent(getApplicationContext(), UserDetails.class));
                             }
@@ -71,12 +98,26 @@ public class Login extends AppCompatActivity {
         }
     }
 
+    /**
+     * Called when the activity is first created.
+     * <p>
+     * Sets up the UI components, including email and password input fields,
+     * login button, progress bar, and a link to the registration screen.
+     * Also sets up the click listeners for logging in and navigating to registration.
+     * </p>
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         mAuth = FirebaseAuth.getInstance();
+
         credentialManager = CredentialManager.create(this);
+
+
+        // Initialize UI components
         editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
         buttonLogin = findViewById(R.id.login_button);
@@ -86,6 +127,7 @@ public class Login extends AppCompatActivity {
 
 
 
+        // Set click listener to navigate to the registration activity
         textViewLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -95,6 +137,7 @@ public class Login extends AppCompatActivity {
             }
         });
 
+        // Set click listener for login button
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -102,8 +145,10 @@ public class Login extends AppCompatActivity {
                 String email = String.valueOf(editTextEmail.getText());
                 String password = String.valueOf(editTextPassword.getText());
 
+                // Validate email input
                 if (TextUtils.isEmpty(email)) {
                     Toast.makeText(Login.this, "Please enter your email", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
                     return;
                 }
 
@@ -112,6 +157,7 @@ public class Login extends AppCompatActivity {
                     return;
                 }
 
+                // Attempt to sign in using FirebaseAuth
                 mAuth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                             @Override
@@ -120,7 +166,7 @@ public class Login extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(Login.this, "Login successful.",
                                             Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(getApplicationContext(), ProfilePage.class);
+                                    Intent intent = new Intent(getApplicationContext(), HomePage.class);
                                     startActivity(intent);
                                     finish();
                                 } else {

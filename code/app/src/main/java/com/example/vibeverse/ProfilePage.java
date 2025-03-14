@@ -1,27 +1,14 @@
 package com.example.vibeverse;
 
-import android.annotation.SuppressLint;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.PopupMenu;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -33,109 +20,151 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.ParseException;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * ProfilePage displays the user's mood feed and profile-related functionalities.
+ * <p>
+ * This activity retrieves and displays a list of MoodEvent objects from Firestore.
+ * It allows the user to filter the feed using a FilterDialog and perform a simple
+ * client-side search via an EditText. It also includes a logout button and bottom
+ * navigation for app-wide navigation.
+ * </p>
+ */
 public class ProfilePage extends AppCompatActivity implements FilterDialog.FilterListener {
 
+    /** Request code used when editing a mood event. */
+    public static final int EDIT_MOOD_REQUEST_CODE = 1001;
     private static final String TAG = "ProfilePage";
-    private static final int EDIT_MOOD_REQUEST_CODE = 1001;
 
-
+    /** RecyclerView to display the mood feed. */
     private RecyclerView recyclerFeed;
-    private Button buttonFilter;
-    private PostAdapter postAdapter;
-    private List<Post> allPosts;
+    /** Adapter for the RecyclerView displaying MoodEvent objects. */
+    private MoodEventAdapter moodEventAdapter;
+    /** List of all MoodEvent objects. */
+    private List<MoodEvent> allMoodEvents;
+    /** EditText for performing a search within the mood feed. */
     private EditText editSearch;
+    /** View displayed when there are no mood entries. */
+    private View emptyStateView;
+    /** Button to logout the user. */
+
+
+    private TextView textName, textUsername, textBioContent;
+    private ImageView profilePicture;
+
 
     private Button logoutButton;
+    /** BottomNavigationView for navigating between app sections. */
     private BottomNavigationView bottomNavigationView;
-    private View emptyStateView;
-
-    // Add these as class fields
-    private FirebaseFirestore db;
-    private FirebaseAuth mAuth;
-    private String userId;
+    /** Button to open the FilterDialog. */
+    private ImageButton buttonFilter;
+    /** ProgressBar indicating loading state. */
     private ProgressBar progressLoading;
+    /** Firestore database instance. */
+    private FirebaseFirestore db;
+    /** Firebase Authentication instance. */
+    private FirebaseAuth mAuth;
+    /** ID of the current user. */
+    private String userId;
 
+    /** Formatter for parsing and formatting timestamps. */
+    private final SimpleDateFormat sourceFormat =
+            new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
+
+    /**
+     * Called when the activity is created.
+     * <p>
+     * Initializes UI components, configures RecyclerView and bottom navigation,
+     * loads the current mood feed from Firestore, and sets up search and filter functionality.
+     * </p>
+     *
+     * @param savedInstanceState Bundle containing saved state data, if any.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile_page);
 
-        // Initialize Firebase
+        // Initialize Firebase Auth and Firestore instances.
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-
-        // Get current user ID or use a device ID if not logged in
         if (mAuth.getCurrentUser() != null) {
             userId = mAuth.getCurrentUser().getUid();
         } else {
+            // If not logged in, use a device-based ID as fallback.
             SharedPreferences prefs = getSharedPreferences("VibeVersePrefs", Context.MODE_PRIVATE);
             userId = prefs.getString("device_id", null);
-
             if (userId == null) {
                 userId = java.util.UUID.randomUUID().toString();
                 prefs.edit().putString("device_id", userId).apply();
             }
+
+
         }
+
+
+        // **Find your TextViews & ImageView from XML**
+        textName = findViewById(R.id.textName);
+        textUsername = findViewById(R.id.textUsername);
+        textBioContent = findViewById(R.id.textBioContent);
+        profilePicture = findViewById(R.id.profilePicture);
+
+        // Then call a helper method to load the profile
+        loadUserProfile();
         // Logout button
         logoutButton = findViewById(R.id.buttonLogout);
 
-        logoutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mAuth.signOut();
-                Intent intent = new Intent(ProfilePage.this, Login.class);
-                startActivity(intent);
-                finish();
-            }
+
+        // Set up logout button to sign out the user.
+        logoutButton = findViewById(R.id.buttonLogout);
+        logoutButton.setOnClickListener(v -> {
+            mAuth.signOut();
+            startActivity(new Intent(ProfilePage.this, Login.class));
+            finish();
         });
 
+        // Set up bottom navigation.
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.nav_add) {
-                // Launch SelectMoodActivity
-                Intent intent = new Intent(ProfilePage.this, SelectMoodActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            // Handle other navigation items here
-            return false;
-        });
+        NavigationHelper.setupBottomNavigation(this, bottomNavigationView);
 
+        // Set up RecyclerView.
         recyclerFeed = findViewById(R.id.recyclerFeed);
-        ImageButton buttonFilter = findViewById(R.id.buttonFilter);
-        emptyStateView = findViewById(R.id.emptyStateView);
-
         recyclerFeed.setLayoutManager(new LinearLayoutManager(this));
         recyclerFeed.setHasFixedSize(true);
-        editSearch = findViewById(R.id.editSearch);
 
+        // Initialize search and filter UI elements.
+        editSearch = findViewById(R.id.editSearch);
+        buttonFilter = findViewById(R.id.buttonFilter);
+        emptyStateView = findViewById(R.id.emptyStateView);
         progressLoading = findViewById(R.id.progressLoading);
+
+        // If progressLoading is not defined in the layout, create it programmatically.
         if (progressLoading == null) {
-            // If progress bar doesn't exist in the layout yet, create one programmatically
             progressLoading = new ProgressBar(this);
             progressLoading.setId(View.generateViewId());
             progressLoading.setVisibility(View.GONE);
-
-            // Add to layout - adapt this according to your actual layout structure
             ViewGroup parent = (ViewGroup) recyclerFeed.getParent();
             FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -145,39 +174,47 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             parent.addView(progressLoading, params);
         }
 
-        // Initialize empty lists
-        allPosts = new ArrayList<>();
-        postAdapter = new PostAdapter(new ArrayList<>());
-        recyclerFeed.setAdapter(postAdapter);
+        // Initialize the list and adapter for mood events.
+        allMoodEvents = new ArrayList<>();
+        moodEventAdapter = new MoodEventAdapter(this, new ArrayList<>());
+        recyclerFeed.setAdapter(moodEventAdapter);
 
-        // Load data from Firestore instead of using dummy data
+        // Load mood events from Firestore.
         loadMoodsFromFirestore();
 
-        buttonFilter.setOnClickListener(v -> FilterDialog.show(ProfilePage.this, this));
+        // Open the FilterDialog when the filter button is clicked.
+        buttonFilter.setOnClickListener(v ->
+                FilterDialog.show(ProfilePage.this, ProfilePage.this)
+        );
 
+        // Set up search functionality for client-side filtering.
         editSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                postAdapter.filter(charSequence.toString());
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                moodEventAdapter.filter(s.toString());
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {}
+            public void afterTextChanged(Editable s) {}
         });
     }
 
+    /**
+     * Loads mood events from Firestore.
+     * <p>
+     * Retrieves the "moods" subcollection for the current user, orders by timestamp (descending),
+     * and converts each document into a MoodEvent. Updates the adapter and handles empty state UI.
+     * </p>
+     */
     private void loadMoodsFromFirestore() {
         if (progressLoading != null) {
             progressLoading.setVisibility(View.VISIBLE);
         }
-
         if (recyclerFeed != null) {
             recyclerFeed.setVisibility(View.VISIBLE);
         }
-
         if (emptyStateView != null) {
             emptyStateView.setVisibility(View.GONE);
         }
@@ -187,78 +224,51 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 .collection("moods")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    allPosts.clear();
-                    SimpleDateFormat sourceFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
-
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                .addOnSuccessListener(snapshots -> {
+                    allMoodEvents.clear();
+                    for (QueryDocumentSnapshot doc : snapshots) {
                         try {
-                            // Create a MoodEvent from the Firestore data
-                            MoodEvent moodEvent = MoodEvent.fromMap(document.getData());
-
-                            // Parse the timestamp to a Date object
-                            Date date = new Date();
-                            try {
-                                if (moodEvent.getTimestamp() != null) {
-                                    date = sourceFormat.parse(moodEvent.getTimestamp());
+                            MoodEvent moodEvent = MoodEvent.fromMap(doc.getData());
+                            if (moodEvent.getTimestamp() != null) {
+                                Date date = sourceFormat.parse(moodEvent.getTimestamp());
+                                if (date != null) {
+                                    moodEvent.setDate(date);
                                 }
-                            } catch (ParseException e) {
-                                e.printStackTrace();
                             }
+                            moodEvent.setDocumentId(doc.getId());
 
-                            // Create a Post object
-                            Post post = new Post(
-                                    moodEvent.getMood(), // Title is the mood text
-                                    moodEvent.getEmoji(), // Mood is the emoji
-                                    R.drawable.demo_image, // Default image for now
-                                    date
-                            );
-
-                            // Store the document ID for Firestore operations
-                            post.documentId = document.getId();
-
-                            // Add subtitle using trigger and social situation
+                            // Build a small "subtitle" (Trigger, Social, etc.)
                             StringBuilder subtitle = new StringBuilder();
-
                             if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
                                 subtitle.append("Trigger: ").append(moodEvent.getTrigger());
-                                post.trigger = moodEvent.getTrigger();
                             }
-
-                            if (moodEvent.getSocialSituation() != null && !moodEvent.getSocialSituation().isEmpty()) {
+                            if (moodEvent.getSocialSituation() != null &&
+                                    !moodEvent.getSocialSituation().isEmpty()) {
                                 if (subtitle.length() > 0) {
                                     subtitle.append(" | ");
                                 }
                                 subtitle.append("Social: ").append(moodEvent.getSocialSituation());
-                                post.socialSituation = moodEvent.getSocialSituation();
                             }
+                            moodEvent.setSubtitle(subtitle.toString());
 
-                            post.subtitle = subtitle.toString();
-                            post.photoUri = moodEvent.getPhotoUri();
-                            post.intensity = moodEvent.getIntensity();
-                            post.timestamp = moodEvent.getTimestamp();
-
-                            // Add to the list
-                            allPosts.add(post);
-                        } catch (Exception e) {
-                            Log.e("ProfilePage", "Error parsing mood data: " + e.getMessage());
+                            allMoodEvents.add(moodEvent);
+                        } catch (ParseException e) {
+                            Log.e(TAG, "Error parsing timestamp", e);
                         }
                     }
-
-                    // Update the adapter with the new data
-                    postAdapter.updatePosts(new ArrayList<>(allPosts));
+                    moodEventAdapter.updateMoodEvents(new ArrayList<>(allMoodEvents));
 
                     if (progressLoading != null) {
                         progressLoading.setVisibility(View.GONE);
                     }
-
-                    // Show empty state if no posts
-                    if (allPosts.isEmpty()) {
+                    if (allMoodEvents.isEmpty()) {
                         if (emptyStateView != null) {
                             recyclerFeed.setVisibility(View.GONE);
                             emptyStateView.setVisibility(View.VISIBLE);
                         } else {
-                            Toast.makeText(ProfilePage.this, "No mood entries found. Add one!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ProfilePage.this,
+                                    "No mood entries found. Add one!",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
@@ -266,57 +276,162 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                     if (progressLoading != null) {
                         progressLoading.setVisibility(View.GONE);
                     }
-                    Toast.makeText(ProfilePage.this, "Error loading moods: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProfilePage.this,
+                            "Error loading moods: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
                 });
     }
 
+
+    private void loadUserProfile() {
+        // Make sure you have the correct path: "users" -> document(userId)
+        db.collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Read the fields from the Firestore document
+                        String fullName = documentSnapshot.getString("fullName");
+                        String username = documentSnapshot.getString("username");
+                        String bio = documentSnapshot.getString("bio");
+                        String profilePicUri = documentSnapshot.getString("profilePicUri");
+
+                        // Populate the TextViews
+                        if (fullName != null) textName.setText(fullName);
+                        if (username != null) textUsername.setText(username);
+                        if (bio != null) textBioContent.setText(bio);
+
+                        // If you have a profile picture URL, load it using Glide (or Picasso).
+                        if (profilePicUri != null && !profilePicUri.isEmpty()) {
+                            // Make sure you have Glide in your Gradle dependencies
+                            // implementation 'com.github.bumptech.glide:glide:4.14.2'
+                            Glide.with(ProfilePage.this)
+                                    .load(profilePicUri)
+                                    .placeholder(R.drawable.user_icon) // fallback placeholder
+                                    .error(R.drawable.user_icon)       // error placeholder
+                                    .into(profilePicture);
+                        }
+                    } else {
+                        Toast.makeText(ProfilePage.this, "User profile does not exist.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(ProfilePage.this, "Failed to load user profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+
+  
+    /**
+   * Called when the activity resumes.
+   * <p>
+   * Reloads the mood events from Firestore to update the feed.
+   * </p>
+   */
     @Override
     public void onResume() {
         super.onResume();
-        // Reload data when returning to this screen
         loadMoodsFromFirestore();
     }
 
+    /**
+     * Callback method from FilterDialog.FilterListener.
+     * <p>
+     * This method is required by the interface but is not used in this implementation.
+     * </p>
+     *
+     * @param timeFilter   The time filter string.
+     * @param isHappy      True if "Happy" is selected.
+     * @param isSad        True if "Sad" is selected.
+     * @param isAngry      True if "Angry" is selected.
+     * @param isSurprised  True if "Surprised" is selected.
+     * @param isAfraid     True if "Afraid" is selected.
+     * @param isDisgusted  True if "Disgusted" is selected.
+     * @param isConfused   True if "Confused" is selected.
+     * @param isShameful   True if "Shameful" is selected.
+     */
+    @Override
+    public void onFilterApplied(String timeFilter,
+                                boolean isHappy,
+                                boolean isSad,
+                                boolean isAngry,
+                                boolean isSurprised,
+                                boolean isAfraid,
+                                boolean isDisgusted,
+                                boolean isConfused,
+                                boolean isShameful) {
+    }
+
+    /**
+     * Callback method that receives the final filtered list of MoodEvent objects from Firestore.
+     * <p>
+     * Updates the RecyclerView adapter with the filtered data.
+     * </p>
+     *
+     * @param filteredMoods The list of filtered MoodEvent objects.
+     */
+    @Override
+    public void onFilteredResults(List<MoodEvent> filteredMoods) {
+        moodEventAdapter.updateMoodEvents(filteredMoods);
+    }
+
+    /**
+     * Handles the result from EditMoodActivity.
+     * <p>
+     * If the mood was updated, retrieves the updated details and updates the corresponding
+     * MoodEvent in Firestore.
+     * </p>
+     *
+     * @param requestCode The request code for the activity result.
+     * @param resultCode  The result code returned by the activity.
+     * @param data        The Intent containing updated mood details.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (requestCode == EDIT_MOOD_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            // Get updated values
             String updatedMood = data.getStringExtra("updatedMood");
             String updatedEmoji = data.getStringExtra("updatedEmoji");
             String updatedTrigger = data.getStringExtra("updatedTrigger");
+            String updatedReasonWhy = data.getStringExtra("updatedReasonWhy");
             String updatedSocialSituation = data.getStringExtra("updatedSocialSituation");
             int updatedIntensity = data.getIntExtra("updatedIntensity", 5);
-            String timestamp = data.getStringExtra("timestamp");
             int moodPosition = data.getIntExtra("moodPosition", -1);
             String updatedPhotoUri = data.getStringExtra("updatedPhotoUri");
 
-            if (moodPosition >= 0 && moodPosition < allPosts.size()) {
-                // Get the post to update
-                Post postToUpdate = allPosts.get(moodPosition);
-
+            if (moodPosition >= 0 && moodPosition < allMoodEvents.size()) {
+                MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
                 // Update Firestore
-                updateMoodInFirestore(postToUpdate.documentId, updatedEmoji, updatedMood,
-                        updatedTrigger, updatedSocialSituation, updatedIntensity, updatedPhotoUri);
+                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood, updatedTrigger,
+                        updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri);;
             }
-
-
-
-
-
         }
     }
 
+    /**
+     * Updates a MoodEvent document in Firestore with the provided updated details.
+     * <p>
+     * Updates fields such as emoji, mood, trigger, social situation, intensity, and photo URI.
+     * </p>
+     *
+     * @param documentId      The Firestore document ID of the MoodEvent.
+     * @param emoji           The updated emoji.
+     * @param mood            The updated mood title.
+     * @param trigger         The updated trigger.
+     * @param reasonWhy       The updated reason. 
+     * @param socialSituation The updated social situation.
+     * @param intensity       The updated intensity level.
+     * @param photoUri        The updated photo URI.
+     */
+
     private void updateMoodInFirestore(String documentId, String emoji, String mood,
-                                       String trigger, String socialSituation,
+                                       String trigger, String reasonWhy, String socialSituation,
                                        int intensity, String photoUri) {
         // Show loading indicator
         if (progressLoading != null) {
             progressLoading.setVisibility(View.VISIBLE);
         }
 
-        // Create a map with updated values
         Map<String, Object> updatedMood = new HashMap<>();
         updatedMood.put("emoji", emoji);
         updatedMood.put("mood", mood);
@@ -324,8 +439,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         updatedMood.put("trigger", trigger);
         updatedMood.put("socialSituation", socialSituation);
         updatedMood.put("intensity", intensity);
+        updatedMood.put("reasonWhy", reasonWhy);
 
-        // Handle photo if it exists
         if (photoUri != null && !photoUri.equals("N/A")) {
             updatedMood.put("hasPhoto", true);
             updatedMood.put("photoUri", photoUri);
@@ -333,7 +448,6 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             updatedMood.put("hasPhoto", false);
         }
 
-        // Update the document in Firestore
         db.collection("Usermoods")
                 .document(userId)
                 .collection("moods")
@@ -343,47 +457,53 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                     if (progressLoading != null) {
                         progressLoading.setVisibility(View.GONE);
                     }
-                    Toast.makeText(ProfilePage.this, "Mood updated successfully", Toast.LENGTH_SHORT).show();
-                    loadMoodsFromFirestore(); // Reload data to reflect changes
+                    Toast.makeText(ProfilePage.this,
+                            "Mood updated successfully",
+                            Toast.LENGTH_SHORT).show();
+                    loadMoodsFromFirestore();
                 })
                 .addOnFailureListener(e -> {
                     if (progressLoading != null) {
                         progressLoading.setVisibility(View.GONE);
                     }
-                    Toast.makeText(ProfilePage.this, "Error updating mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ProfilePage.this,
+                            "Error updating mood: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
                 });
     }
 
-    private void deleteMoodFromFirestore(String documentId, int position) {
-        // Show a confirmation dialog
+    /**
+     * Deletes a MoodEvent document from Firestore.
+     * <p>
+     * Displays a confirmation dialog before deletion. If confirmed, deletes the MoodEvent and updates the adapter.
+     * </p>
+     *
+     * @param documentId The Firestore document ID of the MoodEvent to delete.
+     * @param position   The position of the MoodEvent in the list.
+     */
+    public void deleteMoodFromFirestore(String documentId, int position) {
         new AlertDialog.Builder(this)
                 .setTitle("Delete Mood")
                 .setMessage("Are you sure you want to delete this mood entry?")
                 .setPositiveButton("Delete", (dialog, which) -> {
-                    // Show loading
                     if (progressLoading != null) {
                         progressLoading.setVisibility(View.VISIBLE);
                     }
-
-                    // Delete from Firestore
                     db.collection("Usermoods")
                             .document(userId)
                             .collection("moods")
                             .document(documentId)
                             .delete()
                             .addOnSuccessListener(aVoid -> {
-                                // Remove from local list
-                                allPosts.remove(position);
-                                postAdapter.updatePosts(new ArrayList<>(allPosts));
-
+                                allMoodEvents.remove(position);
+                                moodEventAdapter.updateMoodEvents(new ArrayList<>(allMoodEvents));
                                 if (progressLoading != null) {
                                     progressLoading.setVisibility(View.GONE);
                                 }
-
-                                Toast.makeText(ProfilePage.this, "Mood deleted successfully", Toast.LENGTH_SHORT).show();
-
-                                // Check if list is now empty
-                                if (allPosts.isEmpty() && emptyStateView != null) {
+                                Toast.makeText(ProfilePage.this,
+                                        "Mood deleted successfully",
+                                        Toast.LENGTH_SHORT).show();
+                                if (allMoodEvents.isEmpty() && emptyStateView != null) {
                                     recyclerFeed.setVisibility(View.GONE);
                                     emptyStateView.setVisibility(View.VISIBLE);
                                 }
@@ -392,197 +512,12 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                                 if (progressLoading != null) {
                                     progressLoading.setVisibility(View.GONE);
                                 }
-                                Toast.makeText(ProfilePage.this, "Error deleting mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ProfilePage.this,
+                                        "Error deleting mood: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT).show();
                             });
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
-
-    }
-
-    @Override
-    public void onFilterApplied(String timeFilter, boolean isHappy, boolean isSad, boolean isAfraid, boolean isConfused) {
-        applyFilters(timeFilter, isHappy, isSad, isAfraid, isConfused);
-    }
-
-    private void applyFilters(String timeFilter, boolean isHappy, boolean isSad, boolean isAfraid, boolean isConfused) {
-        List<Post> filteredPosts = new ArrayList<>();
-        long currentTime = System.currentTimeMillis();
-
-        for (Post post : allPosts) {
-            long postTime = post.date.getTime();
-            boolean isWithinTime = false;
-
-            switch (timeFilter) {
-                case "last_24_hours":
-                    isWithinTime = (currentTime - postTime) <= 86400000;
-                    break;
-                case "3Days":
-                    isWithinTime = (currentTime - postTime) <= 259200000;
-                    break;
-                case "last_week":
-                    isWithinTime = (currentTime - postTime) <= 604800000;
-                    break;
-                case "last_month":
-                    isWithinTime = (currentTime - postTime) <= 2592000000L;
-                    break;
-                case "all_time":
-                    isWithinTime = true;
-                    break;
-            }
-
-            if (isWithinTime) {
-                if ((isHappy && post.mood.equals("HAPPY")) ||
-                        (isSad && post.mood.equals("SAD")) ||
-                        (isAfraid && post.mood.equals("AFRAID")) ||
-                        (isConfused && post.mood.equals("CONFUSED")) ||
-                        (!isHappy && !isSad && !isAfraid && !isConfused)) {
-                    filteredPosts.add(post);
-                }
-            }
-        }
-        postAdapter.updatePosts(filteredPosts);
-    }
-
-    private static class Post {
-        public String subtitle;
-        String title;
-        String mood;
-        int imageResId;
-        Date date;
-
-        // Added fields for edit and delete functionality
-        String documentId; // Firestore document ID
-        String trigger;
-        String socialSituation;
-        int intensity = 5; // Default intensity
-        String timestamp;
-        String photoUri;
-        String emoji;
-
-        Post(String title, String mood, int imageResId, Date date) {
-            this.title = title;
-            this.mood = mood;
-            this.imageResId = imageResId;
-            this.date = date;
-        }
-    }
-
-    private class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
-
-        private final List<Post> postList;
-        private List<Post> originalList;
-        private List<Post> currentList;
-
-        private final SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy • hh:mm:ss a", Locale.US);
-
-        PostAdapter(List<Post> postList) {
-            this.postList = postList;
-            this.originalList = new ArrayList<>(postList);
-            this.currentList = new ArrayList<>(postList);
-        }
-
-        public void updatePosts(List<Post> newPosts) {
-            postList.clear();
-            postList.addAll(newPosts);
-            originalList = new ArrayList<>(newPosts);
-            currentList = new ArrayList<>(newPosts);
-            notifyDataSetChanged();
-        }
-
-        @NonNull
-        @Override
-        public PostViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_post, parent, false);
-            return new PostViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull PostViewHolder holder, int position) {
-            Post post = postList.get(position);
-            holder.textTitle.setText(post.title);
-            holder.textSubtitle.setText(formatter.format(post.date) + " • " + post.mood);
-            holder.imagePost.setImageResource(post.imageResId);
-
-            // Set click listener for the menu button
-            holder.buttonPostMenu.setOnClickListener(v -> {
-                showPostMenu(v, position, post);
-            });
-        }
-
-        // Java
-        private void showPostMenu(View view, int position, Post post) {
-            // Create a popup menu without XML
-            PopupMenu popup = new PopupMenu(ProfilePage.this, view);
-
-            // Add menu items programmatically
-            Menu menu = popup.getMenu();
-            menu.add(0, 1, 0, "Edit");
-            menu.add(0, 2, 0, "Delete");
-
-            popup.setOnMenuItemClickListener(item -> {
-                int id = item.getItemId();
-                if (id == 1) { // Edit
-                    // Launch EditMoodActivity
-                    Intent intent = new Intent(ProfilePage.this, EditMoodActivity.class);
-                    intent.putExtra("selectedMood", post.title);
-                    intent.putExtra("selectedEmoji", post.mood);
-                    intent.putExtra("trigger", post.trigger);
-                    intent.putExtra("socialSituation", post.socialSituation);
-                    intent.putExtra("intensity", post.intensity);
-                    intent.putExtra("timestamp", post.timestamp);
-                    intent.putExtra("photoUri", post.photoUri);
-                    intent.putExtra("moodPosition", position);
-                    startActivityForResult(intent, EDIT_MOOD_REQUEST_CODE);
-                    return true;
-                } else if (id == 2) { // Delete
-                    // Delete the mood
-                    deleteMoodFromFirestore(post.documentId, position);
-                    return true;
-                }
-                return false;
-            });
-
-            popup.show();
-        }
-        @Override
-        public int getItemCount() {
-            return postList.size();
-        }
-
-        // Custom filter method
-        public void filter(String query) {
-            query = query.toLowerCase().trim();
-            currentList.clear();
-            if (query.isEmpty()) {
-                currentList.addAll(originalList);
-            } else {
-                for (Post post : originalList) {
-                    boolean titleMatches = post.title != null && post.title.toLowerCase().contains(query);
-                    boolean subtitleMatches = post.subtitle != null && post.subtitle.toLowerCase().contains(query);
-                    if (titleMatches || subtitleMatches) {
-                        currentList.add(post);
-                    }
-                }
-            }
-            // Update postList since it's used for display
-            postList.clear();
-            postList.addAll(currentList);
-            notifyDataSetChanged();
-        }
-
-        class PostViewHolder extends RecyclerView.ViewHolder {
-            ImageView imagePost;
-            TextView textTitle, textSubtitle;
-            ImageButton buttonPostMenu;
-
-            PostViewHolder(@NonNull View itemView) {
-                super(itemView);
-                imagePost = itemView.findViewById(R.id.imagePost);
-                textTitle = itemView.findViewById(R.id.textTitle);
-                textSubtitle = itemView.findViewById(R.id.textSubtitle);
-                buttonPostMenu = itemView.findViewById(R.id.buttonPostMenu);
-            }
-        }
     }
 }

@@ -19,6 +19,18 @@
             android:padding="16dp"
             android:background="#4B2C39">
 
+            <!-- Back Arrow Above Title -->
+            <ImageView
+                android:id="@+id/backArrow"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="16dp"
+                android:src="@drawable/ic_back_arrow"
+                android:contentDescription="Back"
+                android:clickable="true"
+                android:focusable="true" />
+
             <!-- Title -->
             <TextView
                 android:layout_width="wrap_content"
@@ -84,6 +96,15 @@
                 android:thumbTintMode="src_in"
                 android:splitTrack="false"/>
 
+            <EditText
+                android:id="@+id/reasonWhyInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Give a reason for the mood event (3 words or 20 characters)"
+                android:background="@drawable/rounded_edittext_background"
+                android:padding="10dp"
+                android:layout_marginTop="8dp"/>
+
             <!-- Trigger Input with Rounded Corners -->
             <EditText
                 android:id="@+id/triggerInput"
@@ -95,14 +116,14 @@
                 android:layout_marginTop="8dp"/>
 
             <!-- Social Situation Input with Rounded Corners -->
-            <EditText
-                android:id="@+id/socialSituationInput"
+            <Spinner
+                android:id="@+id/socialSituationSpinner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/select_social_situation"
+                android:layout_marginTop="8dp"
                 android:background="@drawable/rounded_edittext_background"
                 android:padding="10dp"
-                android:layout_marginTop="8dp"/>
+                android:entries="@array/social_situation_options"/>
 
             <!-- Image Button (Above the overlay button) -->
             <FrameLayout
@@ -138,8 +159,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="100dp" />
 
-
-
         </LinearLayout>
     </ScrollView>
 
@@ -150,9 +169,8 @@
         android:layout_height="wrap_content"
         android:text="@string/continue_text"
         android:textSize="18sp"
-        android:backgroundTint="#D94C4C"
+        android:backgroundTint="#000000"
         android:textColor="@android:color/white"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"/>
-
 </FrameLayout>

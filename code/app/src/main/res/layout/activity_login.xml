@@ -40,21 +40,6 @@
             app:iconSize="24dp"
             app:iconTint="@null" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/twitter_sign_in"
-            style="@style/Widget.MaterialComponents.Button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
-            android:backgroundTint="@color/black"
-            android:padding="12dp"
-            android:text="@string/XSignInText"
-            android:textAllCaps="false"
-            app:icon="@drawable/x"
-            app:iconGravity="start"
-            app:iconSize="24dp"
-            app:iconTint="@null" />
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
