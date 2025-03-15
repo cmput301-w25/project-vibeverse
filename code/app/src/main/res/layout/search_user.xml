@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".SearchUserActivity">
+    tools:context=".SearchUserPage">
 
     <!-- Search & Filter Bar -->
     <LinearLayout
@@ -31,7 +31,9 @@
             android:textColor="@android:color/white"
             android:textColorHint="@android:color/darker_gray"
             android:drawableStart="@drawable/ic_search"
-            android:drawablePadding="12dp"/>
+            android:drawablePadding="12dp"
+            android:maxLines="1"
+            android:inputType="text"/>
     </LinearLayout>
 
     <!-- FrameLayout to hold RecyclerView and ProgressBar -->
