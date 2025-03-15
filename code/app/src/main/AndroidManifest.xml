@@ -94,6 +94,13 @@
             android:name=".SearchUserPage"
             android:exported="false"/>
 
+        <!-- Users ProfileActivity -->
+        <activity
+            android:name=".UsersProfile"
+            android:exported="false" />
+
+
+
 
         <!-- Mood Selection Activity -->
         <activity

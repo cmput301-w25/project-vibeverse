@@ -93,12 +93,9 @@ public class SearchUserPage extends AppCompatActivity implements UserAdapter.OnU
 
     @Override
     public void onUserClick(User user) {
-        // Handle user click - to be implemented for navigating to user profile
-        // Intent intent = new Intent(SearchUserPage.this, UserProfileActivity.class);
-        // intent.putExtra("userId", user.getUserId());
-        // startActivity(intent);
-
-        // For now, just prepare the code structure
-        // Uncomment the above code when you have the UserProfileActivity
+        // Navigate to user profile when a user is clicked
+        Intent intent = new Intent(SearchUserPage.this, UsersProfile.class);
+        intent.putExtra("userId", user.getUserId());
+        startActivity(intent);
     }
 }
