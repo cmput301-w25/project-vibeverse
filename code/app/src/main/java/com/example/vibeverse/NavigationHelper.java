@@ -44,9 +44,10 @@ public class NavigationHelper {
             } else if (itemId == R.id.nav_add && !(activity instanceof SelectMoodActivity)) {
                 intent = new Intent(activity, SelectMoodActivity.class);
             }
+            else if (itemId == R.id.nav_search && !(activity instanceof SearchUserPage)) {
+                 intent = new Intent(activity, SearchUserPage.class);
+            }
             // Uncomment when implementing these pages:
-            // else if (itemId == R.id.nav_search && !(activity instanceof SearchPage)) {
-            //     intent = new Intent(activity, SearchPage.class);
             // } else if (itemId == R.id.nav_map && !(activity instanceof MapPage)) {
             //     intent = new Intent(activity, MapPage.class);
             // }
@@ -74,11 +75,11 @@ public class NavigationHelper {
             return R.id.nav_profile;
         } else if (activity instanceof SelectMoodActivity) {
             return R.id.nav_add;
-        }
+        } else if (activity instanceof SearchUserPage) {
+             return R.id.nav_search;
+         }
         // Uncomment when implementing:
-        // else if (activity instanceof SearchPage) {
-        //     return R.id.nav_search;
-        // } else if (activity instanceof MapPage) {
+        // else if (activity instanceof MapPage) {
         //     return R.id.nav_map;
         // }
         return R.id.nav_home; // Default to Home if no match is found
