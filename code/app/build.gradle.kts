@@ -9,12 +9,10 @@ plugins {
 android {
     namespace = "com.example.vibeverse"
     compileSdk = 35
-    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.vibeverse"
         minSdk = 24
-        targetSdk = 35
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -43,6 +41,11 @@ android {
         buildConfig = true
     }
 
+}
+configurations.all {
+    resolutionStrategy {
+        force ("androidx.test:core:1.6.1")
+    }
 }
 
 dependencies {
