@@ -29,7 +29,7 @@ public class UsersProfile extends AppCompatActivity {
 
     // UI Elements
     private CircleImageView profilePicture;
-    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing;
+    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing, textTopUsername;
     private Button buttonFollow;
     private ImageButton buttonBack;
     private RecyclerView recyclerUserPosts;
@@ -75,6 +75,7 @@ public class UsersProfile extends AppCompatActivity {
         profilePicture = findViewById(R.id.profilePicture);
         textName = findViewById(R.id.textName);
         textUsername = findViewById(R.id.textUsername);
+        textTopUsername = findViewById(R.id.textTopUsername);
         textBioContent = findViewById(R.id.textBioContent);
         textFollowers = findViewById(R.id.textFollowers);
         textFollowing = findViewById(R.id.textFollowing);
@@ -116,6 +117,7 @@ public class UsersProfile extends AppCompatActivity {
             // Set name and username
             textName.setText(user.getFullName());
             textUsername.setText("@" + user.getUsername());
+            textTopUsername.setText(user.getUsername());
 
             // Set bio if available
             if (user.getBio() != null && !user.getBio().isEmpty()) {
