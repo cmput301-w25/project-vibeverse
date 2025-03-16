@@ -82,7 +82,6 @@ public class LoginUITest {
                     .perform(typeText("demo1670"), closeSoftKeyboard());
             onView(withId(R.id.login_button)).perform(click());
 
-            // Optionally, wait for the async login process (adjust sleep time as necessary).
             try {
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
