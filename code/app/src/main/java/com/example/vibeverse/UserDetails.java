@@ -30,10 +30,12 @@ import androidx.core.content.FileProvider;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -300,6 +302,9 @@ public class UserDetails extends AppCompatActivity {
             userData.put("dateOfBirth", dob.getText().toString().trim());
             userData.put("gender", genderSpinner.getSelectedItem().toString());
             userData.put("email", user.getEmail());
+            userData.put("followerCount", 0);
+            userData.put("followingCount", 0);
+            userData.put("newNotificationCount", 0);
 
 
             if (imageUri != null) {
@@ -311,12 +316,44 @@ public class UserDetails extends AppCompatActivity {
                 userData.put("hasProfilePic", false);
             }
 
+            userData.put("followerCount", 0);
+            userData.put("followingCount", 0);
+            userData.put("newNotificationCount", 0);
+
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            DocumentReference userDocRef = db.collection("users").document(user.getUid());
+
 
             // Get Firestore instance and save data
-            FirebaseFirestore db = FirebaseFirestore.getInstance();
-            db.collection("users").document(user.getUid())
-                    .set(userData)
+            userDocRef.set(userData)
                     .addOnSuccessListener(aVoid -> {
+                        // 2) Create subcollections:
+
+                        // (a) followers subcollection with an empty array of follower IDs
+                        Map<String, Object> followersMap = new HashMap<>();
+                        followersMap.put("followerIds", new ArrayList<String>()); // empty list
+                        userDocRef.collection("followers")
+                                .document("list")
+                                .set(followersMap);
+
+                        // (b) following subcollection with an empty array of following IDs
+                        Map<String, Object> followingMap = new HashMap<>();
+                        followingMap.put("followingIds", new ArrayList<String>()); // empty list
+                        userDocRef.collection("following")
+                                .document("list")
+                                .set(followingMap);
+
+                        Map<String, Object> followReqMap = new HashMap<>();
+                        followReqMap.put("followReqs", new ArrayList<String>()); // empty list
+                        userDocRef.collection("followRequests")
+                                .document("list")
+                                .set(followingMap);
+
+
+                        userDocRef.collection("notifications")
+                                .document("placeholder")
+                                .set(new HashMap<String, Object>());
+
                         Toast.makeText(UserDetails.this, "Profile created successfully!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(UserDetails.this, MainActivity.class);
                         startActivity(intent);
@@ -329,6 +366,7 @@ public class UserDetails extends AppCompatActivity {
             Toast.makeText(this, "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     /**
      * Displays a DatePickerDialog for the user to select their date of birth.

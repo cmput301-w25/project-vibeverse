@@ -71,7 +71,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     /** Button to logout the user. */
 
 
-    private TextView textName, textUsername, textBioContent;
+    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing;
     private ImageView profilePicture;
 
 
@@ -130,6 +130,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         textUsername = findViewById(R.id.textUsername);
         textBioContent = findViewById(R.id.textBioContent);
         profilePicture = findViewById(R.id.profilePicture);
+        textFollowers = findViewById(R.id.textFollowers);
+        textFollowing = findViewById(R.id.textFollowing);
 
         // Then call a helper method to load the profile
         loadUserProfile();
@@ -295,11 +297,15 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                         String username = documentSnapshot.getString("username");
                         String bio = documentSnapshot.getString("bio");
                         String profilePicUri = documentSnapshot.getString("profilePicUri");
+                        String followerCount = String.valueOf(documentSnapshot.getLong("followerCount"));
+                        String followingCount = String.valueOf(documentSnapshot.getLong("followingCount"));
 
                         // Populate the TextViews
                         if (fullName != null) textName.setText(fullName);
                         if (username != null) textUsername.setText(username);
                         if (bio != null) textBioContent.setText(bio);
+                        textFollowers.setText(followerCount);
+                        textFollowing.setText(followingCount);
 
                         // If you have a profile picture URL, load it using Glide (or Picasso).
                         if (profilePicUri != null && !profilePicUri.isEmpty()) {

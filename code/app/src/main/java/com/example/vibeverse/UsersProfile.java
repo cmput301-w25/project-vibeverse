@@ -1,5 +1,6 @@
 package com.example.vibeverse;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -13,37 +14,48 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class UsersProfile extends AppCompatActivity {
 
-    private String userId;
+    private String pageUserId;
     private FirebaseFirestore db;
 
     // UI Elements
     private CircleImageView profilePicture;
     private TextView textName, textUsername, textBioContent, textFollowers, textFollowing;
-    private Button buttonFollow;
+
+    private Button buttonFollowStateFollow;
+    private Button buttonFollowStateRequested;
+    private Button buttonFollowStateFollowing;
     private ImageButton buttonBack;
     private RecyclerView recyclerUserPosts;
     private ProgressBar progressLoading;
     private View emptyStateView;
 
+    String activeUserId;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.users_profile);
+        activeUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+
 
         // Get user ID from intent
-        userId = getIntent().getStringExtra("userId");
-        if (userId == null) {
+        pageUserId = getIntent().getStringExtra("userId");
+        if (pageUserId == null) {
             Toast.makeText(this, "Error loading profile", Toast.LENGTH_SHORT).show();
             finish();
             return;
@@ -65,10 +77,126 @@ public class UsersProfile extends AppCompatActivity {
         buttonBack.setOnClickListener(v -> finish());
 
         // Set up follow button (placeholder for now)
-        buttonFollow.setOnClickListener(v -> {
-            // You'll implement the follow logic later
-            Toast.makeText(UsersProfile.this, "Follow feature coming soon", Toast.LENGTH_SHORT).show();
+        buttonFollowStateFollow.setOnClickListener(v -> {
+// 1) Create the Notification object
+            Notification followNotification = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                followNotification = new Notification(
+                        "You have a new follow request!",      // content
+                        LocalDateTime.now(),                   // dateTime
+                        Notification.NotifType.FOLLOW_REQUEST, // notifType
+                        activeUserId,                         // senderUserId (who is following)
+                        pageUserId                             // receiverUserId (owner of this profile)
+                );
+            }
+
+            // 2) Convert Notification object into a Map for Firestore
+            //    (because LocalDateTime & Enum aren’t stored directly as-is)
+            Map<String, Object> notifData = new HashMap<>();
+            notifData.put("content", followNotification.getContent());
+            notifData.put("dateTime", followNotification.getDateTime().toString());
+            notifData.put("notifType", followNotification.getNotifType().name());
+            notifData.put("senderUserId", followNotification.getSenderUserId());
+            notifData.put("receiverUserId", followNotification.getReceiverUserId());
+            notifData.put("isRead", followNotification.isRead());
+
+            // 3) Get a reference to the recipient user’s doc & new_notifications subcollection
+            DocumentReference recipientUserRef = db.collection("users").document(pageUserId);
+
+            recipientUserRef.collection("notifications")
+                    .add(notifData)
+                    .addOnSuccessListener(docRef -> {
+                        // 5) Increment the user's newNotificationCount
+                        recipientUserRef.update("newNotificationCount",
+                                com.google.firebase.firestore.FieldValue.increment(1));
+
+                        // 6) Also add the sender's ID to the "followRequests" subcollection
+                        //    (sibling of "notifications")
+                        Map<String, Object> followRequestUpdate = new HashMap<>();
+                        followRequestUpdate.put("followReqs",
+                                com.google.firebase.firestore.FieldValue.arrayUnion(activeUserId));
+
+                        // We'll store it in a doc named "list" in the followRequests subcollection
+                        recipientUserRef.collection("followRequests")
+                                .document("list")
+                                // Use merge() so we don't overwrite existing IDs
+                                .set(followRequestUpdate, com.google.firebase.firestore.SetOptions.merge())
+                                .addOnSuccessListener(aVoid2 -> {
+                                    Toast.makeText(UsersProfile.this,
+                                            "Follow request sent!",
+                                            Toast.LENGTH_SHORT).show();
+                                    showRequestedState();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(UsersProfile.this,
+                                            "Failed to add follow request: " + e.getMessage(),
+                                            Toast.LENGTH_SHORT).show();
+                                });
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(UsersProfile.this,
+                                "Failed to send notification: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    });
+
         });
+
+        buttonFollowStateRequested.setOnClickListener(v -> {
+            DocumentReference recipientUserRef = db.collection("users").document(pageUserId);
+
+            // 1) Remove from followRequests
+            recipientUserRef.collection("followRequests")
+                    .document("list")
+                    .update("followReqs",
+                            com.google.firebase.firestore.FieldValue.arrayRemove(activeUserId))
+                    .addOnSuccessListener(aVoid -> {
+                        // 2) Find & delete the matching notification (senderUserId=activeUserId & notifType=FOLLOW_REQUEST)
+                        recipientUserRef.collection("notifications")
+                                .whereEqualTo("senderUserId", activeUserId)
+                                .whereEqualTo("notifType", Notification.NotifType.FOLLOW_REQUEST.name())
+                                .limit(1)
+                                .get()
+                                .addOnSuccessListener(querySnapshot -> {
+                                    if (!querySnapshot.isEmpty()) {
+                                        // There's at most one doc that matches
+                                        DocumentSnapshot doc = querySnapshot.getDocuments().get(0);
+                                        doc.getReference().delete(); // remove the notification doc
+
+                                        // 3) Decrement newNotificationCount
+                                        recipientUserRef.update("newNotificationCount",
+                                                com.google.firebase.firestore.FieldValue.increment(-1));
+                                    }
+                                });
+
+                        // 4) Switch UI to "Follow"
+                        showFollowState();
+                        Toast.makeText(UsersProfile.this, "Follow request canceled.", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(UsersProfile.this, "Failed to cancel request: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    });
+        });
+
+        buttonFollowStateFollowing.setOnClickListener(v -> {
+            DocumentReference recipientUserRef = db.collection("users").document(pageUserId);
+
+            // Remove from followers
+            recipientUserRef.collection("followers")
+                    .document("list")
+                    .update("followerIds",
+                            com.google.firebase.firestore.FieldValue.arrayRemove(activeUserId))
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
+                        showFollowState();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(UsersProfile.this, "Failed to unfollow: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    });
+        });
+
+
     }
 
     private void initViews() {
@@ -78,7 +206,12 @@ public class UsersProfile extends AppCompatActivity {
         textBioContent = findViewById(R.id.textBioContent);
         textFollowers = findViewById(R.id.textFollowers);
         textFollowing = findViewById(R.id.textFollowing);
-        buttonFollow = findViewById(R.id.buttonFollow);
+        buttonFollowStateFollow = findViewById(R.id.buttonFollow);
+        buttonFollowStateRequested = findViewById(R.id.buttonFollowStateRequested);
+        buttonFollowStateFollowing = findViewById(R.id.buttonFollowStateFollowing);
+        buttonFollowStateFollow.setVisibility(View.GONE);
+        buttonFollowStateRequested.setVisibility(View.GONE);
+        buttonFollowStateFollowing.setVisibility(View.GONE);
         buttonBack = findViewById(R.id.buttonBack);
         recyclerUserPosts = findViewById(R.id.recyclerUserPosts);
         progressLoading = findViewById(R.id.progressLoading);
@@ -91,16 +224,20 @@ public class UsersProfile extends AppCompatActivity {
     private void loadUserData() {
         showLoading(true);
 
-        db.collection("users").document(userId)
+        db.collection("users").document(pageUserId)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     showLoading(false);
-                    if (documentSnapshot.exists()) {
-                        updateUI(documentSnapshot);
-                    } else {
+                    if (!documentSnapshot.exists()) {
                         Toast.makeText(UsersProfile.this, "User not found", Toast.LENGTH_SHORT).show();
                         finish();
+                        return;
                     }
+
+                    updateUI(documentSnapshot);
+
+                    // After we have the basic user info, check follow status:
+                    checkFollowStatus();
                 })
                 .addOnFailureListener(e -> {
                     showLoading(false);
@@ -121,7 +258,7 @@ public class UsersProfile extends AppCompatActivity {
             if (user.getBio() != null && !user.getBio().isEmpty()) {
                 textBioContent.setText(user.getBio());
             } else {
-                textBioContent.setText("No bio available");
+                textBioContent.setText("");
             }
 
             // Load profile picture
@@ -135,10 +272,6 @@ public class UsersProfile extends AppCompatActivity {
                 profilePicture.setImageResource(R.drawable.user_icon);
             }
 
-            // In a real app, you would load followers and following counts from the database
-            // This is just placeholder code
-            textFollowers.setText("0");
-            textFollowing.setText("0");
         }
     }
 
@@ -183,4 +316,72 @@ public class UsersProfile extends AppCompatActivity {
         recyclerUserPosts.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         emptyStateView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
+
+    private void checkFollowStatus() {
+        // 1) Check if activeUserId is in the pageUserId's followers
+        DocumentReference followersDocRef = db.collection("users")
+                .document(pageUserId)
+                .collection("followers")
+                .document("list");
+
+        followersDocRef.get().addOnSuccessListener(followersDocSnap -> {
+            if (followersDocSnap.exists()) {
+                // The array might be named "followerIds" or something else in your code
+                @SuppressWarnings("unchecked")
+                java.util.List<String> followerIds =
+                        (java.util.List<String>) followersDocSnap.get("followerIds");
+
+                if (followerIds != null && followerIds.contains(activeUserId)) {
+                    // The user is already in the followers array
+                    showFollowingState();
+                    return; // no need to check requests
+                }
+            }
+
+            // 2) If not a follower, check if they're in followRequests
+            DocumentReference requestsDocRef = db.collection("users")
+                    .document(pageUserId)
+                    .collection("followRequests")
+                    .document("list");
+
+            requestsDocRef.get().addOnSuccessListener(requestsDocSnap -> {
+                if (requestsDocSnap.exists()) {
+                    @SuppressWarnings("unchecked")
+                    java.util.List<String> followReqs =
+                            (java.util.List<String>) requestsDocSnap.get("followReqs");
+
+                    if (followReqs != null && followReqs.contains(activeUserId)) {
+                        // The user has requested to follow
+                        showRequestedState();
+                    } else {
+                        // Not a follower and not in requests
+                        showFollowState();
+                    }
+                } else {
+                    // No doc => definitely not in requests
+                    showFollowState();
+                }
+            });
+        });
+    }
+
+    private void showFollowState() {
+        buttonFollowStateFollow.setVisibility(View.VISIBLE);
+        buttonFollowStateRequested.setVisibility(View.GONE);
+        buttonFollowStateFollowing.setVisibility(View.GONE);
+    }
+
+    private void showRequestedState() {
+        buttonFollowStateFollow.setVisibility(View.GONE);
+        buttonFollowStateRequested.setVisibility(View.VISIBLE);
+        buttonFollowStateFollowing.setVisibility(View.GONE);
+    }
+
+    private void showFollowingState() {
+        buttonFollowStateFollow.setVisibility(View.GONE);
+        buttonFollowStateRequested.setVisibility(View.GONE);
+        buttonFollowStateFollowing.setVisibility(View.VISIBLE);
+    }
+
+
 }

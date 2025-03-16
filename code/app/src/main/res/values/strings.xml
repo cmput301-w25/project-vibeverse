@@ -57,7 +57,9 @@
     <string name="add_mood_button">Add Mood</string>
     <string name="mood_history_heading">Mood History</string>
     <string name="following">Following</string>
-    <string name="follows">Follows</string>
+    <string name="follows">Followers</string>
     <string name="search">Search...</string>
     <string name="search_users">Search User...</string>
+    <string name="followButtonText">Follow</string>
+    <string name="requestedButtonText">Requested</string>
 </resources>

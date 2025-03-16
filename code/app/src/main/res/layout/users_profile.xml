@@ -103,15 +103,39 @@
             android:orientation="vertical"
             android:gravity="center_horizontal">
 
-            <!-- Follow Button (replacing Logout) -->
+            <!-- Three follow-state buttons stacked in the same spot -->
             <Button
                 android:id="@+id/buttonFollow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@string/followButtonText"
+                android:textColor="@android:color/white"
+                android:visibility="gone"
                 android:backgroundTint="@android:color/black"
-                android:text="Follow"
-                android:textColor="@android:color/white" />
+                android:layout_gravity="center_horizontal"
+                />
 
+            <Button
+                android:id="@+id/buttonFollowStateRequested"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/requestedButtonText"
+                android:textColor="@android:color/white"
+                android:visibility="gone"
+                android:backgroundTint="@color/follow_button_alt_color"
+                android:layout_gravity="center_horizontal"
+                />
+
+            <Button
+                android:id="@+id/buttonFollowStateFollowing"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Following"
+                android:textColor="@android:color/white"
+                android:visibility="gone"
+                android:backgroundTint="@color/follow_button_alt_color"
+                android:layout_gravity="center_horizontal"
+                />
             <!-- Spacer -->
             <View
                 android:layout_width="match_parent"
