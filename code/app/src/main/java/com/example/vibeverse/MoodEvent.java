@@ -1,7 +1,5 @@
 package com.example.vibeverse;
 
-import static android.content.ContentValues.TAG;
-
 import android.net.Uri;
 import android.util.Log;
 
@@ -178,7 +176,7 @@ public class MoodEvent implements Serializable {
                 moodMap.put("photoDateTaken", photograph.getDateTaken().getTime());
             }
             moodMap.put("photoLocation", photograph.getLocation());
-            moodMap.put("photoSizeKB", photograph.getFileSizeKB());
+            moodMap.put("photoSizeKB", photograph.getFileSize());
         } else {
             moodMap.put("hasPhoto", false);
         }
@@ -401,7 +399,7 @@ public class MoodEvent implements Serializable {
 
     public long getPhotoSize() {
         if (photograph != null) {
-            return photograph.getFileSizeKB();
+            return photograph.getFileSize();
         }
         return 0;
     }
