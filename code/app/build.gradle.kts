@@ -43,6 +43,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     implementation(libs.firebase.storage)
+    implementation(libs.espresso.intents)
+
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
