@@ -69,10 +69,11 @@ public class SearchUserPage extends AppCompatActivity implements UserAdapter.OnU
 
     private void searchUsers(String query) {
         // Search for usernames that start with the query (case-insensitive would be better, but Firestore has limitations)
+        String lowerCaseQuery = query.toLowerCase();
         db.collection("users")
-                .orderBy("username")
-                .startAt(query)
-                .endAt(query + "\uf8ff") // This is a high code point that comes after all regular characters
+                .orderBy("usernameLowercase") // Order by a lowercase version of the username
+                .startAt(lowerCaseQuery)
+                .endAt(lowerCaseQuery + "\uf8ff") // This is a high code point that comes after all regular characters
                 .limit(20) // Limit results for better performance
                 .get()
                 .addOnCompleteListener(task -> {

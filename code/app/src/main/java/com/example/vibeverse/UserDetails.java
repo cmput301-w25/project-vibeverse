@@ -300,6 +300,7 @@ public class UserDetails extends AppCompatActivity {
             userData.put("dateOfBirth", dob.getText().toString().trim());
             userData.put("gender", genderSpinner.getSelectedItem().toString());
             userData.put("email", user.getEmail());
+            userData.put("usernameLowercase", username.getText().toString().trim().toLowerCase()); // Lowercase version
 
 
             if (imageUri != null) {
