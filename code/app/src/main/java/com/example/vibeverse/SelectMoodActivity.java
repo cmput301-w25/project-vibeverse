@@ -113,7 +113,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         // Initialize UI references
         initializeUIElements();
 
-        // Initialize Firebase
+        // Initialize Firebase8
         initializeFirebase();
 
         // Initialize mood data (colors and emojis)

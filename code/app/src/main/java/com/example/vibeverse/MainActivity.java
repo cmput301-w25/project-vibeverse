@@ -60,9 +60,15 @@ public class MainActivity extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-//        if (!Places.isInitialized()) {
-//            Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY);
-//        }
+        if (!Places.isInitialized()) {
+            try {
+                Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY);
+                // Add logging for debugging
+                android.util.Log.d("PlacesAPI", "Places initialized successfully in MainActivity");
+            } catch (Exception e) {
+                android.util.Log.e("PlacesAPI", "Places initialization failed: " + e.getMessage(), e);
+            }
+        }
 
 //        button = findViewById(R.id.logout_button);
 //        textView = findViewById(R.id.userDetails);
