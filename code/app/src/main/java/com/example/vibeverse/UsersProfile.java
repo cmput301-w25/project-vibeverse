@@ -70,6 +70,9 @@ public class UsersProfile extends AppCompatActivity {
         moodEventAdapter = new MoodEventAdapter(this, new ArrayList<>());
         recyclerUserPosts.setAdapter(moodEventAdapter);
 
+        // Hide menu button for other users' profiles
+        moodEventAdapter.setMenuButtonVisibility(false);
+
         // Load user data
         loadUserData();
 
