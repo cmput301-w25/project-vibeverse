@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
@@ -70,6 +71,7 @@ public class SearchUserPage extends AppCompatActivity implements UserAdapter.OnU
     private void searchUsers(String query) {
         // Search for usernames that start with the query (case-insensitive would be better, but Firestore has limitations)
         String lowerCaseQuery = query.toLowerCase();
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid(); // Get current user ID
         db.collection("users")
                 .orderBy("usernameLowercase") // Order by a lowercase version of the username
                 .startAt(lowerCaseQuery)
@@ -82,12 +84,12 @@ public class SearchUserPage extends AppCompatActivity implements UserAdapter.OnU
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             User user = document.toObject(User.class);
                             user.setUserId(document.getId()); // Set the document ID as userId
-                            userList.add(user);
+                            // Exclude the logged-in user from search results
+                            if (!user.getUserId().equals(currentUserId)) {
+                                userList.add(user);
+                            }
                         }
                         userAdapter.notifyDataSetChanged();
-                    } else {
-                        // Handle errors
-                        // Log.e("SearchUserPage", "Error searching users", task.getException());
                     }
                 });
     }
