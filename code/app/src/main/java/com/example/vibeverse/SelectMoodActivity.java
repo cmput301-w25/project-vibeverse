@@ -34,14 +34,23 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -65,6 +74,12 @@ public class SelectMoodActivity extends AppCompatActivity {
     private View selectedMoodContainer;
     private LinearLayout mainContainer;
     private TextView imageHintText;
+
+    private static final int REQUEST_LOCATION_AUTOCOMPLETE = 3;
+    private FrameLayout locationButton;
+    private TextView selectedLocationText;
+    private String selectedLocationName = null;
+    private LatLng selectedLocationCoords = null;
 
     // Mood properties
     private String selectedMood = "Happy"; // Default mood
@@ -91,10 +106,14 @@ public class SelectMoodActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_mood);
 
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY);
+        }
+
         // Initialize UI references
         initializeUIElements();
 
-        // Initialize Firebase
+        // Initialize Firebase8
         initializeFirebase();
 
         // Initialize mood data (colors and emojis)
@@ -128,6 +147,8 @@ public class SelectMoodActivity extends AppCompatActivity {
         imgSelected = findViewById(R.id.imgSelected);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         imageHintText = findViewById(R.id.imageHintText);
+        locationButton = findViewById(R.id.btnLocation);
+        selectedLocationText = findViewById(R.id.selectedLocationText);
     }
 
     /**
@@ -267,6 +288,8 @@ public class SelectMoodActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+
+        locationButton.setOnClickListener(v -> startPlacesAutocomplete());
 
         // Continue button listener
         continueButton.setOnClickListener(v -> {
@@ -589,6 +612,17 @@ public class SelectMoodActivity extends AppCompatActivity {
         }
     }
 
+    private void startPlacesAutocomplete() {
+        // Define the place fields to return
+        List<Place.Field> fields = Arrays.asList(
+                Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG);
+
+        // Start the autocomplete intent
+        Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields)
+                .build(this);
+        startActivityForResult(intent, REQUEST_LOCATION_AUTOCOMPLETE);
+    }
+
     /**
      * Handles results from camera or gallery intents
      */
@@ -618,6 +652,21 @@ public class SelectMoodActivity extends AppCompatActivity {
                     imgSelected.setImageBitmap(bitmap);
                     imageUri = downloadUrl;
                 });
+            } else if (requestCode == REQUEST_LOCATION_AUTOCOMPLETE) {
+                // Handle location selection
+                Place place = Autocomplete.getPlaceFromIntent(data);
+                selectedLocationName = place.getName() + ", " + place.getAddress();
+                selectedLocationCoords = place.getLatLng();
+                selectedLocationText.setText(selectedLocationName);
+                selectedLocationText.setTextColor(Color.BLACK);
+                Toast.makeText(this, "Location selected: " + selectedLocationName, Toast.LENGTH_SHORT).show();
+            }
+        } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+            if (requestCode == REQUEST_LOCATION_AUTOCOMPLETE) {
+                // Handle the error
+                Status status = Autocomplete.getStatusFromIntent(data);
+                Log.e("SelectMoodActivity", "Place selection error: " + status.getStatusMessage());
+                Toast.makeText(this, "Error selecting location", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -640,6 +689,12 @@ public class SelectMoodActivity extends AppCompatActivity {
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("intensity", moodEvent.getIntensity());
         moodData.put("reasonWhy", moodEvent.getReasonWhy());
+
+        if (selectedLocationName != null && selectedLocationCoords != null) {
+            moodData.put("moodLocation", selectedLocationName);
+            moodData.put("moodLatitude", selectedLocationCoords.latitude);
+            moodData.put("moodLongitude", selectedLocationCoords.longitude);
+        }
 
         // Handle photograph if present
         if (moodEvent.getPhotograph() != null) {

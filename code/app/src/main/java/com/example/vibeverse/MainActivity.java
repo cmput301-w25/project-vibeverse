@@ -7,6 +7,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+
+import com.google.android.libraries.places.api.Places;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -57,6 +59,16 @@ public class MainActivity extends AppCompatActivity {
         // Initialize FirebaseAuth and Firestore
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+
+        if (!Places.isInitialized()) {
+            try {
+                Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY);
+                // Add logging for debugging
+                android.util.Log.d("PlacesAPI", "Places initialized successfully in MainActivity");
+            } catch (Exception e) {
+                android.util.Log.e("PlacesAPI", "Places initialization failed: " + e.getMessage(), e);
+            }
+        }
 
 //        button = findViewById(R.id.logout_button);
 //        textView = findViewById(R.id.userDetails);
