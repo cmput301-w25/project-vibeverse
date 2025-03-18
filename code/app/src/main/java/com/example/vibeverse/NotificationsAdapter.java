@@ -14,8 +14,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
 
 public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdapter.NotificationViewHolder> {
     private List<Notification> notificationList;
@@ -69,7 +71,8 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
         public void bind(Notification notification) {
             // Set the notification text and date
             contentText.setText(notification.getContent());
-            dateTimeText.setText(notification.getDateTime());
+            String formattedDateTime = getFormattedDateTime(notification.getDateTime());
+            dateTimeText.setText(formattedDateTime);
             acceptButton.setBackgroundTintList(null);
             rejectButton.setBackgroundTintList(null);
 
@@ -126,6 +129,43 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
                 // Add logic for rejecting the follow request
                 // e.g., remove the notification or update its state.
             });
+        }
+    }
+
+    private String getFormattedDateTime(String isoDateTime) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Parse the ISO string. Adjust the pattern if your input format changes.
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+            LocalDateTime dateTime = LocalDateTime.parse(isoDateTime, inputFormatter);
+
+            // Get the day and its ordinal suffix
+            int day = dateTime.getDayOfMonth();
+            String daySuffix = getDayOfMonthSuffix(day);
+
+            // Format the date part. We use "MMMM d, yyyy" then insert the suffix.
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy");
+            String formattedDate = dateTime.format(dateFormatter);
+            // Replace the day number with the day plus its suffix
+            formattedDate = formattedDate.replaceFirst("\\d+", day + daySuffix);
+
+            // Format the time part as "hh:mm a" (e.g., 11:05 PM)
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+            String formattedTime = dateTime.format(timeFormatter);
+
+            return formattedDate + " " + formattedTime;
+        }
+        return null;
+    }
+
+    private String getDayOfMonthSuffix(int day) {
+        if (day >= 11 && day <= 13) {
+            return "th";
+        }
+        switch (day % 10) {
+            case 1: return "st";
+            case 2: return "nd";
+            case 3: return "rd";
+            default: return "th";
         }
     }
 }
