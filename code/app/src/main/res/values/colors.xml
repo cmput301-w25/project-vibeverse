@@ -18,4 +18,8 @@
     <color name="confused_color">#AB47BC</color>
     <color name="shameful_color">#EC407A</color>
 
+    <color name="unread_color">#F0F8FF</color>
+    <color name="read_color">#FFFFFF</color>
+
+
 </resources>

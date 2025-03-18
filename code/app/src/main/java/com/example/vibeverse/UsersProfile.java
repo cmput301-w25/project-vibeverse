@@ -70,7 +70,7 @@ public class UsersProfile extends AppCompatActivity {
         // Load user data
         loadUserData();
 
-        // Load user posts (you can implement this based on your app's structure)
+
         loadUserPosts();
 
         // Set up back button
@@ -78,67 +78,87 @@ public class UsersProfile extends AppCompatActivity {
 
         // Set up follow button (placeholder for now)
         buttonFollowStateFollow.setOnClickListener(v -> {
-// 1) Create the Notification object
-            Notification followNotification = null;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                followNotification = new Notification(
-                        "You have a new follow request!",      // content
-                        LocalDateTime.now(),                   // dateTime
-                        Notification.NotifType.FOLLOW_REQUEST, // notifType
-                        activeUserId,                         // senderUserId (who is following)
-                        pageUserId                             // receiverUserId (owner of this profile)
-                );
-            }
+            // First, retrieve the active user's username from Firestore.
+            db.collection("users").document(activeUserId)
+                    .get()
+                    .addOnSuccessListener(docSnapshot -> {
+                        if (docSnapshot.exists()) {
+                            String activeUsername = docSnapshot.getString("username");
+                            if (activeUsername == null || activeUsername.isEmpty()) {
+                                Toast.makeText(UsersProfile.this,
+                                        "Active user username not found.",
+                                        Toast.LENGTH_SHORT).show();
+                                return;
+                            }
 
-            // 2) Convert Notification object into a Map for Firestore
-            //    (because LocalDateTime & Enum aren’t stored directly as-is)
-            Map<String, Object> notifData = new HashMap<>();
-            notifData.put("content", followNotification.getContent());
-            notifData.put("dateTime", followNotification.getDateTime().toString());
-            notifData.put("notifType", followNotification.getNotifType().name());
-            notifData.put("senderUserId", followNotification.getSenderUserId());
-            notifData.put("receiverUserId", followNotification.getReceiverUserId());
-            notifData.put("isRead", followNotification.isRead());
+                            // Build the notification content using the active user's username.
+                            String notificationContent = activeUsername + " has requested to follow you!";
 
-            // 3) Get a reference to the recipient user’s doc & new_notifications subcollection
-            DocumentReference recipientUserRef = db.collection("users").document(pageUserId);
+                            // Create the Notification object.
+                            Notification followNotification = null;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                followNotification = new Notification(
+                                        notificationContent,                     // content
+                                        LocalDateTime.now().toString(),                     // dateTime
+                                        Notification.NotifType.FOLLOW_REQUEST,   // notifType
+                                        activeUserId,                            // senderUserId
+                                        pageUserId                             // receiverUserId
+                                );
+                            }
 
-            recipientUserRef.collection("notifications")
-                    .add(notifData)
-                    .addOnSuccessListener(docRef -> {
-                        // 5) Increment the user's newNotificationCount
-                        recipientUserRef.update("newNotificationCount",
-                                com.google.firebase.firestore.FieldValue.increment(1));
+                            // Convert Notification object into a Map for Firestore.
+                            Map<String, Object> notifData = new HashMap<>();
+                            notifData.put("content", followNotification.getContent());
+                            notifData.put("dateTime", followNotification.getDateTime().toString());
+                            notifData.put("notifType", followNotification.getNotifType().name());
+                            notifData.put("senderUserId", followNotification.getSenderUserId());
+                            notifData.put("receiverUserId", followNotification.getReceiverUserId());
+                            notifData.put("isRead", followNotification.isRead());
 
-                        // 6) Also add the sender's ID to the "followRequests" subcollection
-                        //    (sibling of "notifications")
-                        Map<String, Object> followRequestUpdate = new HashMap<>();
-                        followRequestUpdate.put("followReqs",
-                                com.google.firebase.firestore.FieldValue.arrayUnion(activeUserId));
+                            // Get a reference to the recipient user’s document.
+                            DocumentReference recipientUserRef = db.collection("users").document(pageUserId);
 
-                        // We'll store it in a doc named "list" in the followRequests subcollection
-                        recipientUserRef.collection("followRequests")
-                                .document("list")
-                                // Use merge() so we don't overwrite existing IDs
-                                .set(followRequestUpdate, com.google.firebase.firestore.SetOptions.merge())
-                                .addOnSuccessListener(aVoid2 -> {
-                                    Toast.makeText(UsersProfile.this,
-                                            "Follow request sent!",
-                                            Toast.LENGTH_SHORT).show();
-                                    showRequestedState();
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(UsersProfile.this,
-                                            "Failed to add follow request: " + e.getMessage(),
-                                            Toast.LENGTH_SHORT).show();
-                                });
+                            recipientUserRef.collection("notifications")
+                                    .add(notifData)
+                                    .addOnSuccessListener(docRef -> {
+                                        // Increment the user's newNotificationCount.
+                                        recipientUserRef.update("newNotificationCount",
+                                                com.google.firebase.firestore.FieldValue.increment(1));
+
+                                        // Also add the sender's ID to the "followRequests" subcollection.
+                                        Map<String, Object> followRequestUpdate = new HashMap<>();
+                                        followRequestUpdate.put("followReqs",
+                                                com.google.firebase.firestore.FieldValue.arrayUnion(activeUserId));
+
+                                        recipientUserRef.collection("followRequests")
+                                                .document("list")
+                                                .set(followRequestUpdate, com.google.firebase.firestore.SetOptions.merge())
+                                                .addOnSuccessListener(aVoid2 -> {
+                                                    Toast.makeText(UsersProfile.this,
+                                                            "Follow request sent!",
+                                                            Toast.LENGTH_SHORT).show();
+                                                    showRequestedState();
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Toast.makeText(UsersProfile.this,
+                                                            "Failed to add follow request: " + e.getMessage(),
+                                                            Toast.LENGTH_SHORT).show();
+                                                });
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(UsersProfile.this,
+                                                "Failed to send notification: " + e.getMessage(),
+                                                Toast.LENGTH_SHORT).show();
+                                    });
+                        } else {
+                            Toast.makeText(UsersProfile.this,
+                                    "Active user data not found.", Toast.LENGTH_SHORT).show();
+                        }
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(UsersProfile.this,
-                                "Failed to send notification: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                                "Error retrieving active user: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
-
         });
 
         buttonFollowStateRequested.setOnClickListener(v -> {
@@ -253,6 +273,10 @@ public class UsersProfile extends AppCompatActivity {
             // Set name and username
             textName.setText(user.getFullName());
             textUsername.setText("@" + user.getUsername());
+
+            // Set follower and following counts
+            textFollowers.setText(String.valueOf(user.getFollowerCount()));
+            textFollowing.setText(String.valueOf(user.getFollowingCount()));
 
             // Set bio if available
             if (user.getBio() != null && !user.getBio().isEmpty()) {

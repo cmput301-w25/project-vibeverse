@@ -12,6 +12,25 @@ public class User {
     private long profilePicSizeKB;
     private String profilePicUri;
 
+    private int followerCount;
+    private int followingCount;
+
+    public int getFollowerCount() {
+        return followerCount;
+    }
+
+    public void setFollowerCount(int followerCount) {
+        this.followerCount = followerCount;
+    }
+
+    public int getFollowingCount() {
+        return followingCount;
+    }
+
+    public void setFollowingCount(int followingCount) {
+        this.followingCount = followingCount;
+    }
+
     // Empty constructor required for Firestore
     public User() {
     }

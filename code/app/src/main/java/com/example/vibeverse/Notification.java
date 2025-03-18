@@ -1,5 +1,7 @@
 package com.example.vibeverse;
 
+import com.google.firebase.firestore.PropertyName;
+
 import java.time.LocalDateTime;
 
 public class Notification {
@@ -12,14 +14,16 @@ public class Notification {
 
     private NotifType notifType;
     private String content;
-    private LocalDateTime dateTime;
+    private String dateTime;
     private String senderUserId;
     private String receiverUserId;
 
+    @PropertyName("isRead")
     private boolean isRead;
 
 
-    public Notification(String content, LocalDateTime dateTime, NotifType notifType, String senderUserId, String receiverUserId) {
+
+    public Notification(String content, String dateTime, NotifType notifType, String senderUserId, String receiverUserId) {
         this.content = content;
         this.dateTime = dateTime;
         this.notifType = notifType;
@@ -28,10 +32,15 @@ public class Notification {
         this.isRead = false;
     }
 
+    // Empty constructor required for Firestore
+    public Notification() {
+    }
+
     public NotifType getNotifType() {
         return notifType;
     }
 
+    @PropertyName("isRead")
     public boolean isRead() {
         return isRead;
     }
@@ -52,11 +61,11 @@ public class Notification {
         this.content = content;
     }
 
-    public LocalDateTime getDateTime() {
+    public String getDateTime() {
         return dateTime;
     }
 
-    public void setDateTime(LocalDateTime dateTime) {
+    public void setDateTime(String dateTime) {
         this.dateTime = dateTime;
     }
 
