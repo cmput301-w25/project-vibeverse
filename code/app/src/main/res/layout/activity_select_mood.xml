@@ -105,16 +105,6 @@
                 android:padding="10dp"
                 android:layout_marginTop="8dp"/>
 
-            <!-- Trigger Input with Rounded Corners -->
-            <EditText
-                android:id="@+id/triggerInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/select_trigger"
-                android:background="@drawable/rounded_edittext_background"
-                android:padding="10dp"
-                android:layout_marginTop="8dp"/>
-
             <!-- Social Situation Input with Rounded Corners -->
             <Spinner
                 android:id="@+id/socialSituationSpinner"

@@ -239,11 +239,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                             }
                             moodEvent.setDocumentId(doc.getId());
 
-                            // Build a small "subtitle" (Trigger, Social, etc.)
                             StringBuilder subtitle = new StringBuilder();
-                            if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
-                                subtitle.append("Trigger: ").append(moodEvent.getTrigger());
-                            }
                             if (moodEvent.getSocialSituation() != null &&
                                     !moodEvent.getSocialSituation().isEmpty()) {
                                 if (subtitle.length() > 0) {
@@ -398,7 +394,6 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         if (requestCode == EDIT_MOOD_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             String updatedMood = data.getStringExtra("updatedMood");
             String updatedEmoji = data.getStringExtra("updatedEmoji");
-            String updatedTrigger = data.getStringExtra("updatedTrigger");
             String updatedReasonWhy = data.getStringExtra("updatedReasonWhy");
             String updatedSocialSituation = data.getStringExtra("updatedSocialSituation");
             int updatedIntensity = data.getIntExtra("updatedIntensity", 5);
@@ -408,7 +403,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             if (moodPosition >= 0 && moodPosition < allMoodEvents.size()) {
                 MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
                 // Update Firestore
-                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood, updatedTrigger,
+                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood,
                         updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri);;
             }
         }
@@ -417,13 +412,12 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     /**
      * Updates a MoodEvent document in Firestore with the provided updated details.
      * <p>
-     * Updates fields such as emoji, mood, trigger, social situation, intensity, and photo URI.
+     * Updates fields such as emoji, mood, social situation, intensity, and photo URI.
      * </p>
      *
      * @param documentId      The Firestore document ID of the MoodEvent.
      * @param emoji           The updated emoji.
      * @param mood            The updated mood title.
-     * @param trigger         The updated trigger.
      * @param reasonWhy       The updated reason. 
      * @param socialSituation The updated social situation.
      * @param intensity       The updated intensity level.
@@ -431,7 +425,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
      */
 
     private void updateMoodInFirestore(String documentId, String emoji, String mood,
-                                       String trigger, String reasonWhy, String socialSituation,
+                                       String reasonWhy, String socialSituation,
                                        int intensity, String photoUri) {
         // Show loading indicator
         if (progressLoading != null) {
@@ -442,7 +436,6 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         updatedMood.put("emoji", emoji);
         updatedMood.put("mood", mood);
         updatedMood.put("emotionalState", emoji + " " + mood);
-        updatedMood.put("trigger", trigger);
         updatedMood.put("socialSituation", socialSituation);
         updatedMood.put("intensity", intensity);
         updatedMood.put("reasonWhy", reasonWhy);
