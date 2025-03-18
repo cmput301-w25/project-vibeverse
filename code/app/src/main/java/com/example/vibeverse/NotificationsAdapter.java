@@ -70,6 +70,8 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
             // Set the notification text and date
             contentText.setText(notification.getContent());
             dateTimeText.setText(notification.getDateTime());
+            acceptButton.setBackgroundTintList(null);
+            rejectButton.setBackgroundTintList(null);
 
 
 
