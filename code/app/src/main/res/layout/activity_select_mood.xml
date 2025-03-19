@@ -27,7 +27,7 @@
                 android:layout_marginBottom="8dp"
                 android:layout_marginTop="16dp"
                 android:src="@drawable/ic_back_arrow"
-                android:contentDescription="Back"
+                android:contentDescription="@string/backButtonDescription"
                 android:clickable="true"
                 android:focusable="true" />
 
@@ -100,7 +100,7 @@
                 android:id="@+id/reasonWhyInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Give a reason for the mood event (3 words or 20 characters)"
+                android:hint="@string/reasonWhyHint"
                 android:background="@drawable/rounded_edittext_background"
                 android:padding="10dp"
                 android:layout_marginTop="8dp"/>

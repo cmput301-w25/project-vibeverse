@@ -93,11 +93,15 @@ public class UsersProfile extends AppCompatActivity {
 
                             // Build the notification content using the active user's username.
                             String notificationContent = activeUsername + " has requested to follow you!";
+                            DocumentReference recipientUserRef = db.collection("users").document(pageUserId);
+                            DocumentReference newNotifDocRef = recipientUserRef.collection("notifications").document();
+                            String notifId = newNotifDocRef.getId();
 
                             // Create the Notification object.
                             Notification followNotification = null;
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 followNotification = new Notification(
+                                        notifId,
                                         notificationContent,                     // content
                                         LocalDateTime.now().toString(),                     // dateTime
                                         Notification.NotifType.FOLLOW_REQUEST,   // notifType
@@ -114,9 +118,8 @@ public class UsersProfile extends AppCompatActivity {
                             notifData.put("senderUserId", followNotification.getSenderUserId());
                             notifData.put("receiverUserId", followNotification.getReceiverUserId());
                             notifData.put("isRead", followNotification.isRead());
-
-                            // Get a reference to the recipient user’s document.
-                            DocumentReference recipientUserRef = db.collection("users").document(pageUserId);
+                            notifData.put("requestStatus", followNotification.getRequestStatus());
+                            notifData.put("id", notifId);
 
                             recipientUserRef.collection("notifications")
                                     .add(notifData)

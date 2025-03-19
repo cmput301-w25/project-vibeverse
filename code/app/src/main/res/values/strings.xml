@@ -62,4 +62,6 @@
     <string name="search_users">Search User...</string>
     <string name="followButtonText">Follow</string>
     <string name="requestedButtonText">Requested</string>
+    <string name="reasonWhyHint">Give a reason for the mood event (up to 200 characters)</string>
+    <string name="backButtonDescription">Back</string>
 </resources>

@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -12,6 +13,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalDateTime;
@@ -86,14 +90,32 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
                 container.setBackgroundResource(R.drawable.read_notification_background);
             }
 
-            // Show accept/reject buttons only if the notification type is FOLLOW_REQUEST
+            // For follow request notifications, check if an action has already been taken.
             if (notification.getNotifType() == Notification.NotifType.FOLLOW_REQUEST) {
-                acceptButton.setVisibility(View.VISIBLE);
-                rejectButton.setVisibility(View.VISIBLE);
+                String requestStatus = notification.getRequestStatus(); // e.g., "accepted", "rejected", or null
+                if ("pending".equals(requestStatus)) {
+                    // No action taken yet: show the accept and reject buttons.
+                    acceptButton.setVisibility(View.VISIBLE);
+                    rejectButton.setVisibility(View.VISIBLE);
+                }
+                else if (requestStatus != null) {
+                    // An action has been taken: display the corresponding icon.
+                    buttonContainer.removeAllViews();
+                    ImageView statusIcon = new ImageView(context);
+                    if (requestStatus.equals("accepted")) {
+                        statusIcon.setImageResource(R.drawable.ic_accepted);
+                    } else if (requestStatus.equals("rejected")) {
+                        statusIcon.setImageResource(R.drawable.ic_rejected);
+                    }
+                    statusIcon.setAlpha(0.5f);
+                    buttonContainer.addView(statusIcon);
+                }
             } else {
+                // For other notification types, hide the buttons.
                 acceptButton.setVisibility(View.GONE);
                 rejectButton.setVisibility(View.GONE);
             }
+
 
             // Load the sender's profile picture using their user id.
             // This assumes that in the users collection, the profile picture URL is stored under "profilePicUri".
@@ -121,13 +143,93 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
 
             // Set click listeners for the follow request buttons
             acceptButton.setOnClickListener(v -> {
-                // Add logic for accepting the follow request
-                // e.g., update Firestore, add to following/followers collections, etc.
+                buttonContainer.removeAllViews();
+                ImageView statusIcon = new ImageView(context);
+                statusIcon.setImageResource(R.drawable.ic_accepted);
+                statusIcon.setAlpha(0.5f);
+                buttonContainer.addView(statusIcon);
+
+                // Get current active user's id.
+                String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                // Remove sender id from current user's followRequests subcollection.
+                db.collection("users")
+                        .document(currentUserId)
+                        .collection("followRequests")
+                        .document("list")
+                        .update("followReqs", FieldValue.arrayRemove(notification.getSenderUserId()));
+
+                // Add sender id to current user's followers subcollection.
+                db.collection("users")
+                        .document(currentUserId)
+                        .collection("followers")
+                        .document("list")
+                        .update("followerIds", FieldValue.arrayUnion(notification.getSenderUserId()));
+
+                // Add current user's id to sender's following subcollection.
+                db.collection("users")
+                        .document(notification.getSenderUserId())
+                        .collection("following")
+                        .document("list")
+                        .update("followingIds", FieldValue.arrayUnion(currentUserId));
+
+                // Increment active user's follower count by 1.
+                db.collection("users")
+                        .document(currentUserId)
+                        .update("followerCount", FieldValue.increment(1));
+
+                // Increment notification sender's following count by 1.
+                db.collection("users")
+                        .document(notification.getSenderUserId())
+                        .update("followingCount", FieldValue.increment(1));
+
+                db.collection("users")
+                        .document(currentUserId)
+                        .collection("notifications")
+                        .whereEqualTo("id", notification.getId())
+                        .get()
+                        .addOnSuccessListener(querySnapshot -> {
+                            if (!querySnapshot.isEmpty()) {
+                                // Get the first matching document and update it.
+                                querySnapshot.getDocuments().get(0)
+                                        .getReference()
+                                        .update("requestStatus", "accepted");
+                            }
+                        });
+
             });
 
             rejectButton.setOnClickListener(v -> {
-                // Add logic for rejecting the follow request
-                // e.g., remove the notification or update its state.
+                // Replace the buttons with a greyed-out rejected icon.
+                buttonContainer.removeAllViews();
+                ImageView statusIcon = new ImageView(context);
+                statusIcon.setImageResource(R.drawable.ic_rejected);
+                statusIcon.setAlpha(0.5f);
+                buttonContainer.addView(statusIcon);
+
+                // Get current active user's id.
+                String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                // Remove sender id from current user's followRequests subcollection.
+                db.collection("users")
+                        .document(currentUserId)
+                        .collection("followRequests")
+                        .document("list")
+                        .update("followReqs", FieldValue.arrayRemove(notification.getSenderUserId()));
+
+                db.collection("users")
+                        .document(currentUserId)
+                        .collection("notifications")
+                        .whereEqualTo("id", notification.getId())
+                        .get()
+                        .addOnSuccessListener(querySnapshot -> {
+                            if (!querySnapshot.isEmpty()) {
+                                // Get the first matching document and update it.
+                                querySnapshot.getDocuments().get(0)
+                                        .getReference()
+                                        .update("requestStatus", "rejected");
+                            }
+                        });
             });
         }
     }

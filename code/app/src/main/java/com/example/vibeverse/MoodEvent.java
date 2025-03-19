@@ -34,16 +34,6 @@ public class MoodEvent implements Serializable {
     private Date date;
     private String subtitle;
 
-    private boolean isPrivate; // true if private, false if public
-
-    public boolean isPrivate() {
-        return isPrivate;
-    }
-
-    public void setPrivacy(boolean privacy) {
-        this.isPrivate = privacy;
-    }
-
     /**
      * Returns the emoji representing the mood.
      *

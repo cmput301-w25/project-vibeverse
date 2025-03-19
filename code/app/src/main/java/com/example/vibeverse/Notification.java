@@ -18,18 +18,39 @@ public class Notification {
     private String senderUserId;
     private String receiverUserId;
 
+    public String getRequestStatus() {
+        return requestStatus;
+    }
+
+    public void setRequestStatus(String requestStatus) {
+        this.requestStatus = requestStatus;
+    }
+
+    private String requestStatus;
+
+    private String id;
+
+
+
     @PropertyName("isRead")
     private boolean isRead;
 
 
 
-    public Notification(String content, String dateTime, NotifType notifType, String senderUserId, String receiverUserId) {
+    public Notification(String id, String content, String dateTime, NotifType notifType, String senderUserId, String receiverUserId) {
+        this.id = id;
         this.content = content;
         this.dateTime = dateTime;
         this.notifType = notifType;
         this.senderUserId = senderUserId;
         this.receiverUserId = receiverUserId;
         this.isRead = false;
+        if (notifType != NotifType.FOLLOW_REQUEST) {
+            this.requestStatus = null;
+        }
+        else{
+            this.requestStatus = "pending";
+        }
     }
 
     // Empty constructor required for Firestore
@@ -38,6 +59,14 @@ public class Notification {
 
     public NotifType getNotifType() {
         return notifType;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @PropertyName("isRead")
