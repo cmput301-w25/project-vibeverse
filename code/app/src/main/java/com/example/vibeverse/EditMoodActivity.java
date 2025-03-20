@@ -52,7 +52,7 @@ import java.util.Map;
  * This activity uses the same layout as SelectMoodActivity for consistency.
  * It receives mood details from the calling activity (e.g., MainActivity),
  * displays the current values, and allows the user to update the mood,
- * trigger, social situation, intensity, and an optional image.
+ * social situation, intensity, and an optional image.
  * When the user clicks "Update Mood", the updated details are sent back to the caller.
  * </p>
  */
@@ -60,7 +60,7 @@ public class EditMoodActivity extends AppCompatActivity {
 
     // UI Elements
     private TextView selectedMoodEmoji, selectedMoodText;
-    private EditText triggerInput, reasonWhyInput;
+    private EditText reasonWhyInput;
     private Spinner socialSituationInput;
     private SeekBar moodIntensitySlider;
     private Button updateButton;
@@ -116,7 +116,6 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedMoodText = findViewById(R.id.selectedMoodText);
         selectedMoodContainer = findViewById(R.id.selectedMoodContainer);
         moodIntensitySlider = findViewById(R.id.moodIntensitySlider);
-        triggerInput = findViewById(R.id.triggerInput);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         updateButton = findViewById(R.id.continueButton); // Reuse the same button ID
@@ -184,28 +183,18 @@ public class EditMoodActivity extends AppCompatActivity {
         inputBg.setStroke(1, Color.parseColor("#E0E0E0"));
 
         // Clone the drawable for each input to avoid shared state issues
-        GradientDrawable triggerBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
         GradientDrawable socialBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
         GradientDrawable reasonWhyBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
 
 
-        triggerInput.setBackground(triggerBg);
         socialSituationInput.setBackground(socialBg);
         reasonWhyInput.setBackground(reasonWhyBg);
 
         // Set padding for the input fields
         int paddingPx = (int) dpToPx(12);
-        triggerInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         socialSituationInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         reasonWhyInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
-        // Add labels above input fields for clarity
-        TextView triggerLabel = new TextView(this);
-        triggerLabel.setText("What triggered this mood?");
-        triggerLabel.setTextColor(Color.WHITE);
-        triggerLabel.setTypeface(null, Typeface.BOLD);
-        triggerLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        triggerLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
 
         TextView socialLabel = new TextView(this);
         socialLabel.setText("Social situation");
@@ -230,8 +219,6 @@ public class EditMoodActivity extends AppCompatActivity {
         mainContainer.addView(reasonWhyLabel, reasonWhyIndex);
 
 
-        int triggerIndex = mainContainer.indexOfChild(triggerInput);
-        mainContainer.addView(triggerLabel, triggerIndex);
         int socialIndex = mainContainer.indexOfChild(socialSituationInput);
         mainContainer.addView(socialLabel, socialIndex);
 
@@ -283,7 +270,6 @@ public class EditMoodActivity extends AppCompatActivity {
         moodPosition = intent.getIntExtra("moodPosition", -1);
 
         String timestamp = intent.getStringExtra("timestamp");
-        String trigger = intent.getStringExtra("trigger");
         String reasonWhy = intent.getStringExtra("reasonWhy");
         String socialSituation = intent.getStringExtra("socialSituation");
         String currentPhotoUri = intent.getStringExtra("photoUri");
@@ -308,7 +294,6 @@ public class EditMoodActivity extends AppCompatActivity {
         // Set UI fields with the retrieved values
         selectedMoodText.setText(selectedMood);
         selectedMoodEmoji.setText(selectedEmoji);
-        triggerInput.setText(trigger);
         reasonWhyInput.setText(reasonWhy);
         if (socialSituation != null) {
             int spinnerPosition = adapter.getPosition(socialSituation);
@@ -439,7 +424,6 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedMood", selectedMood);
                         resultIntent.putExtra("updatedEmoji", selectedEmoji);
                         resultIntent.putExtra("updatedReasonWhy", reasonWhyInput.getText().toString().trim());
-                        resultIntent.putExtra("updatedTrigger", triggerInput.getText().toString().trim());
                         resultIntent.putExtra("updatedSocialSituation", socialSituationInput.getSelectedItem().toString().trim());
                         resultIntent.putExtra("timestamp", new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault()).format(new Date()));
                         resultIntent.putExtra("moodPosition", moodPosition);

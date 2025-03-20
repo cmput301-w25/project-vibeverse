@@ -51,7 +51,7 @@ import java.util.Map;
 
 /**
  * SelectMoodActivity provides a sleek, professional UI for users to select their mood,
- * adjust mood intensity, optionally add trigger and social situation information, and choose an image.
+ * adjust mood intensity, optionally add social situation information, and choose an image.
  * <p>
  * The activity displays a grid of mood buttons, a large mood display area with a dynamic gradient background,
  * a smooth Material Slider for mood intensity, and input fields with rounded corners.
@@ -63,7 +63,7 @@ public class SelectMoodActivity extends AppCompatActivity {
     // UI Elements
     private TextView selectedMoodEmoji, selectedMoodText;
     private SeekBar moodIntensitySlider;
-    private EditText triggerInput, reasonWhyInput;
+    private EditText reasonWhyInput;
     private Spinner socialSituationInput;
     private Button continueButton;
 
@@ -110,7 +110,6 @@ public class SelectMoodActivity extends AppCompatActivity {
         selectedMoodText = findViewById(R.id.selectedMoodText);
         selectedMoodContainer = findViewById(R.id.selectedMoodContainer);
         moodIntensitySlider = findViewById(R.id.moodIntensitySlider);
-        triggerInput = findViewById(R.id.triggerInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         continueButton = findViewById(R.id.continueButton);
         backButton = findViewById(R.id.backArrow);
@@ -181,7 +180,6 @@ public class SelectMoodActivity extends AppCompatActivity {
                     .setDuration(200)
                     .withEndAction(() -> {
                         Log.d("SelectMoodActivity", "onClick: selectedEmoji after animation = " + selectedEmoji);
-                        String trigger = triggerInput.getText().toString().trim();
                         String socialSituation = socialSituationInput.getSelectedItem().toString().trim();
                         String reasonWhy = reasonWhyInput.getText().toString().trim();
 
@@ -194,18 +192,12 @@ public class SelectMoodActivity extends AppCompatActivity {
 
 
                         // Error handling for reasonWhy input
-                        if (reasonWhy.length() > 20) {
-                            reasonWhyInput.setError("Reason why must be 20 characters or less.");
+                        if (reasonWhy.length() > 200) {
+                            reasonWhyInput.setError("Reason why must be 200 characters or less.");
                             reasonWhyInput.requestFocus();
                             return;
                         }
 
-                        String[] words = reasonWhy.split("\\s+");
-                        if (words.length > 3) {
-                            reasonWhyInput.setError("Reason why must be 3 words or less.");
-                            reasonWhyInput.requestFocus();
-                            return;
-                        }
 
                         // Store the intensity value in the MoodEvent
                         int intensity = moodIntensitySlider.getProgress();
@@ -224,12 +216,12 @@ public class SelectMoodActivity extends AppCompatActivity {
 
 
 
-                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, trigger, socialSituation, photograph);
+                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
                         } else {
                             Log.d("SelectMoodActivity", "onClick: Emoji before assignment= " + selectedEmoji);
-                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, trigger, socialSituation);
+                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, socialSituation);
                             Log.d("SelectMoodActivity", "onClick: Emoji after assignment= " + moodEvent.getEmoji());
                             Log.d("SelectMoodActivity", "onClick: Title after assignment= " + moodEvent.getMoodTitle());
                             // Add intensity to the mood event
@@ -262,7 +254,6 @@ public class SelectMoodActivity extends AppCompatActivity {
         Map<String, Object> moodData = new HashMap<>();
         moodData.put("emoji", moodEvent.getEmoji());
         moodData.put("mood", moodEvent.getMoodTitle());
-        moodData.put("trigger", moodEvent.getTrigger());
         moodData.put("socialSituation", moodEvent.getSocialSituation());
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("intensity", moodEvent.getIntensity());
@@ -545,27 +536,16 @@ public class SelectMoodActivity extends AppCompatActivity {
         inputBg.setCornerRadius(dpToPx(8));
         inputBg.setColor(Color.WHITE);
         inputBg.setStroke(1, Color.parseColor("#E0E0E0"));
-
-        GradientDrawable triggerBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
         GradientDrawable socialBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
         GradientDrawable reasonWhyBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
 
-
-        triggerInput.setBackground(triggerBg);
         socialSituationInput.setBackground(socialBg);
         reasonWhyInput.setBackground(reasonWhyBg);
 
         int paddingPx = (int) dpToPx(12);
-        triggerInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         socialSituationInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
         reasonWhyInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
 
-        TextView triggerLabel = new TextView(this);
-        triggerLabel.setText("What triggered this mood?");
-        triggerLabel.setTextColor(Color.WHITE);
-        triggerLabel.setTypeface(null, Typeface.BOLD);
-        triggerLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        triggerLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
 
         TextView socialLabel = new TextView(this);
         socialLabel.setText("Social situation");
@@ -586,15 +566,12 @@ public class SelectMoodActivity extends AppCompatActivity {
         // Get the parent container
         int reasonWhyIndex = mainContainer.indexOfChild(reasonWhyInput);
         mainContainer.addView(reasonWhyLabel, reasonWhyIndex);
-      
-        int triggerIndex = mainContainer.indexOfChild(triggerInput);
-        mainContainer.addView(triggerLabel, triggerIndex);
+
 
         int socialIndex = mainContainer.indexOfChild(socialSituationInput);
         mainContainer.addView(socialLabel, socialIndex);
 
 
-        triggerInput.setHint("What caused this feeling? (Optional)");
     }
 
     /**
