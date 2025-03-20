@@ -82,10 +82,12 @@
             android:background="@drawable/rounded_black_box"
             android:hint="@string/search"
             android:padding="12dp"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:textColorHint="@android:color/darker_gray"
             android:drawableStart="@drawable/ic_search"
-            android:drawablePadding="12dp" />
+            android:drawablePadding="12dp"
+            android:maxLines="1"
+            android:inputType="text"/>
 
         <ImageButton
             android:id="@+id/buttonFilter"

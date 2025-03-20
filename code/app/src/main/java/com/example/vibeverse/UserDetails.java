@@ -305,6 +305,8 @@ public class UserDetails extends AppCompatActivity {
             userData.put("followerCount", 0);
             userData.put("followingCount", 0);
             userData.put("newNotificationCount", 0);
+            userData.put("usernameLowercase", username.getText().toString().trim().toLowerCase()); // Lowercase version
+
 
 
             if (imageUri != null) {

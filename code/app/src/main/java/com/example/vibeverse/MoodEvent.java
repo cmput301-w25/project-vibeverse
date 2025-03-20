@@ -374,21 +374,33 @@ public class MoodEvent implements Serializable {
         }
         return "N/A";
     }
-
+    /**
+     * Returns the size of the photograph in kilobytes.
+     *
+     * @return The size of the photograph in KB.
+     */
     public long getPhotoSize() {
         if (photograph != null) {
             return photograph.getFileSize();
         }
         return 0;
     }
-
+    /**
+     * Returns the date the photograph was taken.
+     *
+     * @return The date the photograph was taken.
+     */
     public Date getPhotoDate() {
         if (photograph != null) {
             return photograph.getDateTaken();
         }
         return null;
     }
-
+    /**
+     * Returns the location where the photograph was taken.
+     *
+     * @return The location where the photograph was taken.
+     */
     public String getPhotoLocation() {
         if (photograph != null) {
             return photograph.getLocation();
