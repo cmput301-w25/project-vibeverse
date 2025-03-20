@@ -1,5 +1,6 @@
 package com.example.vibeverse;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -140,6 +141,19 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
                         // In case of error, set a default icon
                         profileImage.setImageResource(R.drawable.user_icon);
                     });
+
+            container.setOnClickListener(v -> {
+                // Only handle clicks for FOLLOW_REQUEST notifications
+                if (notification.getNotifType() == Notification.NotifType.FOLLOW_REQUEST) {
+                    // Get the sender's user ID
+                    String senderUserId = notification.getSenderUserId();
+
+                    // Create an intent to open the UsersProfile activity
+                    Intent intent = new Intent(context, UsersProfile.class);
+                    intent.putExtra("userId", senderUserId);
+                    context.startActivity(intent);
+                }
+            });
 
             // Set click listeners for the follow request buttons
             acceptButton.setOnClickListener(v -> {

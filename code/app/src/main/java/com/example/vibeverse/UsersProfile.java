@@ -17,12 +17,14 @@ import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -202,21 +204,40 @@ public class UsersProfile extends AppCompatActivity {
         });
 
         buttonFollowStateFollowing.setOnClickListener(v -> {
-            DocumentReference recipientUserRef = db.collection("users").document(pageUserId);
+            String profileUsername = textUsername.getText().toString();
+            new androidx.appcompat.app.AlertDialog.Builder(UsersProfile.this)
+                    .setTitle("Unfollow Confirmation")
+                    .setMessage("Are you sure you want to unfollow " + profileUsername + "? You will have to request to follow again.")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        DocumentReference pageUserRef = db.collection("users").document(pageUserId);
+                        DocumentReference activeUserRef = db.collection("users").document(activeUserId);
 
-            // Remove from followers
-            recipientUserRef.collection("followers")
-                    .document("list")
-                    .update("followerIds",
-                            com.google.firebase.firestore.FieldValue.arrayRemove(activeUserId))
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
-                        showFollowState();
+                        // Remove activeUserId from the page user's followers subcollection.
+                        pageUserRef.collection("followers")
+                                .document("list")
+                                .update("followerIds", FieldValue.arrayRemove(activeUserId))
+                                .addOnSuccessListener(aVoid -> {
+                                    // Remove pageUserId from the active user's following subcollection.
+                                    activeUserRef.collection("following")
+                                            .document("list")
+                                            .update("followingIds", FieldValue.arrayRemove(pageUserId))
+                                            .addOnSuccessListener(aVoid2 -> {
+                                                // Decrement counts: page user's followerCount and active user's followingCount.
+                                                pageUserRef.update("followerCount", FieldValue.increment(-1));
+                                                activeUserRef.update("followingCount", FieldValue.increment(-1));
+                                                Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
+                                                showFollowState();
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Toast.makeText(UsersProfile.this, "Failed to update following list: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            });
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(UsersProfile.this, "Failed to update followers list: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
                     })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(UsersProfile.this, "Failed to unfollow: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    });
+                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
 

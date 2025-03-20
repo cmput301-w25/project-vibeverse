@@ -80,6 +80,7 @@ public class FilterDialog {
      * @param listener The listener that will receive filter callbacks.
      */
     public static void show(Context context, FilterListener listener) {
+
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_filters);
