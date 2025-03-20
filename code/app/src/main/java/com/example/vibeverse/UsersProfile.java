@@ -55,7 +55,7 @@ public class UsersProfile extends AppCompatActivity {
     private Button buttonFollowStateRequested;
     private Button buttonFollowStateFollowing;
 
-    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing, textTopUsername;
+    private TextView  textTopUsername;
     private Button buttonFollow;
 
     private ImageButton buttonBack;
@@ -364,7 +364,7 @@ public class UsersProfile extends AppCompatActivity {
     private void loadUserPosts() {
         showLoading(true);
         db.collection("Usermoods")
-                .document(userId)
+                .document(pageUserId)
                 .collection("moods")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
@@ -384,9 +384,6 @@ public class UsersProfile extends AppCompatActivity {
 
                             // Build subtitle
                             StringBuilder subtitle = new StringBuilder();
-                            if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
-                                subtitle.append("Trigger: ").append(moodEvent.getTrigger());
-                            }
                             if (moodEvent.getSocialSituation() != null &&
                                     !moodEvent.getSocialSituation().isEmpty()) {
                                 if (subtitle.length() > 0) subtitle.append(" | ");
