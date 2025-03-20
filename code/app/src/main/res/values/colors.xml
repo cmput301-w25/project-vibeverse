@@ -21,5 +21,8 @@
     <color name="unread_color">#F0F8FF</color>
     <color name="read_color">#FFFFFF</color>
 
+    <color name="vibrant_red">#D32F2F</color>
+    <color name="neutral_gray">#757575</color>
+
 
 </resources>

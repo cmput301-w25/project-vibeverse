@@ -239,7 +239,7 @@ public class UsersProfile extends AppCompatActivity {
 
         buttonFollowStateFollowing.setOnClickListener(v -> {
             String profileUsername = textUsername.getText().toString();
-            new androidx.appcompat.app.AlertDialog.Builder(UsersProfile.this)
+            androidx.appcompat.app.AlertDialog alertDialog = new androidx.appcompat.app.AlertDialog.Builder(UsersProfile.this)
                     .setTitle("Unfollow Confirmation")
                     .setMessage("Are you sure you want to unfollow " + profileUsername + "? You will have to request to follow again.")
                     .setPositiveButton("Yes", (dialog, which) -> {
@@ -271,7 +271,16 @@ public class UsersProfile extends AppCompatActivity {
                                 });
                     })
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                    .show();
+                    .create();
+
+            // Customize the button colors when the dialog is shown
+            alertDialog.setOnShowListener(dialog -> {
+                alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
+                        .setTextColor(getResources().getColor(R.color.vibrant_red));
+                alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)
+                        .setTextColor(getResources().getColor(R.color.neutral_gray));
+            });
+            alertDialog.show();
         });
 
 
