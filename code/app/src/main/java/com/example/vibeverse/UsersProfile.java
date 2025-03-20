@@ -1,8 +1,10 @@
 package com.example.vibeverse;
 
+import android.app.AlertDialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -239,47 +241,60 @@ public class UsersProfile extends AppCompatActivity {
 
         buttonFollowStateFollowing.setOnClickListener(v -> {
             String profileUsername = textUsername.getText().toString();
-            androidx.appcompat.app.AlertDialog alertDialog = new androidx.appcompat.app.AlertDialog.Builder(UsersProfile.this)
-                    .setTitle("Unfollow Confirmation")
-                    .setMessage("Are you sure you want to unfollow " + profileUsername + "? You will have to request to follow again.")
-                    .setPositiveButton("Yes", (dialog, which) -> {
-                        DocumentReference pageUserRef = db.collection("users").document(pageUserId);
-                        DocumentReference activeUserRef = db.collection("users").document(activeUserId);
 
-                        // Remove activeUserId from the page user's followers subcollection.
-                        pageUserRef.collection("followers")
-                                .document("list")
-                                .update("followerIds", FieldValue.arrayRemove(activeUserId))
-                                .addOnSuccessListener(aVoid -> {
-                                    // Remove pageUserId from the active user's following subcollection.
-                                    activeUserRef.collection("following")
-                                            .document("list")
-                                            .update("followingIds", FieldValue.arrayRemove(pageUserId))
-                                            .addOnSuccessListener(aVoid2 -> {
-                                                // Decrement counts: page user's followerCount and active user's followingCount.
-                                                pageUserRef.update("followerCount", FieldValue.increment(-1));
-                                                activeUserRef.update("followingCount", FieldValue.increment(-1));
-                                                Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
-                                                showFollowState();
-                                            })
-                                            .addOnFailureListener(e -> {
-                                                Toast.makeText(UsersProfile.this, "Failed to update following list: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                            });
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(UsersProfile.this, "Failed to update followers list: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                });
-                    })
-                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+            // Inflate the custom layout
+            LayoutInflater inflater = LayoutInflater.from(UsersProfile.this);
+            View dialogView = inflater.inflate(R.layout.dialog_unfollow_confirmation, null);
+
+            // Get references to the dialog views
+            TextView titleTextView = dialogView.findViewById(R.id.dialogTitle);
+            TextView messageTextView = dialogView.findViewById(R.id.dialogMessage);
+            Button yesButton = dialogView.findViewById(R.id.buttonYes);
+            Button cancelButton = dialogView.findViewById(R.id.buttonCancel);
+
+            // Set the message text dynamically if needed
+            messageTextView.setText("Are you sure you want to unfollow " + profileUsername + "? You will have to request to follow again.");
+
+            // Create the AlertDialog with the custom view
+            AlertDialog alertDialog = new AlertDialog.Builder(UsersProfile.this)
+                    .setView(dialogView)
                     .create();
 
-            // Customize the button colors when the dialog is shown
-            alertDialog.setOnShowListener(dialog -> {
-                alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)
-                        .setTextColor(getResources().getColor(R.color.vibrant_red));
-                alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)
-                        .setTextColor(getResources().getColor(R.color.neutral_gray));
+            // Set the Yes button action
+            yesButton.setOnClickListener(v1 -> {
+                DocumentReference pageUserRef = db.collection("users").document(pageUserId);
+                DocumentReference activeUserRef = db.collection("users").document(activeUserId);
+
+                // Remove activeUserId from the page user's followers subcollection.
+                pageUserRef.collection("followers")
+                        .document("list")
+                        .update("followerIds", FieldValue.arrayRemove(activeUserId))
+                        .addOnSuccessListener(aVoid -> {
+                            // Remove pageUserId from the active user's following subcollection.
+                            activeUserRef.collection("following")
+                                    .document("list")
+                                    .update("followingIds", FieldValue.arrayRemove(pageUserId))
+                                    .addOnSuccessListener(aVoid2 -> {
+                                        // Decrement counts: page user's followerCount and active user's followingCount.
+                                        pageUserRef.update("followerCount", FieldValue.increment(-1));
+                                        activeUserRef.update("followingCount", FieldValue.increment(-1));
+                                        Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
+                                        showFollowState();
+                                        alertDialog.dismiss();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(UsersProfile.this, "Failed to update following list: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    });
+                        })
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(UsersProfile.this, "Failed to update followers list: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
             });
+
+            // Set the Cancel button action
+            cancelButton.setOnClickListener(v12 -> alertDialog.dismiss());
+
+            // Show the custom dialog
             alertDialog.show();
         });
 
