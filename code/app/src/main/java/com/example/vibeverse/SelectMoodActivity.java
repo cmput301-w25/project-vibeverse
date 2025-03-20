@@ -270,37 +270,53 @@ public class SelectMoodActivity extends AppCompatActivity {
             moodData.put("hasPhoto", false);
         }
 
-        // Add to Firestore - create a document with timestamp as ID
+        // Generate a document ID for the mood event (using current time in millis as an example)
         String docId = String.valueOf(System.currentTimeMillis());
 
+        // Save the mood event under the user's moods collection.
         db.collection("Usermoods")
                 .document(userId)
                 .collection("moods")
                 .document(docId)
                 .set(moodData)
                 .addOnSuccessListener(aVoid -> {
-                    // Success! Now return to ProfilePage
-                    Toast.makeText(SelectMoodActivity.this, "Mood saved successfully!", Toast.LENGTH_SHORT).show();
-
-                    Intent intent = new Intent(SelectMoodActivity.this, ProfilePage.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
-                    startActivity(intent);
-
-                    // Apply a fade-out transition
-                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                    finish();
+                    // After saving the mood, create an empty subcollection for comments.
+                    // Adding a dummy document to "comments" ensures the subcollection is created.
+                    Map<String, Object> initData = new HashMap<>();
+                    initData.put("init", true); // This field is optional.
+                    db.collection("Usermoods")
+                            .document(userId)
+                            .collection("moods")
+                            .document(docId)
+                            .collection("comments")
+                            .document("init")
+                            .set(initData)
+                            .addOnSuccessListener(x -> {
+                                // Successfully created comments subcollection.
+                                Toast.makeText(SelectMoodActivity.this, "Mood saved successfully!", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(SelectMoodActivity.this, ProfilePage.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
+                                startActivity(intent);
+                                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                                finish();
+                            })
+                            .addOnFailureListener(e -> {
+                                // Handle error creating the comments subcollection.
+                                Toast.makeText(SelectMoodActivity.this, "Mood saved, but error creating comments section: " + e.getMessage(),
+                                        Toast.LENGTH_LONG).show();
+                            });
                 })
                 .addOnFailureListener(e -> {
-                    // Handle the error
+                    // Handle the error saving the mood event.
                     Toast.makeText(SelectMoodActivity.this, "Error saving mood: " + e.getMessage(),
                             Toast.LENGTH_LONG).show();
-
-                    // Still navigate back to avoid user being stuck
+                    // Navigate back so the user isn’t stuck.
                     Intent intent = new Intent(SelectMoodActivity.this, ProfilePage.class);
                     startActivity(intent);
                     finish();
                 });
     }
+
 
     /**
      * Sets up a custom toolbar.
