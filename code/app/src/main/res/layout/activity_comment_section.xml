@@ -29,6 +29,31 @@
         android:layout_weight="1"
         android:padding="16dp" />
 
+    <!-- Reply banner: will be shown when replying to a comment -->
+    <LinearLayout
+        android:id="@+id/replyBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#DDDDDD"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/replyBannerText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Replying to [username]" />
+
+        <ImageButton
+            android:id="@+id/replyBannerClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/baseline_close_24" />
+    </LinearLayout>
+
     <!-- Bottom: Comment input area -->
     <LinearLayout
         android:id="@+id/commentInputContainer"
@@ -54,4 +79,5 @@
             android:text="Send"
             android:layout_marginStart="8dp" />
     </LinearLayout>
+
 </LinearLayout>

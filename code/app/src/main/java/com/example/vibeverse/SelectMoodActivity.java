@@ -216,12 +216,12 @@ public class SelectMoodActivity extends AppCompatActivity {
 
 
 
-                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph);
+                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
                         } else {
                             Log.d("SelectMoodActivity", "onClick: Emoji before assignment= " + selectedEmoji);
-                            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, socialSituation);
+                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation);
                             Log.d("SelectMoodActivity", "onClick: Emoji after assignment= " + moodEvent.getEmoji());
                             Log.d("SelectMoodActivity", "onClick: Title after assignment= " + moodEvent.getMoodTitle());
                             // Add intensity to the mood event
@@ -258,6 +258,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("intensity", moodEvent.getIntensity());
         moodData.put("reasonWhy", moodEvent.getReasonWhy());
+        moodData.put("ownerUserId", userId);
 
         // Handle photograph if present
         if (moodEvent.getPhotograph() != null) {
