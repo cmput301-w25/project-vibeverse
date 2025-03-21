@@ -186,7 +186,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
         // Open the FilterDialog when the filter button is clicked.
         buttonFilter.setOnClickListener(v ->
-                FilterDialog.show(ProfilePage.this, ProfilePage.this)
+                FilterDialog.show(ProfilePage.this, ProfilePage.this, allMoodEvents)
         );
 
         // Set up search functionality for client-side filtering.
@@ -374,7 +374,14 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
      */
     @Override
     public void onFilteredResults(List<MoodEvent> filteredMoods) {
+        // First update the adapter with filtered moods
         moodEventAdapter.updateMoodEvents(filteredMoods);
+
+        // Then apply any existing text search filter
+        String currentSearchText = editSearch.getText().toString();
+        if (!currentSearchText.isEmpty()) {
+            moodEventAdapter.filter(currentSearchText);
+        }
     }
 
     /**

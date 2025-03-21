@@ -104,7 +104,7 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         });
 
         // Set up filter button to open the FilterDialog
-        buttonFilter.setOnClickListener(v -> FilterDialog.show(HomePage.this, HomePage.this));
+//        buttonFilter.setOnClickListener(v -> FilterDialog.show(HomePage.this, HomePage.this));
 
         // Set up search functionality to filter posts as user types
         editSearch.addTextChangedListener(new TextWatcher() {
