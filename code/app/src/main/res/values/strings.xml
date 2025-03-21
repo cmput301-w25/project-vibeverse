@@ -39,7 +39,7 @@
     <string name="select_gender">Select Gender</string>
     <string name="full_name">Full Name</string>
     <string name="username">Username</string>
-    <string name="bio_max_150_characters">Bio (Max 150 Characters)</string>
+    <string name="bio_max_100_characters">Bio (Max 100 Characters)</string>
     <string name="user_details">User Details</string>
     <string name="date_of_birth">Date of Birth</string>
     <string name="add_profile_picture">Add Profile Picture</string>
@@ -57,7 +57,11 @@
     <string name="add_mood_button">Add Mood</string>
     <string name="mood_history_heading">Mood History</string>
     <string name="following">Following</string>
-    <string name="follows">Follows</string>
+    <string name="follows">Followers</string>
     <string name="search">Search...</string>
-    <string name="title_activity_maps">MapsActivity</string>
+    <string name="search_users">Search User...</string>
+    <string name="followButtonText">Follow</string>
+    <string name="requestedButtonText">Requested</string>
+    <string name="reasonWhyHint">Give a reason for the mood event (up to 200 characters)</string>
+    <string name="backButtonDescription">Back</string>
 </resources>

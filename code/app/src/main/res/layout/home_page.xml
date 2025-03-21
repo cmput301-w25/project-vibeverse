@@ -2,7 +2,6 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
@@ -35,16 +34,37 @@
             android:scaleType="centerInside"
             android:src="@drawable/vslogo" />
 
-        <!-- Notification Button -->
-        <ImageButton
-            android:id="@+id/buttonNotification"
-            android:layout_width="60dp"
-            android:layout_height="48dp"
-            android:background="@drawable/rounded_black_box"
-            android:src="@drawable/ic_notification"
-            android:padding="8dp" />    </LinearLayout>
+        <!-- Notification Button with Badge -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
-    <!-- Search & Filter Bar -->
+            <ImageButton
+                android:id="@+id/buttonNotification"
+                android:layout_width="60dp"
+                android:layout_height="48dp"
+                android:background="@drawable/rounded_black_box"
+                android:src="@drawable/ic_notification"
+                android:padding="8dp" />
+
+            <!-- Badge TextView (initially hidden) -->
+            <TextView
+                android:id="@+id/notificationBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/badge_background"
+                android:text="0"
+                android:textColor="@android:color/white"
+                android:textSize="10sp"
+                android:padding="2dp"
+                android:minWidth="16dp"
+                android:gravity="center"
+                android:visibility="gone" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <!-- The rest of your layout remains unchanged -->
     <LinearLayout
         android:id="@+id/searchFilterBar"
         android:layout_width="match_parent"
@@ -62,10 +82,12 @@
             android:background="@drawable/rounded_black_box"
             android:hint="@string/search"
             android:padding="12dp"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:textColorHint="@android:color/darker_gray"
             android:drawableStart="@drawable/ic_search"
-            android:drawablePadding="12dp" />
+            android:drawablePadding="12dp"
+            android:maxLines="1"
+            android:inputType="text"/>
 
         <ImageButton
             android:id="@+id/buttonFilter"

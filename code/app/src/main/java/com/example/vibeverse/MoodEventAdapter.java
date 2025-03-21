@@ -57,6 +57,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
     /** Map of mood titles to their associated colors. */
     private final Map<String, Integer> moodColors = new HashMap<>();
+    /** Flag to show or hide the menu button in the mood event items. */
+    private boolean showMenuButton = true;
 
     /**
      * Constructs a new MoodEventAdapter.
@@ -98,6 +100,15 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
         currentList = new ArrayList<>(newMoodEvents);
         notifyDataSetChanged();
     }
+    /**
+     * Sets the visibility of the menu button in the mood event items.
+     *
+     * @param shouldShow True to show the menu button, false to hide it.
+     */
+    public void setMenuButtonVisibility(boolean shouldShow) {
+        this.showMenuButton = shouldShow;
+        notifyDataSetChanged(); // Refresh all items
+    }
 
     @NonNull
     @Override
@@ -110,11 +121,13 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
     public void onBindViewHolder(@NonNull MoodEventViewHolder holder, int position) {
         MoodEvent moodEvent = moodEventList.get(position);
 
+        // Set the menu button visibility.
+        holder.buttonPostMenu.setVisibility(showMenuButton ? View.VISIBLE : View.GONE);
+
         // Set the emoji for the mood event.
         holder.textEmoji.setText(moodEvent.getEmoji());
 
         // Use the trigger as the title if it exists; otherwise, use the mood title.
-        String trigger = moodEvent.getTrigger();
         String reasonWhy = moodEvent.getReasonWhy();
         if (reasonWhy != null && !reasonWhy.trim().isEmpty()) {
             holder.textTitle.setText(reasonWhy);
@@ -145,26 +158,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
         // Handle the visibility and content of the trigger container.
         String socialSituation = moodEvent.getSocialSituation();
-        if (holder.triggerContainer != null) {
-            if (trigger != null && !trigger.trim().isEmpty()) {
-                holder.triggerContainer.setVisibility(View.VISIBLE);
-                holder.triggerText.setText(trigger);
-            } else {
-                holder.triggerContainer.setVisibility(View.GONE);
-            }
-        } else {
-            // Fallback for older layouts.
-            if (holder.triggerLabel != null && holder.triggerText != null) {
-                if (trigger != null && !trigger.trim().isEmpty()) {
-                    holder.triggerLabel.setVisibility(View.VISIBLE);
-                    holder.triggerText.setVisibility(View.VISIBLE);
-                    holder.triggerText.setText(trigger);
-                } else {
-                    holder.triggerLabel.setVisibility(View.GONE);
-                    holder.triggerText.setVisibility(View.GONE);
-                }
-            }
-        }
+
 
         // Handle the social situation container.
         if (holder.socialContainer != null) {
@@ -190,8 +184,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
         // Hide the entire content container if both trigger and social situation are empty.
         if (holder.contentContainer != null) {
-            if ((trigger == null || trigger.trim().isEmpty()) &&
-                    (socialSituation == null || socialSituation.trim().isEmpty())) {
+            if ((socialSituation == null || socialSituation.trim().isEmpty())) {
                 holder.contentContainer.setVisibility(View.GONE);
             } else {
                 holder.contentContainer.setVisibility(View.VISIBLE);
@@ -342,7 +335,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
                 Intent intent = new Intent(context, EditMoodActivity.class);
                 intent.putExtra("selectedMood", moodEvent.getMoodTitle());
                 intent.putExtra("selectedEmoji", moodEvent.getEmoji());
-                intent.putExtra("trigger", moodEvent.getTrigger());
                 intent.putExtra("reasonWhy", moodEvent.getReasonWhy());
                 intent.putExtra("socialSituation", moodEvent.getSocialSituation());
                 intent.putExtra("intensity", moodEvent.getIntensity());

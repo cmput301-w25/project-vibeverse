@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:fontFamily="@font/berkshire_swash"
+
             android:text="@string/user_details"
             android:textColor="@android:color/black"
             android:textSize="28sp"
@@ -56,7 +56,9 @@
             android:layout_marginBottom="12dp"
             android:hint="@string/full_name"
             android:layout_weight="1"
-            android:textColorHint="#908E8E" />
+            android:textColorHint="#908E8E"
+            android:maxLines="1"
+            android:inputType="text"/>
 
         <EditText
             android:id="@+id/username"
@@ -64,7 +66,9 @@
             android:layout_marginBottom="4dp"
             android:hint="@string/username"
             android:layout_weight="1"
-            android:textColorHint="#908E8E" />
+            android:textColorHint="#908E8E"
+            android:maxLines="1"
+            android:inputType="text"/>
 
         <TextView
             android:id="@+id/usernameValidationText"
@@ -82,9 +86,10 @@
             android:layout_height="100dp"
             android:layout_marginBottom="12dp"
             android:layout_weight="1"
-            android:hint="@string/bio_max_150_characters"
-            android:maxLength="150"
+            android:hint="@string/bio_max_100_characters"
+            android:maxLength="100"
             android:maxLines="4"
+            android:inputType="textMultiLine"
             android:textColorHint="#908E8E" />
 
         <Spinner

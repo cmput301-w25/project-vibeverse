@@ -147,34 +147,6 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Trigger Section with icon -->
-                    <LinearLayout
-                        android:id="@+id/triggerContainer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:id="@+id/triggerLabel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="Trigger:"
-                            android:textColor="#212121"
-                            android:textSize="15sp"
-                            android:textStyle="bold"/>
-
-                        <TextView
-                            android:id="@+id/triggerText"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:textColor="#424242"
-                            android:textSize="15sp"
-                            tools:text="hi"/>
-                    </LinearLayout>
 
                     <!-- Social Situation Section with icon -->
                     <LinearLayout

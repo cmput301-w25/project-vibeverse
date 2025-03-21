@@ -7,14 +7,55 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
-    <!-- Top Profile Bar -->
+    <!-- ########### MODIFIED TOP BAR ########### -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/topActionBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/buttonBack"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="16dp"
+            android:src="@drawable/ic_back_arrow"
+            android:contentDescription="Back"
+            android:background="@null"
+            android:tint="@android:color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <!-- Centered Username -->
+        <TextView
+            android:id="@+id/textTopUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="username"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- ########### PROFILE SECTION WITH REDUCED TOP PADDING ########### -->
     <LinearLayout
         android:id="@+id/topProfileBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
-        app:layout_constraintTop_toTopOf="parent"
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintTop_toBottomOf="@id/topActionBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -55,6 +96,7 @@
                         android:textSize="18sp"
                         android:textColor="@color/black" />
 
+                    <!-- Original username (smaller) -->
                     <TextView
                         android:id="@+id/textUsername"
                         android:layout_width="wrap_content"
@@ -65,7 +107,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- User Bio Section directly below the above row -->
+            <!-- User Bio Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -77,33 +119,60 @@
                     android:layout_width="224dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                    android:text="User bio appears here"
                     android:textSize="14sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Right Column: Logout and Followers/Following -->
+        <!-- Right Column: Follow Button and Followers/Following -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:gravity="center_horizontal">
 
-            <!-- Logout Button -->
+
+            <!-- Three follow-state buttons stacked in the same spot -->
+
             <Button
-                android:id="@+id/buttonLogout"
+                android:id="@+id/buttonFollow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="@string/followButtonText"
+                android:textColor="@android:color/white"
+                android:visibility="gone"
                 android:backgroundTint="@android:color/black"
-                android:text="Logout"
-                android:textColor="@android:color/white" />
+                android:layout_gravity="center_horizontal"
+                />
 
+
+            <Button
+                android:id="@+id/buttonFollowStateRequested"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/requestedButtonText"
+                android:textColor="@android:color/white"
+                android:visibility="gone"
+                android:backgroundTint="@color/follow_button_alt_color"
+                android:layout_gravity="center_horizontal"
+                />
+
+            <Button
+                android:id="@+id/buttonFollowStateFollowing"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Following"
+                android:textColor="@android:color/white"
+                android:visibility="gone"
+                android:backgroundTint="@color/follow_button_alt_color"
+                android:layout_gravity="center_horizontal"
+                />
             <!-- Spacer -->
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="16dp" />
 
-            <!-- Followers & Following Layout -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -121,7 +190,7 @@
                         android:id="@+id/textFollowers"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="1732"
+                        android:text="0"
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:textColor="@color/black" />
@@ -134,7 +203,6 @@
                         android:textColor="@color/black" />
                 </LinearLayout>
 
-                <!-- Spacer between columns -->
                 <View
                     android:layout_width="16dp"
                     android:layout_height="match_parent" />
@@ -143,7 +211,6 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-
                     android:orientation="vertical"
                     android:gravity="center">
 
@@ -151,7 +218,7 @@
                         android:id="@+id/textFollowing"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="2.4M"
+                        android:text="0"
                         android:textStyle="bold"
                         android:textSize="16sp"
                         android:textColor="@color/black" />
@@ -163,7 +230,6 @@
                         android:textSize="14sp"
                         android:textColor="@color/black" />
                 </LinearLayout>
-
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -210,18 +276,14 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
         app:layout_constraintTop_toBottomOf="@id/searchFilterBar"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
-
-        <!-- Mood History RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerFeed"
+            android:id="@+id/recyclerUserPosts"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <!-- Loading Progress Indicator -->
         <ProgressBar
             android:id="@+id/progressLoading"
             android:layout_width="wrap_content"
@@ -229,7 +291,6 @@
             android:layout_gravity="center"
             android:visibility="gone" />
 
-        <!-- Empty State View (Optional) -->
         <LinearLayout
             android:id="@+id/emptyStateView"
             android:layout_width="match_parent"
@@ -243,7 +304,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="No mood entries yet"
+                android:text="No posts yet"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -252,22 +313,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Tap the + button to add your first mood!"
+                android:text="This user hasn't shared any posts"
                 android:textColor="@android:color/darker_gray"
                 android:textSize="16sp"
                 android:gravity="center" />
         </LinearLayout>
     </FrameLayout>
-
-
-    <!-- Bottom Navigation -->
-    <include
-        android:id="@+id/bottom_navigation"
-        layout="@layout/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
