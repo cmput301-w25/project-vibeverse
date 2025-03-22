@@ -160,7 +160,19 @@ public class CommentSectionActivity extends AppCompatActivity {
         commentAdapter.setOnReplyClickListener(comment -> {
             replyingToComment = comment;
 
-            replyBannerText.setText("Replying to " + comment.getAuthorUserId());
+            String authorUserId = comment.getAuthorUserId();
+            db.collection("users").document(authorUserId).get().addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    String username = documentSnapshot.getString("username");
+                    replyBannerText.setText("Replying to " + username);
+                } else {
+                    replyBannerText.setText("Replying to Unknown");
+                }
+            }).addOnFailureListener(e -> {
+                replyBannerText.setText("Replying to Unknown");
+            });
+
+
             replyBanner.setVisibility(View.VISIBLE);
         });
 
@@ -174,6 +186,7 @@ public class CommentSectionActivity extends AppCompatActivity {
         // Setup the send comment button
         editComment = findViewById(R.id.editComment);
         buttonSendComment = findViewById(R.id.buttonSendComment);
+        buttonSendComment.setBackgroundTintList(null);
         buttonSendComment.setOnClickListener(v -> postComment());
 
     }
