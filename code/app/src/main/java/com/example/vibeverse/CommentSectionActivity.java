@@ -3,6 +3,7 @@ package com.example.vibeverse;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,17 +22,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class CommentSectionActivity extends AppCompatActivity {
 
@@ -262,7 +267,7 @@ public class CommentSectionActivity extends AppCompatActivity {
         );
 
         if (replyingToComment != null) {
-            // Save as a reply in the parent's "replies" subcollection
+            // Save as a reply in the parent's "replies" subcollection.
             db.collection("Usermoods")
                     .document(moodUserId)
                     .collection("moods")
@@ -275,9 +280,122 @@ public class CommentSectionActivity extends AppCompatActivity {
                     .addOnSuccessListener(unused -> {
                         Toast.makeText(CommentSectionActivity.this, "Reply added", Toast.LENGTH_SHORT).show();
                         editComment.setText("");
-                        // Reset reply mode
+
+                        // Store the parent comment's author before resetting reply mode.
+                        String parentAuthorId = replyingToComment.getAuthorUserId();
+
+                        // Reset reply mode.
                         replyingToComment = null;
                         replyBanner.setVisibility(View.GONE);
+
+                        // Only send a notification if the reply is not to your own comment.
+                        if (!parentAuthorId.equals(currentUserId)) {
+                            // Retrieve active user's username.
+                            db.collection("users").document(currentUserId)
+                                    .get()
+                                    .addOnSuccessListener(docSnapshot -> {
+                                        if (docSnapshot.exists()) {
+                                            String activeUsername = docSnapshot.getString("username");
+                                            if (activeUsername == null || activeUsername.isEmpty()) {
+                                                Toast.makeText(CommentSectionActivity.this,
+                                                        "Active user username not found.",
+                                                        Toast.LENGTH_SHORT).show();
+                                                return;
+                                            }
+
+                                            // Retrieve the post owner's username.
+                                            db.collection("users").document(moodUserId)
+                                                    .get()
+                                                    .addOnSuccessListener(postOwnerSnapshot -> {
+                                                        String postOwnerUsername = "someone";
+                                                        if (postOwnerSnapshot.exists()) {
+                                                            postOwnerUsername = postOwnerSnapshot.getString("username");
+                                                            if (postOwnerUsername == null || postOwnerUsername.isEmpty()) {
+                                                                postOwnerUsername = "someone";
+                                                            }
+                                                        }
+
+                                                        // Truncate the reply text for the notification preview.
+                                                        String truncatedReply = commentText.length() > 50
+                                                                ? commentText.substring(0, 50) + "..."
+                                                                : commentText;
+
+                                                        // Build the notification message.
+                                                        String notificationContent = activeUsername +
+                                                                " replied to your comment on " + postOwnerUsername +
+                                                                "'s post: \"" + truncatedReply + "\"";
+
+                                                        // Reference the parent comment's author user document.
+                                                        DocumentReference recipientUserRef = db.collection("users").document(parentAuthorId);
+                                                        // Create a new notification document reference with an auto-generated ID.
+                                                        DocumentReference newNotifDocRef = recipientUserRef.collection("notifications").document();
+                                                        String notifId = newNotifDocRef.getId();
+
+                                                        // Create the Notification object with type COMMENT_REPLIED_TO.
+                                                        Notification replyNotification;
+                                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                            replyNotification = new Notification(
+                                                                    notifId,
+                                                                    notificationContent,
+                                                                    LocalDateTime.now().toString(),
+                                                                    Notification.NotifType.COMMENT_REPLIED_TO,
+                                                                    currentUserId,
+                                                                    parentAuthorId,
+                                                                    moodDocId
+                                                            );
+                                                        } else {
+                                                            replyNotification = new Notification(
+                                                                    notifId,
+                                                                    notificationContent,
+                                                                    new Date().toString(),
+                                                                    Notification.NotifType.COMMENT_REPLIED_TO,
+                                                                    currentUserId,
+                                                                    parentAuthorId,
+                                                                    moodDocId
+                                                            );
+                                                        }
+
+                                                        // Convert the Notification object into a Map.
+                                                        Map<String, Object> notifData = new HashMap<>();
+                                                        notifData.put("content", replyNotification.getContent());
+                                                        notifData.put("dateTime", replyNotification.getDateTime());
+                                                        notifData.put("notifType", replyNotification.getNotifType().name());
+                                                        notifData.put("senderUserId", replyNotification.getSenderUserId());
+                                                        notifData.put("receiverUserId", replyNotification.getReceiverUserId());
+                                                        notifData.put("isRead", replyNotification.isRead());
+                                                        notifData.put("requestStatus", replyNotification.getRequestStatus());
+                                                        notifData.put("moodEventId", replyNotification.getMoodEventId());
+                                                        notifData.put("id", notifId);
+
+                                                        // Save the notification to the parent comment's author's notifications subcollection.
+                                                        recipientUserRef.collection("notifications")
+                                                                .document(notifId)
+                                                                .set(notifData)
+                                                                .addOnSuccessListener(aVoid -> {
+                                                                    // Optionally, increment the newNotificationCount field.
+                                                                    recipientUserRef.update("newNotificationCount",
+                                                                            com.google.firebase.firestore.FieldValue.increment(1));
+                                                                })
+                                                                .addOnFailureListener(e -> {
+                                                                    Toast.makeText(CommentSectionActivity.this,
+                                                                            "Failed to send reply notification: " + e.getMessage(),
+                                                                            Toast.LENGTH_SHORT).show();
+                                                                });
+                                                    })
+                                                    .addOnFailureListener(e -> {
+                                                        Toast.makeText(CommentSectionActivity.this,
+                                                                "Error retrieving post owner's data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                    });
+                                        } else {
+                                            Toast.makeText(CommentSectionActivity.this,
+                                                    "Active user data not found.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(CommentSectionActivity.this,
+                                                "Error retrieving active user: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    });
+                        }
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(CommentSectionActivity.this, "Error adding reply: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -304,10 +422,102 @@ public class CommentSectionActivity extends AppCompatActivity {
                                 .collection("replies")
                                 .document("init")
                                 .set(Collections.singletonMap("init", true));
+
+                        // Only generate notification if the commenter is not commenting on their own post.
+                        if (!moodUserId.equals(currentUserId)) {
+                            // Retrieve the active user's username.
+                            db.collection("users").document(currentUserId)
+                                    .get()
+                                    .addOnSuccessListener(docSnapshot -> {
+                                        if (docSnapshot.exists()) {
+                                            String activeUsername = docSnapshot.getString("username");
+                                            if (activeUsername == null || activeUsername.isEmpty()) {
+                                                Toast.makeText(CommentSectionActivity.this,
+                                                        "Active user username not found.",
+                                                        Toast.LENGTH_SHORT).show();
+                                                return;
+                                            }
+
+                                            // Truncate comment for notification preview (e.g., 50 characters)
+                                            String truncatedComment = commentText.length() > 50
+                                                    ? commentText.substring(0, 50) + "..."
+                                                    : commentText;
+
+                                            String notificationContent = activeUsername + " commented on your post: \"" + truncatedComment + "\"";
+
+                                            // Reference the post author's user document.
+                                            DocumentReference recipientUserRef = db.collection("users").document(moodUserId);
+                                            // Create a new notification document reference with an auto-generated ID.
+                                            DocumentReference newNotifDocRef = recipientUserRef.collection("notifications").document();
+                                            String notifId = newNotifDocRef.getId();
+
+                                            // Create the Notification object.
+                                            Notification commentNotification;
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                commentNotification = new Notification(
+                                                        notifId,
+                                                        notificationContent,
+                                                        LocalDateTime.now().toString(),
+                                                        Notification.NotifType.POST_COMMENTED_ON,
+                                                        currentUserId,
+                                                        moodUserId,
+                                                        moodDocId
+                                                );
+                                            } else {
+                                                commentNotification = new Notification(
+                                                        notifId,
+                                                        notificationContent,
+                                                        new Date().toString(),
+                                                        Notification.NotifType.POST_COMMENTED_ON,
+                                                        currentUserId,
+                                                        moodUserId,
+                                                        moodDocId
+                                                );
+                                            }
+
+                                            // Convert the Notification object into a Map.
+                                            Map<String, Object> notifData = new HashMap<>();
+                                            notifData.put("content", commentNotification.getContent());
+                                            notifData.put("dateTime", commentNotification.getDateTime());
+                                            notifData.put("notifType", commentNotification.getNotifType().name());
+                                            notifData.put("senderUserId", commentNotification.getSenderUserId());
+                                            notifData.put("receiverUserId", commentNotification.getReceiverUserId());
+                                            notifData.put("isRead", commentNotification.isRead());
+                                            notifData.put("requestStatus", commentNotification.getRequestStatus());
+                                            notifData.put("moodEventId", commentNotification.getMoodEventId());
+                                            notifData.put("id", notifId);
+
+                                            // Save the notification to the post author's notifications subcollection.
+                                            recipientUserRef.collection("notifications")
+                                                    .document(notifId)
+                                                    .set(notifData)
+                                                    .addOnSuccessListener(aVoid -> {
+                                                        // Optionally, increment the newNotificationCount field for the post author.
+                                                        recipientUserRef.update("newNotificationCount",
+                                                                com.google.firebase.firestore.FieldValue.increment(1));
+                                                    })
+                                                    .addOnFailureListener(e -> {
+                                                        Toast.makeText(CommentSectionActivity.this,
+                                                                "Failed to send notification: " + e.getMessage(),
+                                                                Toast.LENGTH_SHORT).show();
+                                                    });
+                                        } else {
+                                            Toast.makeText(CommentSectionActivity.this,
+                                                    "Active user data not found.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(CommentSectionActivity.this,
+                                                "Error retrieving active user: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    });
+                        }
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(CommentSectionActivity.this, "Error adding comment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
+
+
+
         }
     }
 
