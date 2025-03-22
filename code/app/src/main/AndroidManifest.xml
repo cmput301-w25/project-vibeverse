@@ -116,5 +116,8 @@
         <activity android:name=".NotificationsActivity"
             android:exported="false"/>
 
+        <activity android:name=".CommentSectionActivity"
+            android:exported="false"/>
+
     </application>
 </manifest>

@@ -147,7 +147,6 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-
                     <!-- Social Situation Section with icon -->
                     <LinearLayout
                         android:id="@+id/socialContainer"
@@ -202,6 +201,25 @@
             </androidx.cardview.widget.CardView>
 
             <!-- Actions Section with modern button style -->
+            <LinearLayout
+                android:id="@+id/actionsContainer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                app:layout_constraintTop_toBottomOf="@+id/imageContainer"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <Button
+                    android:id="@+id/buttonComment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Comment"
+                    android:drawableLeft="@drawable/baseline_comment_24"
+                    android:padding="8dp"/>
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>

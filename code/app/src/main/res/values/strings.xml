@@ -64,4 +64,5 @@
     <string name="requestedButtonText">Requested</string>
     <string name="reasonWhyHint">Give a reason for the mood event (up to 200 characters)</string>
     <string name="backButtonDescription">Back</string>
+    <string name="profile_picture">Profile Picture</string>
 </resources>

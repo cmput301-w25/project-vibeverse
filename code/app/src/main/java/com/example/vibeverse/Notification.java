@@ -10,6 +10,8 @@ public class Notification {
         COMMENT_LIKED,
         POST_LIKED,
         POST_COMMENTED_ON
+        ,
+        COMMENT_REPLIED_TO
     }
 
     private NotifType notifType;
@@ -17,25 +19,15 @@ public class Notification {
     private String dateTime;
     private String senderUserId;
     private String receiverUserId;
-
-    public String getRequestStatus() {
-        return requestStatus;
-    }
-
-    public void setRequestStatus(String requestStatus) {
-        this.requestStatus = requestStatus;
-    }
-
-    private String requestStatus;
-
-    private String id;
-
+    private String requestStatus; // pending, accepted, rejected
+    private String moodEventId; // the postId of the mood event that the notification is about
 
 
     @PropertyName("isRead")
     private boolean isRead;
 
 
+    private String id;
 
     public Notification(String id, String content, String dateTime, NotifType notifType, String senderUserId, String receiverUserId) {
         this.id = id;
@@ -52,6 +44,42 @@ public class Notification {
             this.requestStatus = "pending";
         }
     }
+
+    // This constructor is to be used for all notification types except follow requests
+    public Notification(String id, String content, String dateTime, NotifType notifType, String senderUserId, String receiverUserId, String moodEventId) {
+        this.id = id;
+        this.content = content;
+        this.dateTime = dateTime;
+        this.notifType = notifType;
+        this.senderUserId = senderUserId;
+        this.receiverUserId = receiverUserId;
+        this.isRead = false;
+        if (notifType != NotifType.FOLLOW_REQUEST) {
+            this.requestStatus = null;
+        }
+        else{
+            this.requestStatus = "pending";
+        }
+
+        this.moodEventId = moodEventId;
+    }
+
+    public String getMoodEventId() {
+        return moodEventId;
+    }
+
+    public void setMoodEventId(String moodEventId) {
+        this.moodEventId = moodEventId;
+    }
+
+    public String getRequestStatus() {
+        return requestStatus;
+    }
+
+    public void setRequestStatus(String requestStatus) {
+        this.requestStatus = requestStatus;
+    }
+
 
     // Empty constructor required for Firestore
     public Notification() {

@@ -25,7 +25,10 @@ public class MoodEvent implements Serializable {
     private String moodTitle;
     private String moodEmoji;
     private String reasonWhy;
-  
+
+    private String ownerUserId;
+
+
     private String documentId; // Firestore document ID
     private String socialSituation;
     private String timestamp; // Formatted timestamp
@@ -34,6 +37,15 @@ public class MoodEvent implements Serializable {
     private Date date;
     private String subtitle;
 
+
+
+    public String getOwnerUserId() {
+        return ownerUserId;
+    }
+
+    public void setOwnerUserId(String ownerUserId) {
+        this.ownerUserId = ownerUserId;
+    }
     /**
      * Returns the emoji representing the mood.
      *
@@ -116,7 +128,8 @@ public class MoodEvent implements Serializable {
      * @param reasonWhy       The reason for the mood.
      * @param socialSituation The social situation when the mood was recorded.
      */
-    public MoodEvent(String moodTitle, String moodEmoji, String reasonWhy, String socialSituation) {
+    public MoodEvent(String ownerUserId, String moodTitle, String moodEmoji, String reasonWhy, String socialSituation) {
+        this.ownerUserId = ownerUserId;
         this.reasonWhy = reasonWhy;
         this.moodEmoji = moodEmoji;
         this.moodTitle = moodTitle;
@@ -135,7 +148,8 @@ public class MoodEvent implements Serializable {
      * @param photograph      The Photograph associated with this mood event.
      */
 
-    public MoodEvent(String moodTitle, String moodEmoji, String reasonWhy, String socialSituation, Photograph photograph) {
+    public MoodEvent(String ownerUserId, String moodTitle, String moodEmoji, String reasonWhy, String socialSituation, Photograph photograph) {
+        this.ownerUserId = ownerUserId;
         this.reasonWhy = reasonWhy;
         this.moodTitle = moodTitle;
         this.moodEmoji = moodEmoji;
@@ -189,10 +203,17 @@ public class MoodEvent implements Serializable {
         String moodTitle = (String) data.get("mood");
         String socialSituation = (String) data.get("socialSituation");
         String reasonWhy = (String) data.get("reasonWhy");
+        String ownerUserId = (String) data.get("ownerUserId");
+        String color = (String) data.get("color");
 
-        Log.d("fromMapDebug", "photoUri field: " + data.get("photoUri"));
 
-        MoodEvent moodEvent = new MoodEvent(moodTitle, moodEmoji, reasonWhy, socialSituation);
+
+
+        MoodEvent moodEvent = new MoodEvent(ownerUserId,moodTitle, moodEmoji, reasonWhy, socialSituation);
+
+        if (data.containsKey("documentId")) {
+            moodEvent.setDocumentId((String) data.get("documentId"));
+        }
 
         // Set the timestamp if available
         if (data.containsKey("timestamp")) {

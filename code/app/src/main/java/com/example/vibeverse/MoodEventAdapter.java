@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -251,6 +252,31 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
         // Apply additional animations to enhance the user experience.
         addAnimations(holder);
+
+        // Inside onBindViewHolder(...) in MoodEventAdapter:
+        Button buttonComment = holder.itemView.findViewById(R.id.buttonComment);
+        buttonComment.setOnClickListener(v -> {
+            Intent intent = new Intent(context, CommentSectionActivity.class);
+            // Pass the relevant post data using extras (adjust as needed)
+            intent.putExtra("reasonWhy", moodEvent.getReasonWhy());
+            intent.putExtra("moodTitle", moodEvent.getMoodTitle());
+            intent.putExtra("emoji", moodEvent.getEmoji());
+            intent.putExtra("timestamp", moodEvent.getTimestamp());
+            intent.putExtra("photoUri", moodEvent.getPhotoUri());
+            intent.putExtra("hasPhoto", hasPhoto);
+            intent.putExtra("moodDocId", moodEvent.getDocumentId());
+            intent.putExtra("moodOwnerId", moodEvent.getOwnerUserId());
+            intent.putExtra("socialSituation", moodEvent.getSocialSituation());
+            intent.putExtra("moodColor", moodColor);
+            intent.putExtra("intensity", moodEvent.getIntensity());
+
+
+            // ... add any additional fields you want to show in the post item view
+
+            context.startActivity(intent);
+
+
+        });
     }
 
     /**
