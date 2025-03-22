@@ -27,7 +27,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     private List<Comment> commentList;
     private FirebaseFirestore db;
     private OnReplyClickListener replyClickListener;
-    // We'll need these to query for replies:
+
     private String moodUserId;
     private String moodDocId;
 
@@ -129,10 +129,13 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 .document(comment.getCommentId())
                 .collection("replies")
                 .orderBy("timestamp")
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    if (!querySnapshot.isEmpty()) {
-                        holder.repliesRecycler.setVisibility(View.VISIBLE);
+                .addSnapshotListener((querySnapshot, e) -> {
+                    if (e != null) {
+                        // Optionally handle the error
+                        return;
+                    }
+                    if (querySnapshot != null) {
+                        repliesList.clear();
                         for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
                             Comment reply = doc.toObject(Comment.class);
                             if (reply != null) {
@@ -140,6 +143,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                             }
                         }
                         replyAdapter.notifyDataSetChanged();
+                        holder.repliesRecycler.setVisibility(repliesList.isEmpty() ? View.GONE : View.VISIBLE);
                     }
                 });
     }
