@@ -3,9 +3,16 @@ package com.example.vibeverse;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.RadialGradient;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
@@ -225,108 +232,148 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Creates a custom bitmap for the mood marker with a sleek, professional design
-     * that matches the screenshot provided
+     * Creates a truly premium, professional custom bitmap for the mood marker
+     * with clean lines, balanced proportions, and sophisticated styling
      */
     private Bitmap createCustomMarkerBitmap(String emoji, String moodTitle, int color) {
-        // Create a higher resolution bitmap for sharper edges
-        int width = 400;
-        int height = 480;
+        // Create appropriately sized bitmap (reduced by ~40%)
+        int width = 240;
+        int height = 280;
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
-        // Draw transparent background
-        canvas.drawColor(Color.TRANSPARENT);
+        // Calculate dimensions
+        float pinWidth = width * 0.85f;
+        float pinHeight = height * 0.75f;
+        float pinLeft = (width - pinWidth) / 2;
+        float pinTop = 0;
+        float pinBottom = pinTop + pinHeight;
+        float pinRadius = dpToPx(12);
 
-        // Create colored background card with rounded corners
-        Paint cardPaint = new Paint();
-        cardPaint.setColor(color);
-        cardPaint.setAntiAlias(true);
-        cardPaint.setShadowLayer(12, 0, 4, Color.parseColor("#33000000"));
-        cardPaint.setStyle(Paint.Style.FILL);
+        // Create drop shadow
+        Paint shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        shadowPaint.setColor(Color.parseColor("#44000000"));
+        shadowPaint.setMaskFilter(new BlurMaskFilter(dpToPx(4), BlurMaskFilter.Blur.NORMAL));
+        Path shadowPath = new Path();
 
-        float cardRadius = dpToPx(20);
-        float cardTop = dpToPx(8);
-        float cardBottom = height - dpToPx(70); // Leave space for pointer
+        // Main pin body for shadow
+        RectF shadowRect = new RectF(pinLeft + dpToPx(2), pinTop + dpToPx(2),
+                pinLeft + pinWidth + dpToPx(2), pinBottom + dpToPx(2));
+        shadowPath.addRoundRect(shadowRect, pinRadius, pinRadius, Path.Direction.CW);
 
-        // Draw card background with mood color
-        canvas.drawRoundRect(dpToPx(8), cardTop, width - dpToPx(8), cardBottom,
-                cardRadius, cardRadius, cardPaint);
+        // Pin pointer for shadow
+        float pointerTip = height - dpToPx(2);
+        float pointerWidth = pinWidth * 0.3f;
+        float pointerLeft = width/2 - pointerWidth/2 + dpToPx(2);
+        float pointerRight = width/2 + pointerWidth/2 + dpToPx(2);
 
-        // Draw pointer (triangle at bottom)
-        Paint pointerPaint = new Paint();
-        pointerPaint.setColor(color);
-        pointerPaint.setAntiAlias(true);
-        pointerPaint.setStyle(Paint.Style.FILL);
+        // Shadow pointer path
+        shadowPath.moveTo(pointerLeft, pinBottom + dpToPx(2));
+        shadowPath.lineTo(width/2 + dpToPx(2), pointerTip);
+        shadowPath.lineTo(pointerRight, pinBottom + dpToPx(2));
+        shadowPath.close();
 
-        android.graphics.Path pointerPath = new android.graphics.Path();
-        float pointerTop = cardBottom;
-        float pointerMiddle = cardBottom + dpToPx(30);
-        float pointerLeft = width/2 - dpToPx(16);
-        float pointerRight = width/2 + dpToPx(16);
+        canvas.drawPath(shadowPath, shadowPaint);
 
-        pointerPath.moveTo(pointerLeft, pointerTop);
-        pointerPath.lineTo(width/2, pointerMiddle);
-        pointerPath.lineTo(pointerRight, pointerTop);
-        pointerPath.close();
+        // Main background color with subtle gradient for dimension
+        Paint pinPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        int lighterColor = adjustColorBrightness(color, 1.1f);
+        int darkerColor = adjustColorBrightness(color, 0.9f);
 
-        // Draw pointer with shadow
-        Paint shadowPaint = new Paint(pointerPaint);
-        shadowPaint.setShadowLayer(8, 0, 4, Color.parseColor("#33000000"));
-        canvas.drawPath(pointerPath, shadowPaint);
+        // Create gradient
+        LinearGradient gradient = new LinearGradient(
+                0, pinTop, 0, pinBottom,
+                lighterColor, darkerColor,
+                Shader.TileMode.CLAMP);
+        pinPaint.setShader(gradient);
 
-        // Add a subtle border for better definition
-        Paint borderPaint = new Paint();
-        borderPaint.setColor(adjustColorBrightness(color, 0.85f));
-        borderPaint.setStyle(Paint.Style.STROKE);
-        borderPaint.setStrokeWidth(dpToPx(2));
-        borderPaint.setAntiAlias(true);
-        canvas.drawRoundRect(dpToPx(8), cardTop, width - dpToPx(8), cardBottom,
-                cardRadius, cardRadius, borderPaint);
+        // Create pin path
+        Path pinPath = new Path();
 
-        // Draw emoji with improved positioning
-        Paint emojiPaint = new Paint();
-        emojiPaint.setColor(Color.BLACK);
-        emojiPaint.setTextSize(width/2.5f);
-        emojiPaint.setAntiAlias(true);
+        // Main pin body
+        RectF pinRect = new RectF(pinLeft, pinTop, pinLeft + pinWidth, pinBottom);
+        pinPath.addRoundRect(pinRect, pinRadius, pinRadius, Path.Direction.CW);
+
+        // Pin pointer
+        float pointerTipY = height - dpToPx(4);
+        float pointerLeftX = width/2 - pointerWidth/2;
+        float pointerRightX = width/2 + pointerWidth/2;
+
+        pinPath.moveTo(pointerLeftX, pinBottom);
+        pinPath.lineTo(width/2, pointerTipY);
+        pinPath.lineTo(pointerRightX, pinBottom);
+        pinPath.close();
+
+        canvas.drawPath(pinPath, pinPaint);
+
+        // Add subtle highlight for depth
+        Paint highlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        highlightPaint.setColor(Color.WHITE);
+        highlightPaint.setAlpha(40); // Very subtle
+
+        Path highlightPath = new Path();
+        float highlightHeight = pinHeight * 0.4f;
+        RectF highlightRect = new RectF(pinLeft, pinTop, pinLeft + pinWidth, pinTop + highlightHeight);
+        highlightPath.addRoundRect(highlightRect, pinRadius, pinRadius, Path.Direction.CW);
+
+        // Only add highlight to top portion with proper clipping
+        canvas.save();
+        Path clipPath = new Path();
+        clipPath.addRoundRect(pinRect, pinRadius, pinRadius, Path.Direction.CW);
+        canvas.clipPath(clipPath);
+        canvas.drawPath(highlightPath, highlightPaint);
+        canvas.restore();
+
+        // Add subtle outline
+        Paint outlinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        outlinePaint.setStyle(Paint.Style.STROKE);
+        outlinePaint.setStrokeWidth(dpToPx(0.5f));
+        outlinePaint.setColor(Color.parseColor("#22000000"));
+        canvas.drawPath(pinPath, outlinePaint);
+
+        // Draw emoji with proper scaling
+        float emojiSize = Math.min(width, height) * 0.28f;
+        float emojiY = pinTop + (pinHeight * 0.35f);
+
+        Paint emojiPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        emojiPaint.setTextSize(emojiSize);
         emojiPaint.setTextAlign(Paint.Align.CENTER);
+        canvas.drawText(emoji, width/2, emojiY, emojiPaint);
 
-        // Position emoji in the upper portion of the card
-        float cardHeight = cardBottom - cardTop;
-        float emojiY = cardTop + cardHeight * 0.35f;
-        float emojiTextHeight = emojiPaint.descent() - emojiPaint.ascent();
-        float emojiTextOffset = emojiTextHeight / 2 - emojiPaint.descent();
-        canvas.drawText(emoji, width/2f, emojiY + emojiTextOffset, emojiPaint);
-
-        // Draw divider line (optional)
-        Paint dividerPaint = new Paint();
-        dividerPaint.setColor(adjustColorBrightness(color, 0.85f));
-        dividerPaint.setStrokeWidth(dpToPx((int) 1.5f));
-        dividerPaint.setAntiAlias(true);
-        float dividerY = cardTop + cardHeight * 0.65f;
-        canvas.drawLine(dpToPx(30), dividerY, width - dpToPx(30), dividerY, dividerPaint);
-
-        // Draw mood title with better typography
-        Paint titlePaint = new Paint();
-        titlePaint.setColor(Color.BLACK);
-        titlePaint.setTextSize(dpToPx(24));
-        titlePaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        titlePaint.setAntiAlias(true);
+        // Draw mood title with modern typography
+        Paint titlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        titlePaint.setColor(getContrastColor(color));
+        titlePaint.setTextSize(dpToPx(12));
+        titlePaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         titlePaint.setTextAlign(Paint.Align.CENTER);
 
-        // Position the title in the lower portion of the card
-        float titleY = cardTop + cardHeight * 0.82f;
-        canvas.drawText(moodTitle, width/2f, titleY, titlePaint);
+        // Add minimal divider
+        Paint dividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        dividerPaint.setColor(Color.parseColor("#22000000"));
+        dividerPaint.setStyle(Paint.Style.STROKE);
+        dividerPaint.setStrokeWidth(dpToPx(0.5f));
+
+        float dividerY = pinTop + (pinHeight * 0.6f);
+        float dividerPadding = pinWidth * 0.2f;
+        canvas.drawLine(pinLeft + dividerPadding, dividerY,
+                pinLeft + pinWidth - dividerPadding, dividerY, dividerPaint);
+
+        // Draw mood label
+        float titleY = pinTop + (pinHeight * 0.75f);
+        canvas.drawText(moodTitle.toUpperCase(), width/2, titleY, titlePaint);
 
         return bitmap;
     }
 
-    // Helper method to adjust color brightness
-    private int adjustColorBrightness(int color, float factor) {
-        float[] hsv = new float[3];
-        Color.colorToHSV(color, hsv);
-        hsv[2] *= factor; // Adjust brightness
-        return Color.HSVToColor(hsv);
+    /**
+     * Determines the optimal text color (black or white) based on background color brightness
+     * Using the W3C contrast algorithm for better readability
+     */
+    private int getContrastColor(int color) {
+        // Calculate perceived brightness using the improved formula
+        // (0.299*R + 0.587*G + 0.114*B)
+        double brightness = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color));
+        return brightness >= 128 ? Color.BLACK : Color.WHITE;
     }
 
     /**
@@ -417,9 +464,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Converts dp to pixels
+     * Helper method to adjust color brightness
+     * @param color The base color
+     * @param factor Factor > 1 brightens, factor < 1 darkens
      */
-    private int dpToPx(int dp) {
+    private int adjustColorBrightness(int color, float factor) {
+        float[] hsv = new float[3];
+        Color.colorToHSV(color, hsv);
+        hsv[2] = Math.max(0f, Math.min(1f, hsv[2] * factor)); // Adjust brightness (V in HSV)
+        return Color.HSVToColor(hsv);
+    }
+
+    /**
+     * Converts dp to pixels - for float values
+     */
+    private int dpToPx(float dp) {
         return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 }
