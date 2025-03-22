@@ -105,6 +105,28 @@ public class SelectMoodActivity extends AppCompatActivity {
         setContentView(R.layout.activity_select_mood);
 
         // Initialize UI references
+        initializeUIElements();
+
+        // Initialize Firebase8
+        initializeFirebase();
+
+        // Initialize mood data (colors and emojis)
+        initializeMoodData();
+
+        // Create mood buttons in the grid
+        createMoodButtons();
+
+        // Setup UI event listeners
+        setupEventListeners();
+
+        // Set the initial mood
+        selectMood(selectedMood);
+    }
+
+    /**
+     * Initialize references to all UI elements
+     */
+    private void initializeUIElements() {
         mainContainer = findViewById(R.id.mainContainer);
         selectedMoodEmoji = findViewById(R.id.selectedMoodEmoji);
         selectedMoodText = findViewById(R.id.selectedMoodText);
