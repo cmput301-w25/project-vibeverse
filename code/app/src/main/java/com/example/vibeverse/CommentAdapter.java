@@ -1,6 +1,7 @@
 package com.example.vibeverse;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -146,6 +147,11 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                         holder.repliesRecycler.setVisibility(repliesList.isEmpty() ? View.GONE : View.VISIBLE);
                     }
                 });
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, UsersProfile.class);
+            intent.putExtra("userId", authorUserId);
+            context.startActivity(intent);
+        });
     }
 
     @Override

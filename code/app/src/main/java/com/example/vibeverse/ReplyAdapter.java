@@ -1,6 +1,7 @@
 package com.example.vibeverse;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -86,6 +87,13 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
 
         // Optionally hide reply icon for replies if you don't want nested replies
         holder.replyIcon.setVisibility(View.GONE);
+
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, UsersProfile.class);
+            intent.putExtra("userId", authorUserId);
+            context.startActivity(intent);
+        });
+
     }
 
     @Override

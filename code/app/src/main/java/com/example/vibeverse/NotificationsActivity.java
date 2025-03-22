@@ -97,12 +97,5 @@ public class NotificationsActivity extends AppCompatActivity {
                 });
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        // Optionally, refresh the UI when leaving the page if you want to show updated read states.
-        // For example:
-        // loadNotifications();
-    }
 
 }
