@@ -21,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 
 
@@ -251,7 +252,12 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
     private String getFormattedDateTime(String isoDateTime) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Parse the ISO string. Adjust the pattern if your input format changes.
-            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+            DateTimeFormatter inputFormatter = new DateTimeFormatterBuilder()
+                    .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+                    .optionalStart()
+                    .appendFraction(java.time.temporal.ChronoField.NANO_OF_SECOND, 3, 6, true)
+                    .optionalEnd()
+                    .toFormatter();
             LocalDateTime dateTime = LocalDateTime.parse(isoDateTime, inputFormatter);
 
             // Get the day and its ordinal suffix
