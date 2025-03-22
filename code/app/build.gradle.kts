@@ -1,23 +1,26 @@
-
+import java.util.Properties
+import java.io.FileInputStream
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 android {
     namespace = "com.example.vibeverse"
-    compileSdk = 35
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.vibeverse"
         minSdk = 24
         targetSdk = 35
-        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders["MAPS_API_KEY"] = getLocalProperty("MAPS_API_KEY")
+        buildConfigField("String", "MAPS_API_KEY", "\"${getLocalProperty("MAPS_API_KEY")}\"")
+
     }
 
     buildTypes {
@@ -33,7 +36,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+    }
 
+}
+configurations.all {
+    resolutionStrategy {
+        force ("androidx.test:core:1.6.1")
+    }
 }
 
 dependencies {
@@ -44,6 +56,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation ("com.github.bumptech.glide:glide:4.16.0")
     implementation(libs.firebase.storage)
+    implementation(libs.accessibility.test.framework)
     annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.firebase.firestore)
     testImplementation(libs.junit)
@@ -95,6 +108,19 @@ dependencies {
     // For instrumentation tests
     androidTestImplementation ("androidx.test:runner:1.5.2")
     androidTestImplementation ("androidx.test:rules:1.5.0")
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
+    implementation ("com.google.android.libraries.places:places:2.7.0")
+    implementation ("com.google.maps.android:android-maps-utils:2.3.0")
+
+    configurations.all {
+        resolutionStrategy {
+            // Force a specific version of protobuf
+            force("com.google.protobuf:protobuf-javalite:3.25.1")
+        }
+
+        // Exclude the older version
+        exclude(group = "com.google.protobuf", module = "protobuf-lite")
+    }
 
 
 
@@ -109,4 +135,13 @@ tasks.register<Javadoc>("javadoc") {
 
     // Use the setter method to configure the output directory.
     setDestinationDir(file("$buildDir/docs/javadoc"))
+}
+
+fun getLocalProperty(key: String): String {
+    val properties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        properties.load(localPropertiesFile.inputStream())
+    }
+    return properties.getProperty(key) ?: ""
 }
