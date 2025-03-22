@@ -269,7 +269,6 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
             intent.putExtra("socialSituation", moodEvent.getSocialSituation());
             intent.putExtra("moodColor", moodColor);
             intent.putExtra("intensity", moodEvent.getIntensity());
-            intent.putExtra("lighterMoodColor", lightenColor(moodColor, 0.7f));
 
 
             // ... add any additional fields you want to show in the post item view

@@ -2,6 +2,7 @@ package com.example.vibeverse;
 
 import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -79,24 +80,12 @@ public class CommentSectionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_comment_section);
         findViewById(android.R.id.content).setBackgroundColor(ContextCompat.getColor(this, android.R.color.white));
 
-        // Retrieve post data from the intent
-        Intent intent = getIntent();
-        String reasonWhy = intent.getStringExtra("reasonWhy");
-        String moodTitle = intent.getStringExtra("moodTitle");
-        String emoji = intent.getStringExtra("emoji");
-        long timestamp = intent.getLongExtra("timestamp", System.currentTimeMillis());
-        String photoUri = intent.getStringExtra("photoUri"); // Get the image URI if available
-        Boolean hasPhoto = intent.getBooleanExtra("hasPhoto", false);
-        String socialSituation = intent.getStringExtra("socialSituation");
-        moodUserId = intent.getStringExtra("moodOwnerId");
-        moodDocId = intent.getStringExtra("moodDocId");
-        int moodColor = intent.getIntExtra("moodColor", 0);
-        int intensity = intent.getIntExtra("intensity", 0);
-        int lighterMoodColor = intent.getIntExtra("lighterMoodColor", 0);
+        // Retrieve only moodOwnerId and moodDocId from the intent.
+        moodUserId = getIntent().getStringExtra("moodOwnerId");
+        moodDocId = getIntent().getStringExtra("moodDocId");
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
-
 
         // Find views inside the included post layout
         View postView = findViewById(R.id.includedPost);
@@ -114,44 +103,72 @@ public class CommentSectionActivity extends AppCompatActivity {
         replyBannerText = findViewById(R.id.replyBannerText);
         replyBannerClose = findViewById(R.id.replyBannerClose);
 
-
-        // Populate the post view with passed data
-        textTitle.setText(reasonWhy);
-
-        // Format the timestamp into a readable date string
-        SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy • hh:mm:ss a", Locale.US);
-        String dateString = formatter.format(new Date(timestamp));
-        textSubtitle.setText(dateString + " • " + moodTitle);
-        textEmoji.setText(emoji);
-        socialSituationView.setText(socialSituation);
-
-        // Load the image if a valid URI exists
-        if (hasPhoto && photoUri != null && !photoUri.isEmpty()) {
-            imageContainer.setVisibility(View.VISIBLE);
-            Glide.with(this)
-                    .load(Uri.parse(photoUri))
-                    .into(imagePost);
-        } else {
-            imageContainer.setVisibility(View.GONE);
-        }
-
         postMenuButton.setVisibility(View.GONE);
 
+        // Retrieve mood details from Firestore dynamically.
+        db.collection("Usermoods")
+                .document(moodUserId)
+                .collection("moods")
+                .document(moodDocId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Retrieve mood details from Firestore.
+                        String reasonWhy = documentSnapshot.getString("reasonWhy");
+                        String moodTitle = documentSnapshot.getString("mood");  // moodTitle now comes from the "mood" field.
+                        String emoji = documentSnapshot.getString("emoji");
+                        Boolean hasPhoto = documentSnapshot.getBoolean("hasPhoto");
+                        Long intensity = documentSnapshot.getLong("intensity");
+                        String socialSituation = documentSnapshot.getString("socialSituation");
+                        // Retrieve the timestamp (adjust based on how you store it)
+                        String timestampStr = documentSnapshot.getString("timestamp");
+                        // Optionally, if stored as a Timestamp object:
+                        // Date timestamp = documentSnapshot.getTimestamp("timestamp").toDate();
 
-        if (moodColorStrip != null) {
-            moodColorStrip.setBackgroundColor(moodColor);
-        }
+                        // Update the post view UI.
+                        textTitle.setText(reasonWhy);
+                        textSubtitle.setText(timestampStr + " • " + moodTitle);
+                        textEmoji.setText(emoji);
+                        socialSituationView.setText(socialSituation);
 
-        // Tint the emoji container with a lighter version of the mood color.
-        if (emojiContainer != null) {
-            emojiContainer.setCardBackgroundColor(lighterMoodColor);
-        }
+                        // Dynamically compute the mood color based on the moodTitle.
+                        String colorName = moodTitle.toLowerCase() + "_color";
+                        int colorResId = getResources().getIdentifier(colorName, "color", getPackageName());
+                        int moodColor = ContextCompat.getColor(this, colorResId);
 
-        // Set the intensity progress bar.
-        if (intensityProgressBar != null) {
-            intensityProgressBar.setProgress(intensity);
-            intensityProgressBar.setProgressTintList(ColorStateList.valueOf(moodColor));
-        }
+                        // Set background color for the mood color strip.
+                        if (moodColorStrip != null) {
+                            moodColorStrip.setBackgroundColor(moodColor);
+                        }
+
+                        // Tint the emoji container with a lighter version of the mood color.
+                        if (emojiContainer != null) {
+                            emojiContainer.setCardBackgroundColor(lightenColor(moodColor, 0.7f));
+                        }
+
+                        // Set the intensity progress bar.
+                        if (intensityProgressBar != null && intensity != null) {
+                            intensityProgressBar.setProgress(intensity.intValue());
+                            intensityProgressBar.setProgressTintList(ColorStateList.valueOf(moodColor));
+                        }
+
+                        // Load the image if available.
+                        String photoUri = documentSnapshot.getString("photoUri");
+                        if (hasPhoto != null && hasPhoto && photoUri != null && !photoUri.isEmpty()) {
+                            imageContainer.setVisibility(View.VISIBLE);
+                            Glide.with(this)
+                                    .load(Uri.parse(photoUri))
+                                    .into(imagePost);
+                        } else {
+                            imageContainer.setVisibility(View.GONE);
+                        }
+                    } else {
+                        Toast.makeText(CommentSectionActivity.this, "Mood data not found.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(CommentSectionActivity.this, "Error retrieving mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
 
         // Setup the comment section
         recyclerComments = findViewById(R.id.recyclerComments);
@@ -160,24 +177,20 @@ public class CommentSectionActivity extends AppCompatActivity {
         commentAdapter = new CommentAdapter(this, commentList, moodUserId, moodDocId);
         recyclerComments.setAdapter(commentAdapter);
 
-
-
         commentAdapter.setOnReplyClickListener(comment -> {
             replyingToComment = comment;
-
             String authorUserId = comment.getAuthorUserId();
-            db.collection("users").document(authorUserId).get().addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    String username = documentSnapshot.getString("username");
-                    replyBannerText.setText("Replying to " + username);
-                } else {
-                    replyBannerText.setText("Replying to Unknown");
-                }
-            }).addOnFailureListener(e -> {
-                replyBannerText.setText("Replying to Unknown");
-            });
-
-
+            db.collection("users").document(authorUserId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            String username = documentSnapshot.getString("username");
+                            replyBannerText.setText("Replying to " + username);
+                        } else {
+                            replyBannerText.setText("Replying to Unknown");
+                        }
+                    })
+                    .addOnFailureListener(e -> replyBannerText.setText("Replying to Unknown"));
             replyBanner.setVisibility(View.VISIBLE);
         });
 
@@ -186,15 +199,13 @@ public class CommentSectionActivity extends AppCompatActivity {
             replyBanner.setVisibility(View.GONE);
         });
 
-
-
         // Setup the send comment button
         editComment = findViewById(R.id.editComment);
         buttonSendComment = findViewById(R.id.buttonSendComment);
         buttonSendComment.setBackgroundTintList(null);
         buttonSendComment.setOnClickListener(v -> postComment());
-
     }
+
 
     @Override
     protected void onStart() {
@@ -519,6 +530,20 @@ public class CommentSectionActivity extends AppCompatActivity {
 
 
         }
+    }
+
+    /**
+     * Lightens a given color by blending it with white.
+     *
+     * @param color  The original color.
+     * @param factor The factor by which to lighten (0.0 to 1.0).
+     * @return The lightened color.
+     */
+    private int lightenColor(int color, float factor) {
+        int red = (int) ((Color.red(color) * (1 - factor) + 255 * factor));
+        int green = (int) ((Color.green(color) * (1 - factor) + 255 * factor));
+        int blue = (int) ((Color.blue(color) * (1 - factor) + 255 * factor));
+        return Color.rgb(red, green, blue);
     }
 
 
