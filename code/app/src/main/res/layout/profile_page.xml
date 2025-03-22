@@ -5,178 +5,209 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/white"
+    tools:context=".ProfilePage">
 
-    <!-- Top Profile Bar -->
+    <!--
+         =============== TOP BAR ===============
+         Displays a big title (textName) and the hamburger menu on the right.
+    -->
     <LinearLayout
-        android:id="@+id/topProfileBar"
+        android:id="@+id/profileHeaderRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
+        android:gravity="center_vertical"
+        android:paddingTop="8dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Left Column: Profile Image, Name/Username, and Bio -->
-        <LinearLayout
+        <!-- Centered Username -->
+        <TextView
+            android:id="@+id/textTopUsername"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:gravity="center"
+            android:text="Username"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black" />
 
-            <!-- Row for Profile Image and Name/Username -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <de.hdodenhof.circleimageview.CircleImageView
-                    android:id="@+id/profilePicture"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:layout_margin="8dp"
-                    android:src="@drawable/user_icon"
-                    app:civ_border_width="2dp"
-                    app:civ_border_color="@android:color/black" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/textName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="First &amp; Last Name"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:textColor="@color/black" />
-
-                    <TextView
-                        android:id="@+id/textUsername"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="username"
-                        android:textSize="14sp"
-                        android:textColor="@color/black" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- User Bio Section directly below the above row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="4dp">
-
-                <TextView
-                    android:id="@+id/textBioContent"
-                    android:layout_width="224dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-                    android:textSize="14sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Right Column: Logout and Followers/Following -->
-        <LinearLayout
+        <!-- Menu Icon on the right -->
+        <ImageButton
+            android:id="@+id/buttonOverflowMenu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_menu"
+            app:tint="@color/black" />
 
-            <!-- Logout Button -->
-            <Button
-                android:id="@+id/buttonLogout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@android:color/black"
-                android:text="Logout"
-                android:textColor="@android:color/white" />
-
-            <!-- Spacer -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="16dp" />
-
-            <!-- Followers & Following Layout -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center">
-
-                <!-- Followers Column -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:id="@+id/textFollowers"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="1732"
-                        android:textStyle="bold"
-                        android:textSize="16sp"
-                        android:textColor="@color/black" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/follows"
-                        android:textSize="14sp"
-                        android:textColor="@color/black" />
-                </LinearLayout>
-
-                <!-- Spacer between columns -->
-                <View
-                    android:layout_width="16dp"
-                    android:layout_height="match_parent" />
-
-                <!-- Following Column -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-
-                    android:orientation="vertical"
-                    android:gravity="center">
-
-                    <TextView
-                        android:id="@+id/textFollowing"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="2.4M"
-                        android:textStyle="bold"
-                        android:textSize="16sp"
-                        android:textColor="@color/black" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/following"
-                        android:textSize="14sp"
-                        android:textColor="@color/black" />
-                </LinearLayout>
-
-            </LinearLayout>
-        </LinearLayout>
     </LinearLayout>
 
-    <!-- Search & Filter Bar -->
+
+
+    <!--
+         =============== PROFILE INFO CONTAINER ===============
+         Contains the profile picture, username, stats (posts/followers/following), and bio
+         in an Instagram-like arrangement.
+    -->
+    <LinearLayout
+        android:id="@+id/profileInfoContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/profileHeaderRow"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Row for Profile Picture + Username/Stats -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Profile Picture -->
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/profilePicture"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginEnd="12dp"
+                android:src="@drawable/user_icon"
+                app:civ_border_width="2dp"
+                app:civ_border_color="@android:color/black" />
+
+            <!-- Right Side: Username on top, then Posts/Followers/Following -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- Placeholder: "Name" -->
+                <TextView
+                    android:id="@+id/fullName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Full Name"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black" />
+
+                <!-- Stats Row: Posts, Followers, Following -->
+                <LinearLayout
+                    android:id="@+id/followersRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="start"
+                    android:layout_marginTop="8dp">
+
+                    <!-- Posts Column -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginEnd="24dp">
+
+                        <TextView
+                            android:id="@+id/textPosts"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:textColor="@color/black" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Posts"
+                            android:textSize="14sp"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+
+                    <!-- Followers Column -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginEnd="24dp">
+
+                        <TextView
+                            android:id="@+id/textFollowers"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1732"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:textColor="@color/black" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/follows"
+                            android:textSize="14sp"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+
+                    <!-- Following Column -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/textFollowing"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2.4M"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:textColor="@color/black" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/following"
+                            android:textSize="14sp"
+                            android:textColor="@color/black" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Bio Section (Placeholder: "Lorem ipsum...") -->
+        <TextView
+            android:id="@+id/textBioContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+            android:textSize="14sp"
+            android:textColor="@color/black" />
+    </LinearLayout>
+
+
+    <!-- =============== Search & Filter Bar (UNCHANGED) =============== -->
     <LinearLayout
         android:id="@+id/searchFilterBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:padding="12dp"
-        app:layout_constraintTop_toBottomOf="@id/topProfileBar"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/profileInfoContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <EditText
             android:id="@+id/editSearch"
@@ -199,17 +230,18 @@
             android:background="@drawable/rounded_black_box"
             android:src="@drawable/ic_filter"
             android:padding="12dp" />
-
     </LinearLayout>
 
-    <!-- FrameLayout to hold both RecyclerView and ProgressBar -->
+    <!-- =============== FrameLayout for Feed & ProgressBar (UNCHANGED) =============== -->
     <FrameLayout
+        android:id="@+id/feedFrame"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="12dp"
         app:layout_constraintTop_toBottomOf="@id/searchFilterBar"
-
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <!-- Mood History RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
@@ -235,13 +267,6 @@
             android:padding="16dp"
             android:visibility="gone">
 
-<!--            <ImageView-->
-<!--                android:layout_width="72dp"-->
-<!--                android:layout_height="72dp"-->
-<!--                android:src="@drawable/ic_mood_empty"-->
-<!--                android:alpha="0.5"-->
-<!--                android:contentDescription="No moods found" />-->
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -262,8 +287,7 @@
         </LinearLayout>
     </FrameLayout>
 
-
-    <!-- Bottom Navigation -->
+    <!-- =============== Bottom Navigation (UNCHANGED) =============== -->
     <include
         android:id="@+id/bottom_navigation"
         layout="@layout/bottom_navigation"
