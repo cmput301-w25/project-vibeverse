@@ -122,7 +122,8 @@ dependencies {
         exclude(group = "com.google.protobuf", module = "protobuf-lite")
     }
 
-
+    //For Charts
+    implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
 }
 

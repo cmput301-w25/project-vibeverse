@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Toggle Buttons -->
+        <RadioGroup
+            android:id="@+id/time_filter_group"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp">
+
+            <RadioButton android:id="@+id/this_week" android:text="This Week"/>
+            <RadioButton android:id="@+id/last_week" android:text="Last Week"/>
+            <RadioButton android:id="@+id/this_month" android:text="This Month"/>
+        </RadioGroup>
+
+        <!-- Emoji Mood Summary -->
+        <TextView
+            android:id="@+id/mood_summary_text"
+            android:text="😊 Mood Summary"
+            android:textSize="24sp"
+            android:layout_marginTop="16dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <!-- Pie Chart -->
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/pie_chart"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="16dp" />
+
+        <!-- Line Chart -->
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/line_chart"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="32dp" />
+    </LinearLayout>
+</ScrollView>
