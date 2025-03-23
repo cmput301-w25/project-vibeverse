@@ -10,16 +10,11 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,7 +27,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
@@ -49,7 +43,7 @@ import java.util.Map;
 /**
  * EditMoodActivity allows users to update an existing mood event.
  * <p>
- * This activity uses the same layout as SelectMoodActivity for consistency.
+ * This activity uses a dedicated layout for editing mood events.
  * It receives mood details from the calling activity (e.g., MainActivity),
  * displays the current values, and allows the user to update the mood,
  * social situation, intensity, and an optional image.
@@ -59,16 +53,16 @@ import java.util.Map;
 public class EditMoodActivity extends AppCompatActivity {
 
     // UI Elements
-    private TextView selectedMoodEmoji, selectedMoodText;
+    private TextView selectedMoodEmoji, selectedMoodText, intensityDisplay;
     private EditText reasonWhyInput;
     private Spinner socialSituationInput;
     private SeekBar moodIntensitySlider;
     private Button updateButton;
-
     private ImageView backButton;
     private View selectedMoodContainer;
-    private LinearLayout mainContainer; // Main screen background container
-    private TextView intensityDisplay;
+    private LinearLayout mainContainer;
+    private ImageView imgSelected, imgPlaceholder;
+    private TextView imageHintText;
 
     // Mood properties
     private String selectedMood;
@@ -80,7 +74,6 @@ public class EditMoodActivity extends AppCompatActivity {
     private final Map<String, String> moodEmojis = new HashMap<>();
 
     private int moodPosition; // Position of the mood in the list
-    private ImageView imgSelected, imgPlaceholder;
 
     private String currentImageUri;
 
@@ -108,160 +101,63 @@ public class EditMoodActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Use the same layout as SelectMoodActivity
-        setContentView(R.layout.activity_select_mood);
+        setContentView(R.layout.activity_edit_mood);
 
+        initializeUIElements();
+        initializeMoodData();
+        populateDataFromIntent();
+        setupEventListeners();
+        applyGradientBackground(selectedColor);
+    }
+
+    /**
+     * Initialize references to all UI elements
+     */
+    private void initializeUIElements() {
         mainContainer = findViewById(R.id.mainContainer);
         selectedMoodEmoji = findViewById(R.id.selectedMoodEmoji);
         selectedMoodText = findViewById(R.id.selectedMoodText);
         selectedMoodContainer = findViewById(R.id.selectedMoodContainer);
         moodIntensitySlider = findViewById(R.id.moodIntensitySlider);
+        intensityDisplay = findViewById(R.id.intensityDisplay);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
-        updateButton = findViewById(R.id.continueButton); // Reuse the same button ID
+        updateButton = findViewById(R.id.updateButton);
         backButton = findViewById(R.id.backArrow);
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
+        imageHintText = findViewById(R.id.imageHintText);
+    }
 
-        // Create a custom toolbar without a title
-        Toolbar toolbar = new Toolbar(this);
-        toolbar.setTitle(""); // Remove the "Edit Mood" text
-        toolbar.setBackgroundColor(Color.TRANSPARENT);
+    /**
+     * Initialize mood colors and emojis maps
+     */
+    private void initializeMoodData() {
+        // Initialize mood colors
+        moodColors.put("Happy", Color.parseColor("#FBC02D"));      // Warm yellow
+        moodColors.put("Sad", Color.parseColor("#42A5F5"));        // Soft blue
+        moodColors.put("Angry", Color.parseColor("#EF5350"));      // Vibrant red
+        moodColors.put("Surprised", Color.parseColor("#FF9800"));  // Orange
+        moodColors.put("Afraid", Color.parseColor("#5C6BC0"));     // Indigo blue
+        moodColors.put("Disgusted", Color.parseColor("#66BB6A"));  // Green
+        moodColors.put("Confused", Color.parseColor("#AB47BC"));   // Purple
+        moodColors.put("Shameful", Color.parseColor("#EC407A"));   // Pink
 
-        // Use the standard navigation icon for the back button
-        toolbar.setNavigationIcon(getResources().getIdentifier(
-                "abc_ic_ab_back_material", "drawable", getPackageName()));
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        // Initialize mood emojis
+        moodEmojis.put("Happy", "😃");
+        moodEmojis.put("Sad", "😢");
+        moodEmojis.put("Angry", "😡");
+        moodEmojis.put("Surprised", "😲");
+        moodEmojis.put("Afraid", "😨");
+        moodEmojis.put("Disgusted", "🤢");
+        moodEmojis.put("Confused", "🤔");
+        moodEmojis.put("Shameful", "😳");
+    }
 
-        // Add to the top of the main container
-        mainContainer.addView(toolbar, 0);
-
-        // Instead of adding another TextView, check if one already exists
-        boolean textAlreadyExists = false;
-        for (int i = 0; i < mainContainer.getChildCount(); i++) {
-            View child = mainContainer.getChildAt(i);
-            if (child instanceof TextView) {
-                TextView textView = (TextView) child;
-                if (textView.getText().toString().contains("Choose how you're feeling")) {
-                    // Text already exists, center it and stop
-                    textView.setGravity(Gravity.CENTER);
-                    textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
-                    textView.setTypeface(null, Typeface.BOLD);
-                    textAlreadyExists = true;
-                    break;
-                }
-            }
-        }
-
-        // Only add new text if none was found
-        if (!textAlreadyExists) {
-            TextView chooseTextView = new TextView(this);
-            chooseTextView.setText("Choose how you're feeling right now");
-            chooseTextView.setTextColor(Color.WHITE);
-            chooseTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
-            chooseTextView.setTypeface(null, Typeface.BOLD);
-            chooseTextView.setGravity(Gravity.CENTER); // Center justify
-            chooseTextView.setPadding(0, dpToPx(16), 0, dpToPx(20));
-            // Add this text view right after the toolbar
-            mainContainer.addView(chooseTextView, 1);
-        }
-
-        // Change the button text to "Update Mood" for clarity
-        updateButton.setText("Update Mood");
-        updateButton.setBackgroundTintList(null);
-
-
-        // Set consistent typeface and text sizes
-        selectedMoodText.setTypeface(null, Typeface.BOLD);
-        selectedMoodEmoji.setTextSize(TypedValue.COMPLEX_UNIT_SP, 64);
-        selectedMoodText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-
-        // Create consistent styling for input fields
-        GradientDrawable inputBg = new GradientDrawable();
-        inputBg.setCornerRadius(dpToPx(8));
-        inputBg.setColor(Color.WHITE);
-        inputBg.setStroke(1, Color.parseColor("#E0E0E0"));
-
-        // Clone the drawable for each input to avoid shared state issues
-        GradientDrawable socialBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
-        GradientDrawable reasonWhyBg = (GradientDrawable) inputBg.getConstantState().newDrawable().mutate();
-
-
-        socialSituationInput.setBackground(socialBg);
-        reasonWhyInput.setBackground(reasonWhyBg);
-
-        // Set padding for the input fields
-        int paddingPx = (int) dpToPx(12);
-        socialSituationInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-        reasonWhyInput.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-
-
-        TextView socialLabel = new TextView(this);
-        socialLabel.setText("Social situation");
-        socialLabel.setTextColor(Color.WHITE);
-        socialLabel.setTypeface(null, Typeface.BOLD);
-        socialLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        socialLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
-
-        TextView reasonWhyLabel = new TextView(this);
-        reasonWhyLabel.setText("Reason why you feel this way");
-        reasonWhyLabel.setTextColor(Color.WHITE);
-        reasonWhyLabel.setTextColor(Color.WHITE);
-        reasonWhyLabel.setTypeface(null, Typeface.BOLD);
-        reasonWhyLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        reasonWhyLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
-      
-      // Get the parent container and add the labels before the respective inputs
-
-
-
-        int reasonWhyIndex = mainContainer.indexOfChild(reasonWhyInput);
-        mainContainer.addView(reasonWhyLabel, reasonWhyIndex);
-
-
-        int socialIndex = mainContainer.indexOfChild(socialSituationInput);
-        mainContainer.addView(socialLabel, socialIndex);
-
-        // Setup the enhanced mood intensity slider with visual indicators
-        setupMoodIntensitySlider();
-
-        // Enhance the image picker button
-        GradientDrawable imageBtnBg = new GradientDrawable();
-        imageBtnBg.setCornerRadius(dpToPx(12));
-        imageBtnBg.setColor(Color.WHITE);
-        imageBtnBg.setStroke(1, Color.parseColor("#E0E0E0"));
-
-        FrameLayout btnTestImage = findViewById(R.id.btnImage);
-        btnTestImage.setBackground(imageBtnBg);
-
-        // Style the image placeholder for consistency
-        imgPlaceholder.setColorFilter(Color.parseColor("#AAAAAA"));
-
-        // Add an image hint text
-        TextView imageHintText = new TextView(this);
-        imageHintText.setText("Add an image (optional)");
-        imageHintText.setTextColor(Color.parseColor("#757575"));
-        imageHintText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        imageHintText.setGravity(Gravity.CENTER);
-        btnTestImage.addView(imageHintText);
-
-        // Position the hint text below the placeholder
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.gravity = Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM;
-        params.bottomMargin = (int) dpToPx(20);
-        imageHintText.setLayoutParams(params);
-
-        // Make the image container appear clickable
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            btnTestImage.setForeground(getDrawable(android.R.drawable.list_selector_background));
-        }
-
-        initializeMoodColors();
-        initializeMoodEmojis();
-
+    /**
+     * Populate the UI with data from the intent
+     */
+    private void populateDataFromIntent() {
         // Retrieve mood info from the Intent
         Intent intent = getIntent();
         selectedMood = intent.getStringExtra("selectedMood");
@@ -269,11 +165,21 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedColor = moodColors.getOrDefault(selectedMood, Color.GRAY);
         moodPosition = intent.getIntExtra("moodPosition", -1);
 
-        String timestamp = intent.getStringExtra("timestamp");
         String reasonWhy = intent.getStringExtra("reasonWhy");
         String socialSituation = intent.getStringExtra("socialSituation");
         String currentPhotoUri = intent.getStringExtra("photoUri");
+        int intensity = intent.getIntExtra("intensity", 5);
 
+        photoDateTaken = intent.getStringExtra("photoDateTaken");
+        photoLocation = intent.getStringExtra("photoLocation");
+        photoSize = intent.getLongExtra("photoSizeKB", 0);
+
+        // Set UI fields with the retrieved values
+        selectedMoodText.setText(selectedMood);
+        selectedMoodEmoji.setText(selectedEmoji);
+        reasonWhyInput.setText(reasonWhy);
+
+        // Set up the spinner with social situation options
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this,
                 R.array.social_situation_options,
@@ -282,28 +188,12 @@ public class EditMoodActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         socialSituationInput.setAdapter(adapter);
 
-
-        photoDateTaken = intent.getStringExtra("photoDateTaken");
-        photoLocation = intent.getStringExtra("photoLocation");
-        photoSize = intent.getLongExtra("photoSizeKB", 0);
-
-
-        // Get the intensity value from the intent (using default of 5 if not found)
-        int intensity = intent.getIntExtra("intensity", 5);
-
-        // Set UI fields with the retrieved values
-        selectedMoodText.setText(selectedMood);
-        selectedMoodEmoji.setText(selectedEmoji);
-        reasonWhyInput.setText(reasonWhy);
         if (socialSituation != null) {
             int spinnerPosition = adapter.getPosition(socialSituation);
             socialSituationInput.setSelection(spinnerPosition);
         }
 
-        // Apply the refined gradient background for consistency
-        applyGradientBackground(selectedColor);
-
-        // Ensure selectedMoodContainer has a GradientDrawable background
+        // Apply the mood color to the container
         GradientDrawable moodContainerBg = new GradientDrawable();
         moodContainerBg.setColor(selectedColor);
         moodContainerBg.setCornerRadius(dpToPx(12));
@@ -311,19 +201,10 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Set the intensity slider value
         moodIntensitySlider.setProgress(intensity);
+        moodIntensitySlider.setProgressTintList(ColorStateList.valueOf(selectedColor));
 
-        // Initialize the intensity display text
-        if (intensityDisplay != null) {
-            StringBuilder intensityBuilder = new StringBuilder();
-            for (int i = 0; i <= 10; i++) {
-                if (i <= intensity) {
-                    intensityBuilder.append("●");
-                } else {
-                    intensityBuilder.append("○");
-                }
-            }
-            intensityDisplay.setText(intensityBuilder.toString());
-        }
+        // Update the intensity display
+        updateIntensityDisplay(intensity);
 
         // Adjust emoji scale based on intensity
         float emojiScale = 0.7f + (intensity / 10f * 0.6f);
@@ -331,34 +212,7 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedMoodEmoji.setScaleY(emojiScale);
 
         // Update mood text based on intensity
-        if (intensity <= 3) {
-            selectedMoodText.setText("Slightly " + selectedMood);
-        } else if (intensity <= 7) {
-            selectedMoodText.setText(selectedMood);
-        } else {
-            selectedMoodText.setText("Very " + selectedMood);
-        }
-
-        // Style the update button
-        GradientDrawable buttonBg = new GradientDrawable();
-        buttonBg.setCornerRadius(dpToPx(24));
-        buttonBg.setColor(Color.parseColor("#5C4B99"));  // Use consistent purple color
-
-
-
-        // Apply elevation for a modern look
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            updateButton.setElevation(dpToPx(4));
-        }
-        updateButton.setBackground(buttonBg);
-        updateButton.setPadding(
-                (int) dpToPx(24),
-                (int) dpToPx(12),
-                (int) dpToPx(24),
-                (int) dpToPx(12)
-        );
-        updateButton.setTextColor(Color.WHITE);
-        updateButton.setTypeface(null, Typeface.BOLD);
+        updateMoodTextBasedOnIntensity(intensity);
 
         // Load existing photo if available
         currentImageUri = currentPhotoUri;
@@ -370,42 +224,41 @@ public class EditMoodActivity extends AppCompatActivity {
             imageHintText.setVisibility(View.GONE);
             imgPlaceholder.setVisibility(View.GONE);
         }
+    }
 
-        // Fade-in animation for the mood container
-        selectedMoodContainer.setAlpha(0f);
-        selectedMoodContainer.animate()
-                .alpha(1f)
-                .setDuration(300)
-                .start();
+    /**
+     * Set up UI event listeners
+     */
+    private void setupEventListeners() {
+        // Set up mood intensity slider listener
+        moodIntensitySlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                applyIntensityEffects(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Optional behavior when touch starts
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Play pulse animation when slider is released
+                animateMoodContainerPulse();
+            }
+        });
 
         // Set click listener for image picker button
+        FrameLayout btnTestImage = findViewById(R.id.btnImage);
         btnTestImage.setOnClickListener(v -> showImagePickerDialog());
 
-        // Set click listener for the update button with animation
+        // Set click listener for the update button
         updateButton.setOnClickListener(view -> {
+            String newReasonWhy = reasonWhyInput.getText().toString().trim();
 
-
-            String newreasonWhy = reasonWhyInput.getText().toString().trim();
-
-            // Check if reasonWhy is empty
-            if (newreasonWhy.isEmpty()) {
-                reasonWhyInput.setError("Reason why is required.");
-                reasonWhyInput.requestFocus();
-                return;
-            }
-
-            // Validate character count
-            if (newreasonWhy.length() > 20) {
-                reasonWhyInput.setError("Reason why must be 20 characters or less.");
-                reasonWhyInput.requestFocus();
-                return;
-            }
-
-            // Validate word count
-            String[] words = newreasonWhy.split("\\s+");
-            if (words.length > 3) {
-                reasonWhyInput.setError("Reason why must be 3 words or less.");
-                reasonWhyInput.requestFocus();
+            // Validate input
+            if (!validateInput(newReasonWhy)) {
                 return;
             }
 
@@ -415,11 +268,7 @@ public class EditMoodActivity extends AppCompatActivity {
                     .alpha(0.8f)
                     .setDuration(200)
                     .withEndAction(() -> {
-
-
-
-                        // Original code for handling the update
-
+                        // Return updated mood data to caller
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("updatedMood", selectedMood);
                         resultIntent.putExtra("updatedEmoji", selectedEmoji);
@@ -433,18 +282,51 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedphotoLocation", photoLocation);
                         resultIntent.putExtra("updatedphotoSizeKB", photoSize);
 
-
                         setResult(RESULT_OK, resultIntent);
                         finish();
                     })
                     .start();
         });
+
+        // Set click listener for back button
         backButton.setOnClickListener(v -> {
             Intent goBackIntent = new Intent(EditMoodActivity.this, ProfilePage.class);
             goBackIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear back stack
             startActivity(goBackIntent);
             finish();
         });
+    }
+
+    /**
+     * Validate the input fields
+     *
+     * @param reasonWhy The reason why text to validate
+     * @return true if input is valid, false otherwise
+     */
+    private boolean validateInput(String reasonWhy) {
+        // Check if reasonWhy is empty
+        if (reasonWhy.isEmpty()) {
+            reasonWhyInput.setError("Reason why is required.");
+            reasonWhyInput.requestFocus();
+            return false;
+        }
+
+        // Validate character count
+        if (reasonWhy.length() > 20) {
+            reasonWhyInput.setError("Reason why must be 20 characters or less.");
+            reasonWhyInput.requestFocus();
+            return false;
+        }
+
+        // Validate word count
+        String[] words = reasonWhy.split("\\s+");
+        if (words.length > 3) {
+            reasonWhyInput.setError("Reason why must be 3 words or less.");
+            reasonWhyInput.requestFocus();
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -465,143 +347,45 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Adjusts the brightness of a given color by a specified factor.
+     * Updates the intensity display based on the slider progress
      *
-     * @param color  The original color.
-     * @param factor The multiplier for brightness.
-     * @return The adjusted color.
+     * @param progress The current intensity value (0-10)
      */
-    private int adjustColorBrightness(int color, float factor) {
-        int r = Math.min(255, (int) (Color.red(color) * factor));
-        int g = Math.min(255, (int) (Color.green(color) * factor));
-        int b = Math.min(255, (int) (Color.blue(color) * factor));
-        return Color.rgb(r, g, b);
+    private void updateIntensityDisplay(int progress) {
+        if (intensityDisplay == null) return;
+
+        StringBuilder intensityBuilder = new StringBuilder();
+        for (int i = 0; i <= 10; i++) {
+            if (i <= progress) {
+                intensityBuilder.append("●"); // Filled circle for active levels
+            } else {
+                intensityBuilder.append("○"); // Empty circle for inactive levels
+            }
+        }
+        intensityDisplay.setText(intensityBuilder.toString());
+        intensityDisplay.setAlpha(0.7f);
+        intensityDisplay.animate().alpha(1.0f).setDuration(200).start();
     }
 
     /**
-     * Converts dp (density-independent pixels) to actual pixel units.
+     * Updates the mood text based on the intensity level
      *
-     * @param dp The dp value.
-     * @return The equivalent pixel value.
+     * @param intensity The current intensity value (0-10)
      */
-    private int dpToPx(float dp) {
-        return Math.round(TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                dp,
-                getResources().getDisplayMetrics()
-        ));
+    private void updateMoodTextBasedOnIntensity(int intensity) {
+        if (intensity <= 3) {
+            selectedMoodText.setText("Slightly " + selectedMood);
+        } else if (intensity <= 7) {
+            selectedMoodText.setText(selectedMood);
+        } else {
+            selectedMoodText.setText("Very " + selectedMood);
+        }
     }
 
     /**
-     * Initializes the mood colors map.
+     * Animate a pulse effect on the mood container
      */
-    private void initializeMoodColors() {
-        moodColors.put("Happy", Color.parseColor("#FBC02D"));      // Warm yellow
-        moodColors.put("Sad", Color.parseColor("#42A5F5"));        // Soft blue
-        moodColors.put("Angry", Color.parseColor("#EF5350"));      // Vibrant red
-        moodColors.put("Surprised", Color.parseColor("#FF9800"));  // Orange
-        moodColors.put("Afraid", Color.parseColor("#5C6BC0"));     // Indigo blue
-        moodColors.put("Disgusted", Color.parseColor("#66BB6A"));  // Green
-        moodColors.put("Confused", Color.parseColor("#AB47BC"));   // Purple
-        moodColors.put("Shameful", Color.parseColor("#EC407A"));   // Pink
-    }
-
-    /**
-     * Initializes the mood emojis map.
-     */
-    private void initializeMoodEmojis() {
-        moodEmojis.put("Happy", "😃");
-        moodEmojis.put("Sad", "😢");
-        moodEmojis.put("Angry", "😡");
-        moodEmojis.put("Surprised", "😲");
-        moodEmojis.put("Afraid", "😨");
-        moodEmojis.put("Disgusted", "🤢");
-        moodEmojis.put("Confused", "🤔");
-        moodEmojis.put("Shameful", "😳");
-    }
-
-    /**
-     * Sets up the mood intensity slider with dynamic visual feedback.
-     */
-    private void setupMoodIntensitySlider() {
-        // Create a slider label
-        TextView sliderLabel = new TextView(this);
-        sliderLabel.setText("Mood Intensity");
-        sliderLabel.setTextColor(Color.WHITE);
-        sliderLabel.setTypeface(null, Typeface.BOLD);
-        sliderLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        sliderLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
-
-        LinearLayout sliderContainer = new LinearLayout(this);
-        sliderContainer.setOrientation(LinearLayout.VERTICAL);
-
-        // Get slider's parent
-        ViewGroup sliderParent = (ViewGroup) moodIntensitySlider.getParent();
-        int sliderIndex = sliderParent.indexOfChild(moodIntensitySlider);
-
-        // Remove slider from its current parent
-        sliderParent.removeView(moodIntensitySlider);
-
-        // Style the slider
-        moodIntensitySlider.setMax(10);
-        moodIntensitySlider.setProgressTintList(ColorStateList.valueOf(selectedColor));
-        moodIntensitySlider.setThumbTintList(ColorStateList.valueOf(Color.WHITE));
-
-        // Set up min/max labels with dynamic intensity indicator
-        LinearLayout minMaxContainer = new LinearLayout(this);
-        minMaxContainer.setOrientation(LinearLayout.HORIZONTAL);
-
-        TextView minLabel = new TextView(this);
-        minLabel.setText("Low");
-        minLabel.setTextColor(Color.WHITE);
-        minLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-
-        // Create intensity display text that updates with slider changes
-        intensityDisplay = new TextView(this);
-        intensityDisplay.setText("●●●●●○○○○○");
-        intensityDisplay.setTextColor(Color.WHITE);
-        intensityDisplay.setTypeface(null, Typeface.BOLD);
-        intensityDisplay.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        intensityDisplay.setGravity(Gravity.CENTER);
-
-        TextView maxLabel = new TextView(this);
-        maxLabel.setText("High");
-        maxLabel.setTextColor(Color.WHITE);
-        maxLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-
-        // Set up layout parameters for labels
-        LinearLayout.LayoutParams minParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        minParams.weight = 1;
-        minLabel.setLayoutParams(minParams);
-
-        LinearLayout.LayoutParams intensityParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        intensityParams.weight = 3;
-        intensityDisplay.setLayoutParams(intensityParams);
-
-        LinearLayout.LayoutParams maxParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        maxParams.weight = 1;
-        maxLabel.setLayoutParams(maxParams);
-
-        minMaxContainer.addView(minLabel);
-        minMaxContainer.addView(intensityDisplay);
-        minMaxContainer.addView(maxLabel);
-
-        // Add slider components to the container and reattach to parent
-        sliderContainer.addView(sliderLabel);
-        sliderContainer.addView(moodIntensitySlider);
-        sliderContainer.addView(minMaxContainer);
-        sliderParent.addView(sliderContainer, sliderIndex);
-
-        // Create a pulse animation for the mood container
+    private void animateMoodContainerPulse() {
         ObjectAnimator pulseAnimator = ObjectAnimator.ofFloat(selectedMoodContainer, "scaleX", 1f, 1.05f);
         pulseAnimator.setDuration(300);
         pulseAnimator.setRepeatCount(1);
@@ -614,25 +398,7 @@ public class EditMoodActivity extends AppCompatActivity {
 
         AnimatorSet pulseSet = new AnimatorSet();
         pulseSet.playTogether(pulseAnimator, pulseAnimatorY);
-
-        // Listener to update intensity effects as slider changes
-        moodIntensitySlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                applyIntensityEffects(progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                // Optional behavior when touch starts
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // Play pulse animation when slider is released
-                pulseSet.start();
-            }
-        });
+        pulseSet.start();
     }
 
     /**
@@ -642,7 +408,7 @@ public class EditMoodActivity extends AppCompatActivity {
      */
     private void applyIntensityEffects(int progress) {
         // Update intensity display text
-        updateIntensityDisplay(intensityDisplay, progress);
+        updateIntensityDisplay(progress);
 
         // Adjust emoji size dynamically
         float emojiScale = 0.7f + (progress / 10f * 0.6f); // Scale from 0.7 to 1.3
@@ -664,34 +430,7 @@ public class EditMoodActivity extends AppCompatActivity {
         }
 
         // Update mood text to reflect intensity
-        if (progress <= 3) {
-            selectedMoodText.setText("Slightly " + selectedMood);
-        } else if (progress <= 7) {
-            selectedMoodText.setText(selectedMood);
-        } else {
-            selectedMoodText.setText("Very " + selectedMood);
-        }
-    }
-
-    /**
-     * Updates the intensity display (dots) based on the slider progress.
-     *
-     * @param intensityDisplay The TextView showing intensity representation.
-     * @param progress         The current slider progress (0-10).
-     */
-    private void updateIntensityDisplay(TextView intensityDisplay, int progress) {
-        if (intensityDisplay == null) return;
-        StringBuilder intensityBuilder = new StringBuilder();
-        for (int i = 0; i <= 10; i++) {
-            if (i <= progress) {
-                intensityBuilder.append("●"); // Filled circle for active levels
-            } else {
-                intensityBuilder.append("○"); // Empty circle for inactive levels
-            }
-        }
-        intensityDisplay.setText(intensityBuilder.toString());
-        intensityDisplay.setAlpha(0.7f);
-        intensityDisplay.animate().alpha(1.0f).setDuration(200).start();
+        updateMoodTextBasedOnIntensity(progress);
     }
 
     /**
@@ -734,76 +473,6 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Called when permission results are returned.
-     *
-     * @param requestCode  The permission request code.
-     * @param permissions  The requested permissions.
-     * @param grantResults The results for the corresponding permissions.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    /**
-     * Handles results from camera or gallery intents.
-     *
-     * @param requestCode The request code identifying the action.
-     * @param resultCode  The result code from the child activity.
-     * @param data        The intent data returned (if any).
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == REQUEST_IMAGE_CAPTURE) {
-                // For camera, imageUri is already set
-                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    photoSize = sizeKB;
-                    currentBitmap = bitmap;
-                    currentImageUri = uri.toString();
-                    imgPlaceholder.setVisibility(View.GONE);
-                    // Also hide the hint text when image is selected
-                    for (int i = 0; i < ((ViewGroup) imgPlaceholder.getParent()).getChildCount(); i++) {
-                        View child = ((ViewGroup) imgPlaceholder.getParent()).getChildAt(i);
-                        if (child instanceof TextView) {
-                            child.setVisibility(View.GONE);
-                            break;
-                        }
-                    }
-                    imgSelected.setVisibility(View.VISIBLE);
-                    imgSelected.setImageBitmap(bitmap);
-                });
-            } else if (requestCode == REQUEST_PICK_IMAGE) {
-                imageUri = data.getData();
-                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
-                    photoSize = sizeKB;
-                    currentBitmap = bitmap;
-                    currentImageUri = uri.toString();
-                    imgPlaceholder.setVisibility(View.GONE);
-                    // Hide hint text
-                    for (int i = 0; i < ((ViewGroup) imgPlaceholder.getParent()).getChildCount(); i++) {
-                        View child = ((ViewGroup) imgPlaceholder.getParent()).getChildAt(i);
-                        if (child instanceof TextView) {
-                            child.setVisibility(View.GONE);
-                            break;
-                        }
-                    }
-                    imgSelected.setVisibility(View.VISIBLE);
-                    imgSelected.setImageBitmap(bitmap);
-                });
-            }
-        }
-    }
-
-    /**
      * Displays a dialog for the user to choose an image source or remove the current photo.
      */
     private void showImagePickerDialog() {
@@ -819,14 +488,7 @@ public class EditMoodActivity extends AppCompatActivity {
                         currentImageUri = "N/A";
                         imgSelected.setVisibility(View.GONE);
                         imgPlaceholder.setVisibility(View.VISIBLE);
-                        // Show hint text again
-                        for (int i = 0; i < ((ViewGroup) imgPlaceholder.getParent()).getChildCount(); i++) {
-                            View child = ((ViewGroup) imgPlaceholder.getParent()).getChildAt(i);
-                            if (child instanceof TextView) {
-                                child.setVisibility(View.VISIBLE);
-                                break;
-                            }
-                        }
+                        imageHintText.setVisibility(View.VISIBLE);
                     }
                 })
                 .show();
@@ -887,6 +549,71 @@ public class EditMoodActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Called when permission results are returned.
+     *
+     * @param requestCode  The permission request code.
+     * @param permissions  The requested permissions.
+     * @param grantResults The results for the corresponding permissions.
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    /**
+     * Handles results from camera or gallery intents.
+     *
+     * @param requestCode The request code identifying the action.
+     * @param resultCode  The result code from the child activity.
+     * @param data        The intent data returned (if any).
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_IMAGE_CAPTURE) {
+                // For camera, imageUri is already set
+                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
+                    photoSize = sizeKB;
+                    currentBitmap = bitmap;
+                    currentImageUri = uri.toString();
+                    imgPlaceholder.setVisibility(View.GONE);
+                    imageHintText.setVisibility(View.GONE);
+                    imgSelected.setVisibility(View.VISIBLE);
+                    imgSelected.setImageBitmap(bitmap);
+                });
+            } else if (requestCode == REQUEST_PICK_IMAGE) {
+                imageUri = data.getData();
+                ImageUtils.processImage(this, imageUri, (bitmap, uri, sizeKB) -> {
+                    photoSize = sizeKB;
+                    currentBitmap = bitmap;
+                    currentImageUri = uri.toString();
+                    imgPlaceholder.setVisibility(View.GONE);
+                    imageHintText.setVisibility(View.GONE);
+                    imgSelected.setVisibility(View.VISIBLE);
+                    imgSelected.setImageBitmap(bitmap);
+                });
+            }
+        }
+    }
+
+    /**
+     * Converts dp (density-independent pixels) to actual pixel units.
+     *
+     * @param dp The dp value.
+     * @return The equivalent pixel value.
+     */
+    private int dpToPx(float dp) {
+        return Math.round(getResources().getDisplayMetrics().density * dp);
+    }
 
     /**
      * Blends two colors together using the specified ratio.
@@ -903,5 +630,4 @@ public class EditMoodActivity extends AppCompatActivity {
         float b = (Color.blue(color1) * ratio) + (Color.blue(color2) * inverseRatio);
         return Color.rgb((int) r, (int) g, (int) b);
     }
-
 }

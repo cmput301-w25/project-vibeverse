@@ -169,29 +169,6 @@
                 android:inputType="text"
                 android:maxLength="20"/>
 
-            <!-- Trigger Label -->
-            <TextView
-                android:id="@+id/triggerLabel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="What triggered this mood?"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/white"
-                android:layout_marginTop="16dp"
-                android:paddingTop="16dp"
-                android:paddingBottom="4dp"/>
-
-            <!-- Trigger Input -->
-            <EditText
-                android:id="@+id/triggerInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="What caused this feeling? (Optional)"
-                android:background="@drawable/rounded_edittext_background"
-                android:padding="12dp"
-                android:inputType="text"/>
-
             <!-- Social Situation Label -->
             <TextView
                 android:id="@+id/socialSituationLabel"
