@@ -46,7 +46,7 @@ import java.util.Map;
  * This activity uses a dedicated layout for editing mood events.
  * It receives mood details from the calling activity (e.g., MainActivity),
  * displays the current values, and allows the user to update the mood,
- * trigger, social situation, intensity, and an optional image.
+ * social situation, intensity, and an optional image.
  * When the user clicks "Update Mood", the updated details are sent back to the caller.
  * </p>
  */
@@ -54,7 +54,7 @@ public class EditMoodActivity extends AppCompatActivity {
 
     // UI Elements
     private TextView selectedMoodEmoji, selectedMoodText, intensityDisplay;
-    private EditText triggerInput, reasonWhyInput;
+    private EditText reasonWhyInput;
     private Spinner socialSituationInput;
     private SeekBar moodIntensitySlider;
     private Button updateButton;
@@ -120,7 +120,6 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedMoodContainer = findViewById(R.id.selectedMoodContainer);
         moodIntensitySlider = findViewById(R.id.moodIntensitySlider);
         intensityDisplay = findViewById(R.id.intensityDisplay);
-        triggerInput = findViewById(R.id.triggerInput);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         updateButton = findViewById(R.id.updateButton);
@@ -166,7 +165,6 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedColor = moodColors.getOrDefault(selectedMood, Color.GRAY);
         moodPosition = intent.getIntExtra("moodPosition", -1);
 
-        String trigger = intent.getStringExtra("trigger");
         String reasonWhy = intent.getStringExtra("reasonWhy");
         String socialSituation = intent.getStringExtra("socialSituation");
         String currentPhotoUri = intent.getStringExtra("photoUri");
@@ -179,7 +177,6 @@ public class EditMoodActivity extends AppCompatActivity {
         // Set UI fields with the retrieved values
         selectedMoodText.setText(selectedMood);
         selectedMoodEmoji.setText(selectedEmoji);
-        triggerInput.setText(trigger);
         reasonWhyInput.setText(reasonWhy);
 
         // Set up the spinner with social situation options
@@ -276,7 +273,6 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedMood", selectedMood);
                         resultIntent.putExtra("updatedEmoji", selectedEmoji);
                         resultIntent.putExtra("updatedReasonWhy", reasonWhyInput.getText().toString().trim());
-                        resultIntent.putExtra("updatedTrigger", triggerInput.getText().toString().trim());
                         resultIntent.putExtra("updatedSocialSituation", socialSituationInput.getSelectedItem().toString().trim());
                         resultIntent.putExtra("timestamp", new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault()).format(new Date()));
                         resultIntent.putExtra("moodPosition", moodPosition);

@@ -67,7 +67,7 @@ public class SelectMoodActivity extends AppCompatActivity {
     // UI Elements
     private TextView selectedMoodEmoji, selectedMoodText, intensityDisplay;
     private SeekBar moodIntensitySlider;
-    private EditText triggerInput, reasonWhyInput;
+    private EditText reasonWhyInput;
     private Spinner socialSituationInput;
     private Button continueButton;
     private ImageView backButton;
@@ -139,7 +139,6 @@ public class SelectMoodActivity extends AppCompatActivity {
         selectedMoodContainer = findViewById(R.id.selectedMoodContainer);
         moodIntensitySlider = findViewById(R.id.moodIntensitySlider);
         intensityDisplay = findViewById(R.id.intensityDisplay);
-        triggerInput = findViewById(R.id.triggerInput);
         socialSituationInput = findViewById(R.id.socialSituationSpinner);
         continueButton = findViewById(R.id.continueButton);
         backButton = findViewById(R.id.backArrow);
@@ -345,7 +344,6 @@ public class SelectMoodActivity extends AppCompatActivity {
      * Create mood event and save to Firestore
      */
     private void saveMoodEvent() {
-        String trigger = triggerInput.getText().toString().trim();
         String socialSituation = socialSituationInput.getSelectedItem().toString().trim();
         String reasonWhy = reasonWhyInput.getText().toString().trim();
         int intensity = moodIntensitySlider.getProgress();
@@ -361,9 +359,9 @@ public class SelectMoodActivity extends AppCompatActivity {
                     new Date(),
                     "VibeVerse Location" // Default location
             );
-            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, trigger, socialSituation, photograph);
+            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, "", socialSituation, photograph);
         } else {
-            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, trigger, socialSituation);
+            moodEvent = new MoodEvent(selectedMood, selectedEmoji, reasonWhy, "", socialSituation);
         }
 
         // Set intensity
@@ -684,7 +682,6 @@ public class SelectMoodActivity extends AppCompatActivity {
         Map<String, Object> moodData = new HashMap<>();
         moodData.put("emoji", moodEvent.getEmoji());
         moodData.put("mood", moodEvent.getMoodTitle());
-        moodData.put("trigger", moodEvent.getTrigger());
         moodData.put("socialSituation", moodEvent.getSocialSituation());
         moodData.put("timestamp", moodEvent.getTimestamp());
         moodData.put("intensity", moodEvent.getIntensity());
