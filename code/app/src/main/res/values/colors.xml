@@ -6,6 +6,7 @@
     <color name="google_blue">#4285F4</color>
     <color name="hint_color">#747688</color>
 
+    <color name="follow_button_alt_color">#747688</color>
     <color name="off_white">#F5F5F5</color>
 
     <color name="happy_color">#FBC02D</color>
@@ -16,5 +17,16 @@
     <color name="disgusted_color">#66BB6A</color>
     <color name="confused_color">#AB47BC</color>
     <color name="shameful_color">#EC407A</color>
+
+    <color name="unread_color">#F0F8FF</color>
+    <color name="read_color">#FFFFFF</color>
+
+    <color name="vibrant_red">#D32F2F</color>
+    <color name="neutral_gray">#757575</color>
+
+    <color name="sendButtonColor">#000000</color>
+
+
+
 
 </resources>
