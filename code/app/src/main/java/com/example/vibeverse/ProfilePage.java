@@ -71,11 +71,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     /** Button to logout the user. */
 
 
-    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing;
+    private TextView textName, textUsername, textBioContent;
     private ImageView profilePicture;
 
 
-    private ImageButton logoutButton;
+    private Button logoutButton;
     /** BottomNavigationView for navigating between app sections. */
     private BottomNavigationView bottomNavigationView;
     /** Button to open the FilterDialog. */
@@ -126,21 +126,19 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
 
         // **Find your TextViews & ImageView from XML**
-        textName = findViewById(R.id.fullName);
-        textUsername = findViewById(R.id.textTopUsername);
+        textName = findViewById(R.id.textName);
+        textUsername = findViewById(R.id.textUsername);
         textBioContent = findViewById(R.id.textBioContent);
         profilePicture = findViewById(R.id.profilePicture);
-        textFollowers = findViewById(R.id.textFollowers);
-        textFollowing = findViewById(R.id.textFollowing);
 
         // Then call a helper method to load the profile
         loadUserProfile();
         // Logout button
-        logoutButton = findViewById(R.id.buttonOverflowMenu);
+        logoutButton = findViewById(R.id.buttonLogout);
 
 
         // Set up logout button to sign out the user.
-        logoutButton = findViewById(R.id.buttonOverflowMenu);
+        logoutButton = findViewById(R.id.buttonLogout);
         logoutButton.setOnClickListener(v -> {
             mAuth.signOut();
             startActivity(new Intent(ProfilePage.this, Login.class));
@@ -186,7 +184,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
         // Open the FilterDialog when the filter button is clicked.
         buttonFilter.setOnClickListener(v ->
-                FilterDialog.show(ProfilePage.this, ProfilePage.this, allMoodEvents)
+                FilterDialog.show(ProfilePage.this, ProfilePage.this)
         );
 
         // Set up search functionality for client-side filtering.
@@ -239,7 +237,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                             }
                             moodEvent.setDocumentId(doc.getId());
 
+                            // Build a small "subtitle" (Trigger, Social, etc.)
                             StringBuilder subtitle = new StringBuilder();
+                            if (moodEvent.getTrigger() != null && !moodEvent.getTrigger().isEmpty()) {
+                                subtitle.append("Trigger: ").append(moodEvent.getTrigger());
+                            }
                             if (moodEvent.getSocialSituation() != null &&
                                     !moodEvent.getSocialSituation().isEmpty()) {
                                 if (subtitle.length() > 0) {
@@ -293,15 +295,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                         String username = documentSnapshot.getString("username");
                         String bio = documentSnapshot.getString("bio");
                         String profilePicUri = documentSnapshot.getString("profilePicUri");
-                        String followerCount = String.valueOf(documentSnapshot.getLong("followerCount"));
-                        String followingCount = String.valueOf(documentSnapshot.getLong("followingCount"));
 
                         // Populate the TextViews
                         if (fullName != null) textName.setText(fullName);
                         if (username != null) textUsername.setText(username);
                         if (bio != null) textBioContent.setText(bio);
-                        textFollowers.setText(followerCount);
-                        textFollowing.setText(followingCount);
 
                         // If you have a profile picture URL, load it using Glide (or Picasso).
                         if (profilePicUri != null && !profilePicUri.isEmpty()) {
@@ -374,14 +372,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
      */
     @Override
     public void onFilteredResults(List<MoodEvent> filteredMoods) {
-        // First update the adapter with filtered moods
         moodEventAdapter.updateMoodEvents(filteredMoods);
-
-        // Then apply any existing text search filter
-        String currentSearchText = editSearch.getText().toString();
-        if (!currentSearchText.isEmpty()) {
-            moodEventAdapter.filter(currentSearchText);
-        }
     }
 
     /**
@@ -401,6 +392,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         if (requestCode == EDIT_MOOD_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
             String updatedMood = data.getStringExtra("updatedMood");
             String updatedEmoji = data.getStringExtra("updatedEmoji");
+            String updatedTrigger = data.getStringExtra("updatedTrigger");
             String updatedReasonWhy = data.getStringExtra("updatedReasonWhy");
             String updatedSocialSituation = data.getStringExtra("updatedSocialSituation");
             int updatedIntensity = data.getIntExtra("updatedIntensity", 5);
@@ -410,7 +402,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             if (moodPosition >= 0 && moodPosition < allMoodEvents.size()) {
                 MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
                 // Update Firestore
-                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood,
+                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood, updatedTrigger,
                         updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri);;
             }
         }
@@ -419,12 +411,13 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     /**
      * Updates a MoodEvent document in Firestore with the provided updated details.
      * <p>
-     * Updates fields such as emoji, mood, social situation, intensity, and photo URI.
+     * Updates fields such as emoji, mood, trigger, social situation, intensity, and photo URI.
      * </p>
      *
      * @param documentId      The Firestore document ID of the MoodEvent.
      * @param emoji           The updated emoji.
      * @param mood            The updated mood title.
+     * @param trigger         The updated trigger.
      * @param reasonWhy       The updated reason. 
      * @param socialSituation The updated social situation.
      * @param intensity       The updated intensity level.
@@ -432,7 +425,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
      */
 
     private void updateMoodInFirestore(String documentId, String emoji, String mood,
-                                       String reasonWhy, String socialSituation,
+                                       String trigger, String reasonWhy, String socialSituation,
                                        int intensity, String photoUri) {
         // Show loading indicator
         if (progressLoading != null) {
@@ -443,6 +436,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         updatedMood.put("emoji", emoji);
         updatedMood.put("mood", mood);
         updatedMood.put("emotionalState", emoji + " " + mood);
+        updatedMood.put("trigger", trigger);
         updatedMood.put("socialSituation", socialSituation);
         updatedMood.put("intensity", intensity);
         updatedMood.put("reasonWhy", reasonWhy);

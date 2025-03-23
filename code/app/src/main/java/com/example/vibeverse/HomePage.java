@@ -18,8 +18,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -54,9 +52,6 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
     private EditText editSearch;
     /** Logo image (optional decoration). */
     private ImageView logoImage;
-
-    private TextView notificationBadge;
-
 
     /**
      * Called when the Activity is created.
@@ -99,12 +94,12 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
 
         // Set up notification button click listener (stub)
         buttonNotification.setOnClickListener(v -> {
-            Intent intent = new Intent(HomePage.this, NotificationsActivity.class);
-            startActivity(intent);
+            // Handle notification button click
+            // Add your notification logic here
         });
 
         // Set up filter button to open the FilterDialog
-//        buttonFilter.setOnClickListener(v -> FilterDialog.show(HomePage.this, HomePage.this));
+        buttonFilter.setOnClickListener(v -> FilterDialog.show(HomePage.this, HomePage.this));
 
         // Set up search functionality to filter posts as user types
         editSearch.addTextChangedListener(new TextWatcher() {
@@ -122,32 +117,6 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         // Set up bottom navigation using the NavigationHelper utility class
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         NavigationHelper.setupBottomNavigation(this, bottomNavigationView);
-
-        // Get the badge TextView
-        notificationBadge = findViewById(R.id.notificationBadge);
-
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-        db.collection("users")
-                .document(currentUserId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Long newNotificationCount = documentSnapshot.getLong("newNotificationCount");
-                        if (newNotificationCount != null && newNotificationCount > 0) {
-                            notificationBadge.setText(String.valueOf(newNotificationCount));
-                            notificationBadge.setVisibility(View.VISIBLE);
-                        } else {
-                            notificationBadge.setVisibility(View.GONE);
-                        }
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    // Optionally handle the error (e.g., log or show a Toast)
-                    notificationBadge.setVisibility(View.GONE);
-                });
     }
 
     /**
