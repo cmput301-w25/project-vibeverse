@@ -40,6 +40,8 @@ public class MoodEventViewHolder extends RecyclerView.ViewHolder {
     View moodColorStrip;
     /** TextView displaying the mood emoji. */
     TextView textEmoji;
+    /** Label for the trigger text (if available). */
+    TextView triggerLabel;
     /** TextView displaying the trigger of the mood event. */
     TextView triggerText;
     /** Label for the social situation text (if available). */
@@ -60,7 +62,8 @@ public class MoodEventViewHolder extends RecyclerView.ViewHolder {
     CardView contentContainer;
     /** Container (CardView) for displaying the image (if available). */
     CardView imageContainer;
-
+    /** Layout container for the trigger information. */
+    LinearLayout triggerContainer;
     /** Layout container for the social information. */
     LinearLayout socialContainer;
 
@@ -85,6 +88,8 @@ public class MoodEventViewHolder extends RecyclerView.ViewHolder {
         // Enhanced views
         moodColorStrip = itemView.findViewById(R.id.moodColorStrip);
         textEmoji = itemView.findViewById(R.id.textEmoji);
+        triggerLabel = itemView.findViewById(R.id.triggerLabel);
+        triggerText = itemView.findViewById(R.id.triggerText);
         socialLabel = itemView.findViewById(R.id.socialLabel);
         socialText = itemView.findViewById(R.id.socialText);
         intensityProgressBar = itemView.findViewById(R.id.intensityProgressBar);
@@ -95,6 +100,7 @@ public class MoodEventViewHolder extends RecyclerView.ViewHolder {
         intensityContainer = itemView.findViewById(R.id.intensityContainer);
         contentContainer = itemView.findViewById(R.id.contentContainer);
         imageContainer = itemView.findViewById(R.id.imageContainer);
+        triggerContainer = itemView.findViewById(R.id.triggerContainer);
         socialContainer = itemView.findViewById(R.id.socialContainer);
 
     }
