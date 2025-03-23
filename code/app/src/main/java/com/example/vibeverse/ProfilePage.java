@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -20,10 +19,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -88,6 +85,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private FirebaseAuth mAuth;
     /** ID of the current user. */
     private String userId;
+    private ImageButton InsightsButton;
 
     /** Formatter for parsing and formatting timestamps. */
     private final SimpleDateFormat sourceFormat =
@@ -120,8 +118,20 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 userId = java.util.UUID.randomUUID().toString();
                 prefs.edit().putString("device_id", userId).apply();
             }
+        }
 
+        // *** Insights Button Integration ***
+        ImageButton InsightsButton = findViewById(R.id.buttonInsights);
+        if (InsightsButton != null) {
+            InsightsButton.setOnClickListener(v -> {
+                // Example debug message
+                Toast.makeText(ProfilePage.this, "Insights button clicked", Toast.LENGTH_SHORT).show();
 
+                // Launch your Insights activity
+                startActivity(new Intent(ProfilePage.this, InsightsActivity.class));
+            });
+        } else {
+            Toast.makeText(this, "Insights button not found! Check your layout ID.", Toast.LENGTH_LONG).show();
         }
 
 
