@@ -46,11 +46,9 @@ public class NavigationHelper {
             }
             else if (itemId == R.id.nav_search && !(activity instanceof SearchUserPage)) {
                  intent = new Intent(activity, SearchUserPage.class);
-            }
-            // Uncomment when implementing these pages:
-            // } else if (itemId == R.id.nav_map && !(activity instanceof MapPage)) {
-            //     intent = new Intent(activity, MapPage.class);
-            // }
+            } else if (itemId == R.id.nav_map && !(activity instanceof MapsActivity)) {
+                 intent = new Intent(activity, MapsActivity.class);
+             }
 
             if (intent != null) {
                 activity.startActivity(intent);
