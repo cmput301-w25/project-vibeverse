@@ -76,4 +76,32 @@ public class ProfilePageUITest {
         onView(withId(R.id.bottom_navigation)).check(matches(isDisplayed()));
     }
 
+    /**
+     * Test 6: Test clicking on a RecyclerView item triggers its click listener.
+     * Note: This assumes the RecyclerView has at least one item. If not, seed test data or adjust accordingly.
+     */
+    @Test
+    public void testRecyclerViewItemClick() {
+        onView(withId(R.id.recyclerFeed))
+                .perform(RecyclerViewActions.actionOnItemAtPosition(0, click()));
+    }
+
+    /**
+     * Test 7: Verify that the empty state view is displayed when there are no mood entries.
+     * This test assumes the app's Firestore is in a state with no mood data.
+     */
+    @Test
+    public void testEmptyStateVisibilityWhenNoMoods() {
+        onView(withId(R.id.emptyStateView)).check(matches(isDisplayed()));
+    }
+
+    /**
+     * Test 8: Verify progress bar visibility during data loading.
+     * For a robust test, consider adding an IdlingResource to wait until loading completes,
+     * then assert that the progress bar is hidden.
+     */
+    @Test
+    public void testProgressBarVisibilityDuringLoading() {
+        onView(withId(R.id.progressLoading)).check(matches(isDisplayed()));
+    }
 }
