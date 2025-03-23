@@ -75,7 +75,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private ImageView profilePicture;
 
 
-    private Button logoutButton;
+    private ImageButton logoutButton;
     /** BottomNavigationView for navigating between app sections. */
     private BottomNavigationView bottomNavigationView;
     /** Button to open the FilterDialog. */
@@ -126,8 +126,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
 
         // **Find your TextViews & ImageView from XML**
-        textName = findViewById(R.id.textName);
-        textUsername = findViewById(R.id.textUsername);
+        textName = findViewById(R.id.fullName);
+        textUsername = findViewById(R.id.textTopUsername);
         textBioContent = findViewById(R.id.textBioContent);
         profilePicture = findViewById(R.id.profilePicture);
         textFollowers = findViewById(R.id.textFollowers);
@@ -136,11 +136,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         // Then call a helper method to load the profile
         loadUserProfile();
         // Logout button
-        logoutButton = findViewById(R.id.buttonLogout);
+        logoutButton = findViewById(R.id.buttonOverflowMenu);
 
 
         // Set up logout button to sign out the user.
-        logoutButton = findViewById(R.id.buttonLogout);
+        logoutButton = findViewById(R.id.buttonOverflowMenu);
         logoutButton.setOnClickListener(v -> {
             mAuth.signOut();
             startActivity(new Intent(ProfilePage.this, Login.class));
@@ -186,7 +186,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
         // Open the FilterDialog when the filter button is clicked.
         buttonFilter.setOnClickListener(v ->
-                FilterDialog.show(ProfilePage.this, ProfilePage.this)
+                FilterDialog.show(ProfilePage.this, ProfilePage.this, allMoodEvents)
         );
 
         // Set up search functionality for client-side filtering.
@@ -374,7 +374,14 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
      */
     @Override
     public void onFilteredResults(List<MoodEvent> filteredMoods) {
+        // First update the adapter with filtered moods
         moodEventAdapter.updateMoodEvents(filteredMoods);
+
+        // Then apply any existing text search filter
+        String currentSearchText = editSearch.getText().toString();
+        if (!currentSearchText.isEmpty()) {
+            moodEventAdapter.filter(currentSearchText);
+        }
     }
 
     /**
