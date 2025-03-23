@@ -22,6 +22,15 @@ public class Notification {
     private String requestStatus; // pending, accepted, rejected
     private String moodEventId; // the postId of the mood event that the notification is about
 
+    private String moodOwnerId; // the ownerId of the mood event that the notification is about
+
+    public String getMoodOwnerId() {
+        return moodOwnerId;
+    }
+
+    public void setMoodOwnerId(String moodOwnerId) {
+        this.moodOwnerId = moodOwnerId;
+    }
 
     @PropertyName("isRead")
     private boolean isRead;
@@ -46,7 +55,7 @@ public class Notification {
     }
 
     // This constructor is to be used for all notification types except follow requests
-    public Notification(String id, String content, String dateTime, NotifType notifType, String senderUserId, String receiverUserId, String moodEventId) {
+    public Notification(String id, String content, String dateTime, NotifType notifType, String senderUserId, String receiverUserId, String moodEventId, String moodOwnerId) {
         this.id = id;
         this.content = content;
         this.dateTime = dateTime;
@@ -62,6 +71,7 @@ public class Notification {
         }
 
         this.moodEventId = moodEventId;
+        this.moodOwnerId = moodOwnerId;
     }
 
     public String getMoodEventId() {

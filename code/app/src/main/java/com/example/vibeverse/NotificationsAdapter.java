@@ -154,6 +154,18 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
                     intent.putExtra("userId", senderUserId);
                     context.startActivity(intent);
                 }
+                else if (notification.getNotifType() == Notification.NotifType.POST_COMMENTED_ON ||
+                        notification.getNotifType() == Notification.NotifType.COMMENT_REPLIED_TO) {
+                    // Get the mood event ID from the notification
+                    String moodEventId = notification.getMoodEventId();
+                    String moodOwnerId = notification.getMoodOwnerId();
+
+                    // Create an intent to open the CommentSectionActivity
+                    Intent intent = new Intent(context, CommentSectionActivity.class);
+                    intent.putExtra("moodOwnerId", moodOwnerId);
+                    intent.putExtra("moodDocId", moodEventId);
+                    context.startActivity(intent);
+                }
             });
 
             // Set click listeners for the follow request buttons
