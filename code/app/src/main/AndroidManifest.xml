@@ -109,6 +109,8 @@
             android:exported="false" />
 
 
+        <activity android:name=".MoodInsightsActivity" />
+        <activity android:name=".InsightsActivity" />
 
 
         <!-- Mood Selection Activity -->
