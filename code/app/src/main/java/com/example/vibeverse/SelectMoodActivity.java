@@ -925,7 +925,4 @@ public class SelectMoodActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Utility class for color manipulation.
-     */
 }

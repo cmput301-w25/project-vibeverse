@@ -145,6 +145,8 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
 
             container.setOnClickListener(v -> {
                 // Only handle clicks for FOLLOW_REQUEST notifications
+                container.setBackgroundResource(R.drawable.read_notification_background);
+
                 if (notification.getNotifType() == Notification.NotifType.FOLLOW_REQUEST) {
                     // Get the sender's user ID
                     String senderUserId = notification.getSenderUserId();

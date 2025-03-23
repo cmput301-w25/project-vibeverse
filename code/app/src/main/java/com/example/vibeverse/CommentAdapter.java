@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import androidx.annotation.NonNull;
@@ -14,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -53,8 +56,10 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         TextView username;
         TextView dateTime;
         TextView commentContent;
-        ImageView replyButton;
+        ImageView replyButton, deleteIcon;
         RecyclerView repliesRecycler;
+
+
 
         public CommentViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -63,6 +68,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             dateTime = itemView.findViewById(R.id.dateTime);
             commentContent = itemView.findViewById(R.id.commentContent);
             replyButton = itemView.findViewById(R.id.replyIcon);
+            deleteIcon = itemView.findViewById(R.id.deleteIcon);
             repliesRecycler = itemView.findViewById(R.id.repliesRecycler);
         }
     }
@@ -113,10 +119,37 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             }
         });
 
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (currentUserId.equals(authorUserId)) {
+            holder.deleteIcon.setVisibility(View.VISIBLE);
+        } else {
+            holder.deleteIcon.setVisibility(View.GONE);
+        }
+
+        holder.deleteIcon.setOnClickListener(v -> {
+            // Determine if the comment is a parent comment or a reply.
+            if (comment.getRepliesTo() == null || comment.getRepliesTo().equals("N/A")) {
+                // It's a parent comment
+                db.collection("Usermoods")
+                        .document(moodUserId)
+                        .collection("moods")
+                        .document(moodDocId)
+                        .collection("comments")
+                        .document(comment.getCommentId())
+                        .delete()
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(context, "Comment deleted", Toast.LENGTH_SHORT).show();
+                        })
+                        .addOnFailureListener(e -> {
+
+                        });
+            }
+        });
+
         // Now load replies for this comment into the nested RecyclerView
         holder.repliesRecycler.setLayoutManager(new LinearLayoutManager(context));
         List<Comment> repliesList = new ArrayList<>();
-        ReplyAdapter replyAdapter = new ReplyAdapter(context, repliesList);
+        ReplyAdapter replyAdapter = new ReplyAdapter(context, repliesList, moodUserId, moodDocId);
         holder.repliesRecycler.setAdapter(replyAdapter);
         // Initially hide replies RecyclerView until replies are found
         holder.repliesRecycler.setVisibility(View.GONE);

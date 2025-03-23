@@ -7,12 +7,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
@@ -25,9 +28,14 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
     private List<Comment> replyList;
     private FirebaseFirestore db;
 
-    public ReplyAdapter(Context context, List<Comment> replyList) {
+    private String moodUserId;
+    private String moodDocId;
+
+    public ReplyAdapter(Context context, List<Comment> replyList, String moodUserId, String moodDocId) {
         this.context = context;
         this.replyList = replyList;
+        this.moodUserId = moodUserId;
+        this.moodDocId = moodDocId;
         db = FirebaseFirestore.getInstance();
     }
 
@@ -36,8 +44,8 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
         TextView username;
         TextView dateTime;
         TextView commentContent;
-        ImageView replyIcon; // Optional: you might not need a reply icon for replies
-
+        ImageView replyIcon;
+        ImageView deleteIcon;
         public ReplyViewHolder(@NonNull View itemView) {
             super(itemView);
             profilePic = itemView.findViewById(R.id.profilePic);
@@ -45,6 +53,7 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
             dateTime = itemView.findViewById(R.id.dateTime);
             commentContent = itemView.findViewById(R.id.commentContent);
             replyIcon = itemView.findViewById(R.id.replyIcon);
+            deleteIcon = itemView.findViewById(R.id.deleteIcon);
         }
     }
 
@@ -85,8 +94,37 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
             holder.profilePic.setImageResource(R.drawable.user_icon);
         });
 
-        // Optionally hide reply icon for replies if you don't want nested replies
         holder.replyIcon.setVisibility(View.GONE);
+
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        if (currentUserId.equals(authorUserId)) {
+            holder.deleteIcon.setVisibility(View.VISIBLE);
+        } else {
+            holder.deleteIcon.setVisibility(View.GONE);
+        }
+
+        holder.deleteIcon.setOnClickListener(v -> {
+            // Check that this reply is actually a reply by verifying the 'repliesTo' field
+            if (reply.getRepliesTo() != null && !reply.getRepliesTo().equals("N/A")) {
+                // Delete the reply from its parent's replies subcollection
+                String parentCommentId = reply.getRepliesTo();
+                db.collection("Usermoods")
+                        .document(moodUserId)
+                        .collection("moods")
+                        .document(moodDocId)
+                        .collection("comments")
+                        .document(parentCommentId)
+                        .collection("replies")
+                        .document(reply.getCommentId())
+                        .delete()
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(context, "Reply deleted", Toast.LENGTH_SHORT).show();
+                        })
+                        .addOnFailureListener(e -> {
+                            // Handle error
+                        });
+            }
+        });
 
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, UsersProfile.class);
