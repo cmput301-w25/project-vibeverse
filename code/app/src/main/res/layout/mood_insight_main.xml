@@ -19,13 +19,13 @@
             android:layout_marginBottom="16dp">
 
             <RadioButton android:id="@+id/past_week"
-                android:text="Past Week"/>
+                android:text="Past Week" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
 
             <RadioButton android:id="@+id/last2_weeks"
-                android:text="Last 2 Weeks"/>
+                android:text="Last 2 Weeks" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
 
             <RadioButton android:id="@+id/this_month"
-                android:text="This Month"/>
+                android:text="This Month" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
         </RadioGroup>
 
         <!-- Emoji Mood Summary -->

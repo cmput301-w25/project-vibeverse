@@ -46,7 +46,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
     // Data variables
     private ArrayList<MoodEvent> allMoodEvents = new ArrayList<>();
     // Assume Firestore timestamps are in ISO format, e.g., "2025-03-23T12:34:56Z"
-    private SimpleDateFormat sourceFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault());
+    private SimpleDateFormat sourceFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
 
     private static final String TAG = "MoodInsightsActivity";
 
