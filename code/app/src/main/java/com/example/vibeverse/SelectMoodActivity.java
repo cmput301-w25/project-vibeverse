@@ -69,6 +69,9 @@ public class SelectMoodActivity extends AppCompatActivity {
 
     private ImageView backButton;
 
+    private androidx.appcompat.widget.SwitchCompat visibilitySwitch;
+
+
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Container for gradient background and transitions
 
@@ -76,6 +79,8 @@ public class SelectMoodActivity extends AppCompatActivity {
     private String selectedMood = "Happy"; // Default mood
     private String selectedEmoji = "😃";
     private int selectedColor = Color.parseColor("#FBC02D");
+
+
     private final Map<String, Integer> moodColors = new HashMap<>();
     private final Map<String, String> moodEmojis = new HashMap<>();
 
@@ -116,6 +121,8 @@ public class SelectMoodActivity extends AppCompatActivity {
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
         imgSelected = findViewById(R.id.imgSelected);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
+        visibilitySwitch = findViewById(R.id.visibilitySwitch);
+
 
 
         mAuth = FirebaseAuth.getInstance();
@@ -201,6 +208,8 @@ public class SelectMoodActivity extends AppCompatActivity {
 
                         // Store the intensity value in the MoodEvent
                         int intensity = moodIntensitySlider.getProgress();
+                        boolean isPublic = visibilitySwitch.isChecked();
+
 
                         MoodEvent moodEvent;
                         if (imageUri != null && currentBitmap != null) {
@@ -216,12 +225,12 @@ public class SelectMoodActivity extends AppCompatActivity {
 
 
 
-                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph);
+                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph, isPublic);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
                         } else {
                             Log.d("SelectMoodActivity", "onClick: Emoji before assignment= " + selectedEmoji);
-                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation);
+                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, isPublic);
                             Log.d("SelectMoodActivity", "onClick: Emoji after assignment= " + moodEvent.getEmoji());
                             Log.d("SelectMoodActivity", "onClick: Title after assignment= " + moodEvent.getMoodTitle());
                             // Add intensity to the mood event
@@ -259,6 +268,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         moodData.put("intensity", moodEvent.getIntensity());
         moodData.put("reasonWhy", moodEvent.getReasonWhy());
         moodData.put("ownerUserId", userId);
+        moodData.put("isPublic", moodEvent.isPublic());
 
         // Handle photograph if present
         if (moodEvent.getPhotograph() != null) {

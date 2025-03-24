@@ -66,6 +66,8 @@ public class EditMoodActivity extends AppCompatActivity {
     private Button updateButton;
 
     private ImageView backButton;
+
+    private androidx.appcompat.widget.SwitchCompat visibilitySwitch;
     private View selectedMoodContainer;
     private LinearLayout mainContainer; // Main screen background container
     private TextView intensityDisplay;
@@ -93,6 +95,8 @@ public class EditMoodActivity extends AppCompatActivity {
     private String photoDateTaken;
     private String photoLocation;
     private Bitmap currentBitmap;
+
+    private boolean isPublic;
 
     /**
      * Called when the activity is first created.
@@ -122,6 +126,7 @@ public class EditMoodActivity extends AppCompatActivity {
         backButton = findViewById(R.id.backArrow);
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
+        visibilitySwitch = findViewById(R.id.visibilitySwitch);
 
         // Create a custom toolbar without a title
         Toolbar toolbar = new Toolbar(this);
@@ -268,11 +273,14 @@ public class EditMoodActivity extends AppCompatActivity {
         selectedEmoji = intent.getStringExtra("selectedEmoji");
         selectedColor = moodColors.getOrDefault(selectedMood, Color.GRAY);
         moodPosition = intent.getIntExtra("moodPosition", -1);
+        isPublic = intent.getBooleanExtra("isPublic", false);
 
         String timestamp = intent.getStringExtra("timestamp");
         String reasonWhy = intent.getStringExtra("reasonWhy");
         String socialSituation = intent.getStringExtra("socialSituation");
         String currentPhotoUri = intent.getStringExtra("photoUri");
+
+
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this,
@@ -299,6 +307,8 @@ public class EditMoodActivity extends AppCompatActivity {
             int spinnerPosition = adapter.getPosition(socialSituation);
             socialSituationInput.setSelection(spinnerPosition);
         }
+        visibilitySwitch.setChecked(isPublic);
+
 
         // Apply the refined gradient background for consistency
         applyGradientBackground(selectedColor);
@@ -395,19 +405,15 @@ public class EditMoodActivity extends AppCompatActivity {
             }
 
             // Validate character count
-            if (newreasonWhy.length() > 20) {
-                reasonWhyInput.setError("Reason why must be 20 characters or less.");
+            if (newreasonWhy.length() > 200) {
+                reasonWhyInput.setError("Reason why must be 200 characters or less.");
                 reasonWhyInput.requestFocus();
                 return;
             }
 
-            // Validate word count
-            String[] words = newreasonWhy.split("\\s+");
-            if (words.length > 3) {
-                reasonWhyInput.setError("Reason why must be 3 words or less.");
-                reasonWhyInput.requestFocus();
-                return;
-            }
+
+            isPublic = visibilitySwitch.isChecked();
+
 
             // Show updating toast
             Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
@@ -432,6 +438,7 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedphotoDateTaken", photoDateTaken);
                         resultIntent.putExtra("updatedphotoLocation", photoLocation);
                         resultIntent.putExtra("updatedphotoSizeKB", photoSize);
+                        resultIntent.putExtra("isPublic", isPublic);
 
 
                         setResult(RESULT_OK, resultIntent);

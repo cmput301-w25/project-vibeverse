@@ -406,12 +406,13 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             int updatedIntensity = data.getIntExtra("updatedIntensity", 5);
             int moodPosition = data.getIntExtra("moodPosition", -1);
             String updatedPhotoUri = data.getStringExtra("updatedPhotoUri");
+            boolean isPublic = data.getBooleanExtra("isPublic", false);
 
             if (moodPosition >= 0 && moodPosition < allMoodEvents.size()) {
                 MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
                 // Update Firestore
                 updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood,
-                        updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri);;
+                        updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri, isPublic);;
             }
         }
     }
@@ -433,7 +434,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
     private void updateMoodInFirestore(String documentId, String emoji, String mood,
                                        String reasonWhy, String socialSituation,
-                                       int intensity, String photoUri) {
+                                       int intensity, String photoUri, boolean isPublic) {
         // Show loading indicator
         if (progressLoading != null) {
             progressLoading.setVisibility(View.VISIBLE);
@@ -446,6 +447,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         updatedMood.put("socialSituation", socialSituation);
         updatedMood.put("intensity", intensity);
         updatedMood.put("reasonWhy", reasonWhy);
+        updatedMood.put("isPublic", isPublic);
 
         if (photoUri != null && !photoUri.equals("N/A")) {
             updatedMood.put("hasPhoto", true);

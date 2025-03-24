@@ -144,6 +144,32 @@
                     android:visibility="gone" />
             </FrameLayout>
 
+            <!-- Mood Visibility Switch using SwitchCompat -->
+            <LinearLayout
+                android:id="@+id/visibilityContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="16dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/visibilityLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/public_visibility"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white"
+                    android:layout_gravity="center_vertical"/>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/visibilitySwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
             <!-- Extra spacing at the bottom if needed -->
             <View
                 android:layout_width="match_parent"
