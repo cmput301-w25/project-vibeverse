@@ -298,7 +298,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
                         // Populate the TextViews
                         if (fullName != null) textName.setText(fullName);
-                        if (username != null) textUsername.setText(username);
+                        if (username != null) textUsername.setText("@"+username);
                         if (bio != null) textBioContent.setText(bio);
                         textFollowers.setText(followerCount);
                         textFollowing.setText(followingCount);

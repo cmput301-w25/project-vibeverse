@@ -88,8 +88,8 @@
             android:layout_weight="1"
             android:hint="@string/bio_max_100_characters"
             android:maxLength="100"
-            android:maxLines="4"
-            android:inputType="textMultiLine"
+            android:maxLines="3"
+            android:inputType="text"
             android:textColorHint="#908E8E" />
 
         <Spinner

@@ -305,7 +305,6 @@ public class UsersProfile extends AppCompatActivity {
     private void initViews() {
         profilePicture = findViewById(R.id.profilePicture);
         textName = findViewById(R.id.textName);
-        textUsername = findViewById(R.id.textUsername);
         textTopUsername = findViewById(R.id.textTopUsername);
         textBioContent = findViewById(R.id.textBioContent);
         textFollowers = findViewById(R.id.textFollowers);
@@ -355,8 +354,7 @@ public class UsersProfile extends AppCompatActivity {
         User user = document.toObject(User.class);
         if (user != null) {
             textName.setText(user.getFullName());
-            textUsername.setText("@" + user.getUsername());
-            textTopUsername.setText(user.getUsername());
+            textTopUsername.setText("@" + user.getUsername());
 
 
             // Set follower and following counts
