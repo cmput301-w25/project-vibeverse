@@ -77,9 +77,9 @@ public class NavigationHelper {
              return R.id.nav_search;
          }
         // Uncomment when implementing:
-        // else if (activity instanceof MapPage) {
-        //     return R.id.nav_map;
-        // }
+        else if (activity instanceof MapsActivity) {
+             return R.id.nav_map;
+        }
         return R.id.nav_home; // Default to Home if no match is found
     }
 }
