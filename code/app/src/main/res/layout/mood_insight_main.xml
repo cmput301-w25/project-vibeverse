@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/white"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
@@ -44,11 +45,12 @@
             android:layout_height="300dp"
             android:layout_marginTop="16dp" />
 
-        <!-- Line Chart -->
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/line_chart"
+        <!-- RecyclerView for Daily Mood Cards -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/dailyMoodRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="32dp" />
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:layout_marginTop="16dp"/>
     </LinearLayout>
 </ScrollView>
