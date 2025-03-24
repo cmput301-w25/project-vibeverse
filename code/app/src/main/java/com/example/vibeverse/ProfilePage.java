@@ -128,7 +128,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 Toast.makeText(ProfilePage.this, "Insights button clicked", Toast.LENGTH_SHORT).show();
 
                 // Launch your Insights activity
-                startActivity(new Intent(ProfilePage.this, InsightsActivity.class));
+                startActivity(new Intent(ProfilePage.this, MoodInsightsActivity.class));
             });
         } else {
             Toast.makeText(this, "Insights button not found! Check your layout ID.", Toast.LENGTH_LONG).show();
