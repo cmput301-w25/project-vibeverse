@@ -19,6 +19,12 @@
     <string name="XSignUpText">Sign up with X</string>
     <string name="already_have_an_account">Already have an account?</string>
     <string name="continueButton">CONTINUE</string>
+    <string name="tab_store">Store</string>
+    <string name="tab_inventory">Inventory</string>
+    <string name="back_button">Back</string>
+    <string name="buy_theme_label">Buy Theme</string>
+
+
 
 
     <string-array name="gender_options">
