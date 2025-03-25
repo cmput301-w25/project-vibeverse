@@ -157,7 +157,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             } else if (id == R.id.menu_vibestatus) {
                 // to be added
             } else if (id == R.id.menu_editprofile) {
-                // to be added
+                Intent intent = new Intent(ProfilePage.this, UserDetails.class);
+                intent.putExtra("source", "edit_profile");
+                startActivity(intent);
             } else if (id == R.id.menu_logout) {
                 mAuth.signOut();
                 startActivity(new Intent(ProfilePage.this, Login.class));
@@ -355,6 +357,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     public void onResume() {
         super.onResume();
         loadMoodsFromFirestore();
+        loadUserProfile(); // Reload updated user details
     }
 
     /**

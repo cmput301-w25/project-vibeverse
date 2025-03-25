@@ -11,6 +11,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -28,6 +30,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -86,6 +89,8 @@ public class UserDetails extends AppCompatActivity {
     private TextView usernameValidationText;
     private boolean isUsernameValid = false;
 
+    private Bitmap currentBitmap;
+
     /**
      * Request codes for image capture and selection.
      */
@@ -99,11 +104,8 @@ public class UserDetails extends AppCompatActivity {
 
     private long fileSize;
 
+    private boolean hasProfilePic;
 
-    /**
-     * Bitmap of the selected profile picture.
-     */
-    private Bitmap currentBitmap;
     /**
      * ImageView for the profile picture placeholder.
      */
@@ -112,6 +114,11 @@ public class UserDetails extends AppCompatActivity {
      * ImageView for the selected profile picture.
      */
     private ImageView profilePictureSelected;
+
+    private String originalUsername = "";
+    private boolean isEditMode;
+
+
 
     private interface UsernameSuggestionCallback {
         void onSuggestionGenerated(String suggestion);
@@ -145,9 +152,12 @@ public class UserDetails extends AppCompatActivity {
         profilePictureSelected = findViewById(R.id.profilePictureSelected);
         usernameValidationText = findViewById(R.id.usernameValidationText);
 
+
+
         // Set up the profile picture button click listener
         FrameLayout btnProfilePicture = findViewById(R.id.btnProfilePicture);
         btnProfilePicture.setOnClickListener(v -> showImagePickerDialog());
+
 
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
@@ -192,20 +202,38 @@ public class UserDetails extends AppCompatActivity {
         genderSpinner.setAdapter(adapter);
 
 
-        username.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus && !username.getText().toString().trim().isEmpty()) {
-                validateUsername(username.getText().toString().trim());
+        username.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String usernameText = s.toString().trim();
+                if (!usernameText.isEmpty()) {
+                    validateUsername(usernameText);
+                }
             }
         });
 
 
         // Set onClickListener for the continue button
-        continueButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handleContinueButtonClick();
-            }
-        });
+        String source = getIntent().getStringExtra("source");
+        if ("edit_profile".equals(source)) {
+            // Change button text to indicate editing mode
+            continueButton.setText(R.string.save_changes_edit_profile);
+            loadUserProfileForEditing();
+            // Change behavior for continue button to update existing profile
+            continueButton.setOnClickListener(v -> updateUserProfile());
+            isEditMode = true;
+        } else {
+            // Default behavior for new registration
+            continueButton.setOnClickListener(v -> handleContinueButtonClick());
+            isEditMode = false;
+        }
+
 
         // Set onClickListener for the date of birth field to show a DatePickerDialog
         dob.setOnClickListener(new View.OnClickListener() {
@@ -219,6 +247,14 @@ public class UserDetails extends AppCompatActivity {
 
     private void validateUsername(String usernameToCheck) {
         if (usernameToCheck.isEmpty()) return;
+
+        if (isEditMode && usernameToCheck.equals(originalUsername)) {
+            usernameValidationText.setText("✓ Username available");
+            usernameValidationText.setTextColor(Color.GREEN);
+            usernameValidationText.setVisibility(View.VISIBLE);
+            isUsernameValid = true;
+            return;
+        }
 
         // Show loading state
         usernameValidationText.setText("Checking username...");
@@ -396,24 +432,33 @@ public class UserDetails extends AppCompatActivity {
         datePickerDialog.show();
     }
 
-    /**
-     * Displays a dialog allowing the user to choose between taking a photo or selecting one from the gallery.
-     */
     private void showImagePickerDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select Image")
-                .setItems(new CharSequence[]{"Take Photo", "Choose from Gallery"}, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        if (which == 0) {
-                            dispatchTakePictureIntent();
-                        } else {
-                            dispatchPickImageIntent();
+                .setItems(new CharSequence[]{"Take Photo", "Choose from Gallery", "Remove Photo"}, (dialog, which) -> {
+                    if (which == 0) {
+                        dispatchTakePictureIntent();
+                    } else if (which == 1) {
+                        dispatchPickImageIntent();
+                    } else {
+                        // Remove photo option
+                        imageUri = null;
+                        profilePictureSelected.setVisibility(View.GONE);
+                        profilePicturePlaceholder.setVisibility(View.VISIBLE);
+                        // Show hint text again
+                        for (int i = 0; i < ((ViewGroup) profilePicturePlaceholder.getParent()).getChildCount(); i++) {
+                            View child = ((ViewGroup) profilePicturePlaceholder.getParent()).getChildAt(i);
+                            if (child instanceof TextView) {
+                                child.setVisibility(View.VISIBLE);
+                                break;
+                            }
                         }
                     }
                 })
                 .show();
     }
+
+
 
     /**
      * Dispatches an intent to capture an image using the device camera.
@@ -587,5 +632,119 @@ public class UserDetails extends AppCompatActivity {
                         callback.onSuggestionGenerated(suggestion);
                     }
                 });
+    }
+
+    /**
+     * Loads the current user's profile data from Firestore and pre-populates the fields.
+     */
+    private void loadUserProfileForEditing() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users").document(user.getUid())
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        fullName.setText(documentSnapshot.getString("fullName"));
+                        originalUsername = documentSnapshot.getString("username");
+                        username.setText(originalUsername);
+                        bio.setText(documentSnapshot.getString("bio"));
+                        dob.setText(documentSnapshot.getString("dateOfBirth"));
+
+                        // Set gender spinner selection. Assuming your gender options array
+                        // has a known order, find the index of the saved gender.
+                        String gender = documentSnapshot.getString("gender");
+                        ArrayAdapter<String> adapter = (ArrayAdapter<String>) genderSpinner.getAdapter();
+                        int spinnerPosition = adapter.getPosition(gender);
+                        genderSpinner.setSelection(spinnerPosition);
+
+                        // Optionally, load profile picture if available
+                        Boolean hasProfilePic = documentSnapshot.getBoolean("hasProfilePic");
+                        if (hasProfilePic != null && hasProfilePic) {
+                            String profilePicUri = documentSnapshot.getString("profilePicUri");
+                            imageUri = Uri.parse(profilePicUri);
+                            if (profilePicUri != null && !profilePicUri.isEmpty()) {
+                                // Using Glide to load the image
+                                Glide.with(UserDetails.this)
+                                        .load(profilePicUri)
+                                        .into(profilePictureSelected);
+                                profilePicturePlaceholder.setVisibility(View.GONE);
+                                profilePictureSelected.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(UserDetails.this, "Error loading profile: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    /**
+     * Updates the current user's profile details in Firestore.
+     */
+    private void updateUserProfile() {
+        // Validate fields just as you do in handleContinueButtonClick()
+        boolean allFieldsFilled = true;
+        if (fullName.getText().toString().trim().isEmpty()) {
+            fullName.setError("Required!");
+            allFieldsFilled = false;
+        }
+        if (username.getText().toString().trim().isEmpty()) {
+            username.setError("Required!");
+            allFieldsFilled = false;
+        } else if (!isUsernameValid) {
+            username.setError("Username already taken");
+            allFieldsFilled = false;
+        }
+        if (bio.getText().toString().trim().isEmpty()) {
+            bio.setError("Required!");
+            allFieldsFilled = false;
+        }
+        if (dob.getText().toString().trim().isEmpty()) {
+            dob.setError("Required!");
+            allFieldsFilled = false;
+        }
+        if (genderSpinner.getSelectedItemPosition() == 0) {
+            TextView errorText = (TextView) genderSpinner.getSelectedView();
+            errorText.setError("Required!");
+            allFieldsFilled = false;
+        }
+
+        if (allFieldsFilled) {
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("fullName", fullName.getText().toString().trim());
+            userData.put("username", username.getText().toString().trim());
+            userData.put("bio", bio.getText().toString().trim());
+            userData.put("dateOfBirth", dob.getText().toString().trim());
+            userData.put("gender", genderSpinner.getSelectedItem().toString());
+            // Other fields you might want to update (like profile picture info)
+            Log.d("UserDetails", "imageUri: " + imageUri);
+            if (imageUri != null) {
+                userData.put("hasProfilePic", true);
+                userData.put("profilePicUri", imageUri.toString());
+                userData.put("profilePicSizeKB", fileSize);
+            }
+            else {
+                userData.put("hasProfilePic", false);
+                userData.put("profilePicUri", null);
+                userData.put("profilePicSizeKB", 0);
+            }
+     ;
+
+            // For consistency, update the lowercase username if needed
+            userData.put("usernameLowercase", username.getText().toString().trim().toLowerCase());
+
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+            db.collection("users").document(user.getUid())
+                    .update(userData)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(UserDetails.this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
+                        // Optionally, navigate back or finish activity
+                        finish();
+                    })
+                    .addOnFailureListener(e ->
+                            Toast.makeText(UserDetails.this, "Error updating profile: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
+        } else {
+            Toast.makeText(this, "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
+        }
     }
 }

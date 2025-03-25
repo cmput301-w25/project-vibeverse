@@ -90,7 +90,9 @@ public class Login extends AppCompatActivity {
                             if (task.getResult().exists()) {
                                 startActivity(new Intent(getApplicationContext(), HomePage.class));
                             } else {
-                                startActivity(new Intent(getApplicationContext(), UserDetails.class));
+                                Intent intent = new Intent(getApplicationContext(), UserDetails.class);
+                                intent.putExtra("source", "login");
+                                startActivity(intent); startActivity(new Intent(getApplicationContext(), UserDetails.class));
                             }
                             finish();
                         }
@@ -266,7 +268,10 @@ public class Login extends AppCompatActivity {
                                             startActivity(new Intent(getApplicationContext(), ProfilePage.class));
                                         } else {
                                             // New user, go to user details
-                                            startActivity(new Intent(getApplicationContext(), UserDetails.class));
+                                            Intent intent = new Intent(getApplicationContext(), UserDetails.class);
+                                            intent.putExtra("source", "login");
+                                            startActivity(intent);
+
                                         }
                                         finish();
                                     }

@@ -51,7 +51,7 @@ public class UsersProfile extends AppCompatActivity {
     // UI Elements
     private CircleImageView profilePicture;
 
-    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing;
+    private TextView textName, textBioContent, textFollowers, textFollowing;
 
     private Button buttonFollowStateFollow;
     private Button buttonFollowStateRequested;
@@ -240,7 +240,7 @@ public class UsersProfile extends AppCompatActivity {
         });
 
         buttonFollowStateFollowing.setOnClickListener(v -> {
-            String profileUsername = textUsername.getText().toString();
+            String profileUsername = textTopUsername.getText().toString();
 
             // Inflate the custom layout
             LayoutInflater inflater = LayoutInflater.from(UsersProfile.this);
