@@ -240,7 +240,7 @@ public class UsersProfile extends AppCompatActivity {
         });
 
         buttonFollowStateFollowing.setOnClickListener(v -> {
-            String profileUsername = textUsername.getText().toString();
+            String profileUsername = textTopUsername.getText().toString();
 
             // Inflate the custom layout
             LayoutInflater inflater = LayoutInflater.from(UsersProfile.this);
@@ -278,8 +278,9 @@ public class UsersProfile extends AppCompatActivity {
                                         // Decrement counts: page user's followerCount and active user's followingCount.
                                         pageUserRef.update("followerCount", FieldValue.increment(-1));
                                         activeUserRef.update("followingCount", FieldValue.increment(-1));
-                                        Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
                                         showFollowState();
+                                        loadUserPosts(); // reload the posts
+                                        Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
                                         alertDialog.dismiss();
                                     })
                                     .addOnFailureListener(e -> {
@@ -385,6 +386,35 @@ public class UsersProfile extends AppCompatActivity {
 
     private void loadUserPosts() {
         showLoading(true);
+
+        // First, check if the active user is following the page user
+        DocumentReference followersDocRef = db.collection("users")
+                .document(pageUserId)
+                .collection("followers")
+                .document("list");
+
+        followersDocRef.get().addOnSuccessListener(followersDocSnap -> {
+            @SuppressWarnings("unchecked")
+            java.util.List<String> followerIds =
+                    (java.util.List<String>) followersDocSnap.get("followerIds");
+
+            // Check if active user is in followers list
+            if (followerIds != null && followerIds.contains(activeUserId)) {
+                // User is following, load posts normally
+                fetchUserPosts();
+            } else {
+                // Not following, show follow to view posts state
+                showLoading(false);
+                showFollowToViewPostsState(true);
+            }
+        }).addOnFailureListener(e -> {
+            showLoading(false);
+            showFollowToViewPostsState(true);
+            Toast.makeText(this, "Error checking follow status: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void fetchUserPosts() {
         db.collection("Usermoods")
                 .document(pageUserId)
                 .collection("moods")
@@ -433,6 +463,21 @@ public class UsersProfile extends AppCompatActivity {
                 });
     }
 
+    // Add this new method to the class
+    private void showFollowToViewPostsState(boolean show) {
+        recyclerUserPosts.setVisibility(show ? View.GONE : View.VISIBLE);
+        emptyStateView.setVisibility(show ? View.VISIBLE : View.GONE);
+
+        if (show) {
+            // Customize the empty state view for follow to view posts
+            TextView emptyTitle = emptyStateView.findViewById(R.id.emptyStateTitle);
+            TextView emptySubtitle = emptyStateView.findViewById(R.id.emptyStateSubtitle);
+
+            emptyTitle.setText("Follow to see their posts");
+            emptySubtitle.setText("Once you follow, their posts will appear here.");
+        }
+    }
+
     private void showLoading(boolean isLoading) {
         progressLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         if (isLoading) {
@@ -463,6 +508,7 @@ public class UsersProfile extends AppCompatActivity {
                 if (followerIds != null && followerIds.contains(activeUserId)) {
                     // The user is already in the followers array
                     showFollowingState();
+                    loadUserPosts();
                     return; // no need to check requests
                 }
             }
@@ -482,13 +528,16 @@ public class UsersProfile extends AppCompatActivity {
                     if (followReqs != null && followReqs.contains(activeUserId)) {
                         // The user has requested to follow
                         showRequestedState();
+                        showFollowToViewPostsState(true);
                     } else {
                         // Not a follower and not in requests
                         showFollowState();
+                        showFollowToViewPostsState(true);
                     }
                 } else {
                     // No doc => definitely not in requests
                     showFollowState();
+                    showFollowToViewPostsState(true);
                 }
             });
         });
