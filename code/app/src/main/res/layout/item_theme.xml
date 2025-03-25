@@ -4,42 +4,61 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    android:elevation="4dp"
-    android:radius="12dp"
-    android:padding="16dp">
+    android:layout_margin="6dp"
+    android:elevation="3dp"
+    android:radius="10dp"
+    android:padding="8dp"
+    android:background="@android:color/white">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp">
 
-        <!-- Theme Name -->
-        <TextView
-            android:id="@+id/themeName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Heart Theme"
-            android:textStyle="bold"
-            android:textSize="18sp" />
+        <!-- Heart Icon -->
+        <ImageView
+            android:id="@+id/themeIcon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_heart" />
 
-        <!-- Theme Info (Price/Type) -->
-        <TextView
-            android:id="@+id/themeInfo"
-            android:layout_width="wrap_content"
+        <!-- Text Info: Theme name + price -->
+        <LinearLayout
+            android:layout_width="288dp"
             android:layout_height="wrap_content"
-            android:layout_below="@id/themeName"
-            android:text="Price: 200 coins"
-            android:textSize="14sp"
-            android:layout_marginTop="4dp" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/themeName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Heart Theme"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/themePrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Price:"
+                android:textColor="@color/neutral_gray"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!-- Lock Icon -->
         <ImageView
-            android:id="@+id/themeLock"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:id="@+id/lockIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="Locked"
             android:src="@drawable/ic_lock"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
             app:tint="@android:color/black" />
-    </RelativeLayout>
+    </LinearLayout>
+
 </androidx.cardview.widget.CardView>
