@@ -1,39 +1,106 @@
 package com.example.vibeverse;
 
+import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
+import android.widget.Button;
+import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import android.view.MenuItem;
-import android.widget.Toast;
 
+import com.google.android.libraries.places.api.Places;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+/**
+ * MainActivity serves as the entry point of the application.
+ * <p>
+ * It checks whether a user is authenticated via FirebaseAuth. If the user is already signed in,
+ * it verifies whether the user details exist in Firestore. If the details exist, the user is redirected
+ * to the HomePage; otherwise, the user is sent to the UserDetails activity. If no user is authenticated,
+ * the activity redirects to the Login activity.
+ * </p>
+ * <p>
+ * The activity also provides a logout button that signs out the current user.
+ * </p>
+ */
 public class MainActivity extends AppCompatActivity {
 
+    /** FirebaseAuth instance for user authentication. */
+    FirebaseAuth auth;
+    /** Button to sign out the current user. */
+    Button button;
+    /** TextView to display user details (for debugging or informational purposes). */
+    TextView textView;
+    /** The currently authenticated FirebaseUser. */
+    FirebaseUser user;
+    /** FirebaseFirestore instance for database operations. */
+    FirebaseFirestore db;
+
+    /**
+     * Called when the activity is first created.
+     * <p>
+     * This method initializes FirebaseAuth and Firestore, retrieves the current user, and checks
+     * if the user exists in the "users" collection in Firestore. Based on this check, the activity
+     * redirects the user to HomePage or UserDetails. If no user is authenticated, it redirects to Login.
+     * It also sets up a logout button which signs out the user when clicked.
+     * </p>
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down,
+     *                           this Bundle contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_profile);
+        setContentView(R.layout.activity_main);
 
-        // Initialize Bottom Navigation
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        // Initialize FirebaseAuth and Firestore
+        auth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
-        // Handle Navigation Item Clicks
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-
-            if (id == R.id.nav_home) {
-                Toast.makeText(MainActivity.this, "Home Clicked", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.nav_search) {
-                Toast.makeText(MainActivity.this, "Search Clicked", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.nav_add) {
-                Toast.makeText(MainActivity.this, "Add Clicked", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.nav_map) {
-                Toast.makeText(MainActivity.this, "Map Clicked", Toast.LENGTH_SHORT).show();
-            } else if (id == R.id.nav_profile) {
-                Toast.makeText(MainActivity.this, "Profile Clicked", Toast.LENGTH_SHORT).show();
+        if (!Places.isInitialized()) {
+            try {
+                Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY);
+                // Add logging for debugging
+                android.util.Log.d("PlacesAPI", "Places initialized successfully in MainActivity");
+            } catch (Exception e) {
+                android.util.Log.e("PlacesAPI", "Places initialization failed: " + e.getMessage(), e);
             }
-            return true;
-        });
+        }
+
+//        button = findViewById(R.id.logout_button);
+//        textView = findViewById(R.id.userDetails);
+
+
+        user = auth.getCurrentUser();
+
+        if (user != null) {
+            // Check if user details exist in Firestore
+            db.collection("users").document(user.getUid())
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            DocumentSnapshot document = task.getResult();
+                            if (document.exists()) {
+                                // User details exist, navigate to HomePage
+                                Intent intent = new Intent(getApplicationContext(), HomePage.class);
+                                startActivity(intent);
+                                finish();
+                            } else {
+                                // User details do not exist, navigate to UserDetails activity
+                                Intent intent = new Intent(getApplicationContext(), UserDetails.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        }
+                    });
+        } else {
+            // No user is authenticated, navigate to Login activity
+            Intent intent = new Intent(getApplicationContext(), Login.class);
+            startActivity(intent);
+            finish();
+        }
     }
 }
