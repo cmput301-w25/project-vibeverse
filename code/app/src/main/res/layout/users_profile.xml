@@ -42,47 +42,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0.3"/>
+            app:layout_constraintHorizontal_bias="0.5"/>
 
-        <!-- Overlapping Follow Buttons -->
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="34dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginEnd="16dp">
-
-            <Button
-                android:id="@+id/buttonFollow"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="@string/followButtonText"
-                android:textSize="10sp"
-                android:textColor="@android:color/white"
-                android:visibility="gone"
-                android:backgroundTint="@android:color/black"/>
-
-            <Button
-                android:id="@+id/buttonFollowStateRequested"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="@string/requestedButtonText"
-                android:textSize="10sp"
-                android:textColor="@android:color/white"
-                android:visibility="gone"
-                android:backgroundTint="@color/follow_button_alt_color"/>
-
-            <Button
-                android:id="@+id/buttonFollowStateFollowing"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Following"
-                android:textSize="10sp"
-                android:textColor="@android:color/white"
-                android:visibility="gone"
-                android:backgroundTint="@color/follow_button_alt_color"/>
-        </FrameLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- =============== PROFILE INFO CONTAINER ===============
@@ -231,6 +192,51 @@
     </LinearLayout>
 
 
+    <FrameLayout
+        android:id="@+id/followButtonContainer"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintTop_toBottomOf="@id/topProfileBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/buttonFollow"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:text="@string/followButtonText"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            android:backgroundTint="@android:color/black"/>
+
+        <Button
+            android:id="@+id/buttonFollowStateRequested"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:text="@string/requestedButtonText"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            android:backgroundTint="@color/follow_button_alt_color"/>
+
+        <Button
+            android:id="@+id/buttonFollowStateFollowing"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:text="Following"
+            android:textSize="16sp"
+            android:textColor="@android:color/white"
+            android:visibility="gone"
+            android:backgroundTint="@color/follow_button_alt_color"/>
+    </FrameLayout>
+
+
     <!-- Search & Filter Bar -->
     <LinearLayout
         android:id="@+id/searchFilterBar"
@@ -240,7 +246,7 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:paddingBottom="12dp"
-        app:layout_constraintTop_toBottomOf="@id/topProfileBar"
+        app:layout_constraintTop_toBottomOf="@id/followButtonContainer"
         android:gravity="center_vertical">
 
         <EditText
