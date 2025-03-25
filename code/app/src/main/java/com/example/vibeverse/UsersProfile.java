@@ -429,6 +429,13 @@ public class UsersProfile extends AppCompatActivity {
                             MoodEvent moodEvent = MoodEvent.fromMap(doc.getData());
                             moodEvent.setDocumentId(doc.getId());
 
+                            // Check if the post is public
+                            // Adjust the method to match your MoodEvent model's getter for isPublic
+                            Boolean isPublic = (Boolean) doc.getData().get("isPublic");
+                            if (isPublic == null || !isPublic) {
+                                continue; // Skip this post if it's not public
+                            }
+
                             if (moodEvent.getTimestamp() != null) {
                                 Date date = sourceFormat.parse(moodEvent.getTimestamp());
                                 moodEvent.setDate(date);
@@ -560,6 +567,4 @@ public class UsersProfile extends AppCompatActivity {
         buttonFollowStateRequested.setVisibility(View.GONE);
         buttonFollowStateFollowing.setVisibility(View.VISIBLE);
     }
-
-
 }
