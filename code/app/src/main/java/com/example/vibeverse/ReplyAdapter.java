@@ -99,8 +99,14 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         if (currentUserId.equals(authorUserId)) {
             holder.deleteIcon.setVisibility(View.VISIBLE);
+            holder.itemView.setOnClickListener(null);
         } else {
             holder.deleteIcon.setVisibility(View.GONE);
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, UsersProfile.class);
+                intent.putExtra("userId", authorUserId);
+                context.startActivity(intent);
+            });
         }
 
         holder.deleteIcon.setOnClickListener(v -> {
@@ -126,11 +132,7 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
             }
         });
 
-        holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(context, UsersProfile.class);
-            intent.putExtra("userId", authorUserId);
-            context.startActivity(intent);
-        });
+
 
     }
 
