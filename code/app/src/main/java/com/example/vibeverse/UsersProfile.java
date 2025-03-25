@@ -3,10 +3,13 @@ package com.example.vibeverse;
 import android.app.AlertDialog;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -43,7 +46,7 @@ import java.util.Locale;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class UsersProfile extends AppCompatActivity {
+public class UsersProfile extends AppCompatActivity implements FilterDialog.FilterListener {
 
     private String pageUserId;
     private FirebaseFirestore db;
@@ -67,6 +70,9 @@ public class UsersProfile extends AppCompatActivity {
 
 
     String activeUserId;
+    private EditText editSearch;
+    private ImageButton buttonFilter;
+    private List<MoodEvent> allMoodEvents = new ArrayList<>();
 
 
     private MoodEventAdapter moodEventAdapter;
@@ -299,8 +305,24 @@ public class UsersProfile extends AppCompatActivity {
             alertDialog.show();
         });
 
+        // Set up search functionality for client-side filtering
+        editSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                moodEventAdapter.filter(s.toString());
+            }
 
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        // Open the FilterDialog when the filter button is clicked
+        buttonFilter.setOnClickListener(v ->
+                FilterDialog.show(UsersProfile.this, UsersProfile.this, allMoodEvents)
+        );
     }
 
     private void initViews() {
@@ -320,6 +342,8 @@ public class UsersProfile extends AppCompatActivity {
         recyclerUserPosts = findViewById(R.id.recyclerUserPosts);
         progressLoading = findViewById(R.id.progressLoading);
         emptyStateView = findViewById(R.id.emptyStateView);
+        editSearch = findViewById(R.id.editSearch);
+        buttonFilter = findViewById(R.id.buttonFilter);
 
         recyclerUserPosts.setLayoutManager(new LinearLayoutManager(this));
     }
@@ -422,7 +446,7 @@ public class UsersProfile extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     showLoading(false);
-                    List<MoodEvent> moodEvents = new ArrayList<>();
+                    allMoodEvents.clear(); // Clear previous events
 
                     for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
                         try {
@@ -430,7 +454,6 @@ public class UsersProfile extends AppCompatActivity {
                             moodEvent.setDocumentId(doc.getId());
 
                             // Check if the post is public
-                            // Adjust the method to match your MoodEvent model's getter for isPublic
                             Boolean isPublic = (Boolean) doc.getData().get("isPublic");
                             if (isPublic == null || !isPublic) {
                                 continue; // Skip this post if it's not public
@@ -450,17 +473,17 @@ public class UsersProfile extends AppCompatActivity {
                             }
                             moodEvent.setSubtitle(subtitle.toString());
 
-                            moodEvents.add(moodEvent);
+                            allMoodEvents.add(moodEvent);
                         } catch (ParseException e) {
                             Log.e("UsersProfile", "Error parsing timestamp", e);
                         }
                     }
 
-                    if (moodEvents.isEmpty()) {
+                    if (allMoodEvents.isEmpty()) {
                         showEmptyState(true);
                     } else {
                         showEmptyState(false);
-                        moodEventAdapter.updateMoodEvents(moodEvents);
+                        moodEventAdapter.updateMoodEvents(allMoodEvents);
                     }
                 })
                 .addOnFailureListener(e -> {
@@ -566,5 +589,30 @@ public class UsersProfile extends AppCompatActivity {
         buttonFollowStateFollow.setVisibility(View.GONE);
         buttonFollowStateRequested.setVisibility(View.GONE);
         buttonFollowStateFollowing.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onFilterApplied(String timeFilter,
+                                boolean isHappy,
+                                boolean isSad,
+                                boolean isAngry,
+                                boolean isSurprised,
+                                boolean isAfraid,
+                                boolean isDisgusted,
+                                boolean isConfused,
+                                boolean isShameful) {
+        // Intentionally left empty if not needed
+    }
+
+    @Override
+    public void onFilteredResults(List<MoodEvent> filteredMoods) {
+        // First update the adapter with filtered moods
+        moodEventAdapter.updateMoodEvents(filteredMoods);
+
+        // Then apply any existing text search filter
+        String currentSearchText = editSearch.getText().toString();
+        if (!currentSearchText.isEmpty()) {
+            moodEventAdapter.filter(currentSearchText);
+        }
     }
 }
