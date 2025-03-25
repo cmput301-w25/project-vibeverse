@@ -6,8 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:padding="12dp"
-    android:gravity="center_vertical"
-    >
+    android:gravity="center_vertical">
 
     <de.hdodenhof.circleimageview.CircleImageView
         android:id="@+id/imageProfile"
@@ -17,20 +16,29 @@
         android:src="@drawable/user_icon"
         app:civ_border_width="2dp"
         app:civ_border_color="@android:color/black" />
-    <TextView
-        android:id="@+id/textUsername"
+
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="Username"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"/>
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/buttonFollow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@android:color/black"
-        android:text="Follow"/>
+        <TextView
+            android:id="@+id/textUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"/>
+
+<!--        <TextView-->
+<!--            android:id="@+id/textFullname"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Full Name"-->
+<!--            android:textSize="14sp"-->
+<!--            android:textColor="@android:color/darker_gray"/>-->
+    </LinearLayout>
+
 </LinearLayout>
