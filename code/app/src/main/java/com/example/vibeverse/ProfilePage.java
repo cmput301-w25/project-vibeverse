@@ -30,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -128,21 +129,6 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             }
         }
 
-        // *** Insights Button Integration ***
-        ImageButton InsightsButton = findViewById(R.id.buttonInsights);
-        if (InsightsButton != null) {
-            InsightsButton.setOnClickListener(v -> {
-                // Example debug message
-                Toast.makeText(ProfilePage.this, "Insights button clicked", Toast.LENGTH_SHORT).show();
-
-                // Launch your Insights activity
-                startActivity(new Intent(ProfilePage.this, MoodInsightsActivity.class));
-            });
-        } else {
-            Toast.makeText(this, "Insights button not found! Check your layout ID.", Toast.LENGTH_LONG).show();
-        }
-
-
         // **Find your TextViews & ImageView from XML**
         textName = findViewById(R.id.fullName);
         textUsername = findViewById(R.id.textTopUsername);
@@ -171,7 +157,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             if (id == R.id.menu_vibestore) {
                 // to be added
             } else if (id == R.id.menu_vibestatus) {
-                // to be added
+                        // Launch Insights activity
+                startActivity(new Intent(ProfilePage.this, MoodInsightsActivity.class));
+
             } else if (id == R.id.menu_editprofile) {
                 Intent intent = new Intent(ProfilePage.this, UserDetails.class);
                 intent.putExtra("source", "edit_profile");
@@ -384,7 +372,6 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         //Addition
         SharedPreferences prefs = getSharedPreferences("VibeVersePrefs", Context.MODE_PRIVATE);
         boolean sad3InARow = prefs.getBoolean("sad_3_in_a_row", false);
-        checkConsecutiveSadMoodsInProfile((ArrayList<MoodEvent>) allMoodEvents);
 
         if (sad3InARow) {
             prefs.edit().putBoolean("sad_3_in_a_row", false).apply();
@@ -588,11 +575,17 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
     //Addition
     private void showSadPopup() {
-        new AlertDialog.Builder(this)
-                .setTitle("We care about you!")
-                .setMessage("You've been feeling sad frequently. Please remember to reach out if you need help.")
-                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
-                .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialog);
+        builder.setTitle("We care about you!")
+                .setMessage("We've noticed you've been feeling down lately. Remember, you're not alone. If you're looking for solutions to help you feel better, please visit the Vibe Status page for more support and resources.")
+                .setPositiveButton("Visit Vibe Status", (dialog, which) -> {
+                    startActivity(new Intent(ProfilePage.this, MoodInsightsActivity.class));
+                    dialog.dismiss();
+                })
+                .setNegativeButton("I'm OK", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void checkConsecutiveSadMoodsInProfile(ArrayList<MoodEvent> moods) {
