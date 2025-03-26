@@ -54,7 +54,7 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
     // UI Elements
     private CircleImageView profilePicture;
 
-    private TextView textName, textBioContent, textFollowers, textFollowing;
+    private TextView textName, textBioContent, textFollowers, textFollowing, textPosts;
 
     private Button buttonFollowStateFollow;
     private Button buttonFollowStateRequested;
@@ -344,6 +344,7 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         emptyStateView = findViewById(R.id.emptyStateView);
         editSearch = findViewById(R.id.editSearch);
         buttonFilter = findViewById(R.id.buttonFilter);
+        textPosts = findViewById(R.id.textPosts);
 
         recyclerUserPosts.setLayoutManager(new LinearLayoutManager(this));
     }
@@ -445,6 +446,11 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+
+                    int postCount = queryDocumentSnapshots.size();
+                    // Update the posts TextView
+                    textPosts.setText(String.valueOf(postCount));
+
                     showLoading(false);
                     allMoodEvents.clear(); // Clear previous events
 
