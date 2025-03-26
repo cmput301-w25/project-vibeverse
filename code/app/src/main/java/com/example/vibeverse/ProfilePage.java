@@ -95,6 +95,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
     private DrawerLayout drawerLayout;
     private NavigationView rightNavView;
+    private boolean sadDialogShown = false;
 
     /** Formatter for parsing and formatting timestamps. */
     private final SimpleDateFormat sourceFormat =
@@ -607,9 +608,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             }
         }
 
-        if (consecutiveSadCount >= 3) {
+        if (consecutiveSadCount >= 3 && !sadDialogShown) {
             showSadPopup();
+            sadDialogShown = true;
         }
     }
+
 
 }
