@@ -35,6 +35,19 @@
             android:textStyle="bold"
             android:textColor="@android:color/black" />
 
+        <!-- Suppose you want it near the logout button in the top bar -->
+        <ImageButton
+            android:id="@+id/buttonInsights"
+            android:layout_width="60dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/rounded_black_box"
+            android:src="@drawable/ic_notification"
+            android:contentDescription="Insights"
+            android:padding="8dp" />
+
+
+
         <!-- Menu Icon on the right -->
         <ImageButton
             android:id="@+id/buttonOverflowMenu"

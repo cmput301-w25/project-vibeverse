@@ -34,6 +34,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -266,6 +267,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                     }
                     moodEventAdapter.updateMoodEvents(new ArrayList<>(allMoodEvents));
 
+                    checkConsecutiveSadMoodsInProfile(new ArrayList<>(allMoodEvents));
+
                     if (progressLoading != null) {
                         progressLoading.setVisibility(View.GONE);
                     }
@@ -344,6 +347,15 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     public void onResume() {
         super.onResume();
         loadMoodsFromFirestore();
+
+        //Addition
+        SharedPreferences prefs = getSharedPreferences("VibeVersePrefs", Context.MODE_PRIVATE);
+        boolean sad3InARow = prefs.getBoolean("sad_3_in_a_row", false);
+        checkConsecutiveSadMoodsInProfile((ArrayList<MoodEvent>) allMoodEvents);
+
+        if (sad3InARow) {
+            prefs.edit().putBoolean("sad_3_in_a_row", false).apply();
+        }
     }
 
     /**
@@ -536,4 +548,38 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
+    //Addition
+    private void showSadPopup() {
+        new AlertDialog.Builder(this)
+                .setTitle("We care about you!")
+                .setMessage("You've been feeling sad frequently. Please remember to reach out if you need help.")
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void checkConsecutiveSadMoodsInProfile(ArrayList<MoodEvent> moods) {
+        if (moods == null || moods.size() < 3) {
+            Log.d(TAG, "Not enough moods to check for three consecutive sad moods.");
+            return;
+        }
+        // Sort moods in descending order (newest first)
+        ArrayList<MoodEvent> sortedMoods = new ArrayList<>(moods);
+        Collections.sort(sortedMoods, (m1, m2) -> m2.getDate().compareTo(m1.getDate()));
+
+        int consecutiveSadCount = 0;
+        for (int i = 0; i < 3; i++) {
+            MoodEvent event = sortedMoods.get(i);
+            if (event.getMoodTitle().equals("😢")) {
+                consecutiveSadCount++;
+            } else {
+                break; // stop if a non-sad mood is encountered
+            }
+        }
+
+        if (consecutiveSadCount >= 3) {
+            showSadPopup();
+        }
+    }
+
 }

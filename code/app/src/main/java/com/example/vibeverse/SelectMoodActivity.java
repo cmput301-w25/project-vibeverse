@@ -105,11 +105,11 @@ public class SelectMoodActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_mood);
-
+        /*
         if (!Places.isInitialized()) {
             Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY);
         }
-
+        */
         // Initialize UI references
         initializeUIElements();
 

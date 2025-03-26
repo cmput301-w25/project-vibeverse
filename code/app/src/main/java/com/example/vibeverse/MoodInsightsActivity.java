@@ -1,14 +1,18 @@
 package com.example.vibeverse;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -98,6 +102,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
 
         // Load data
         loadMoodsFromFirestore();
+        checkConsecutiveSadMoods(allMoodEvents);
     }
 
     private void loadMoodsFromFirestore() {
@@ -256,6 +261,44 @@ public class MoodInsightsActivity extends AppCompatActivity {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
     }
+
+    private void checkConsecutiveSadMoods(ArrayList<MoodEvent> moods) {
+        if (moods == null || moods.size() < 3) {
+            Log.d(TAG, "Not enough moods to check for three consecutive sad moods.");
+            return;
+        }
+        // Sort moods in descending order (newest first)
+        ArrayList<MoodEvent> sortedMoods = new ArrayList<>(moods);
+        Collections.sort(sortedMoods, (m1, m2) -> m2.getDate().compareTo(m1.getDate()));
+
+        int consecutiveSadCount = 0;
+        for (int i = 0; i < 3; i++) {
+            MoodEvent event = sortedMoods.get(i);
+            if (event.getMoodTitle().equals("😢")) {
+                consecutiveSadCount++;
+            } else {
+                break; // stop if a non-sad mood is encountered
+            }
+        }
+
+        if (consecutiveSadCount >= 3){
+            showAreYouOkPopup();
+        }
+    }
+
+
+    private void showAreYouOkPopup() {
+        new AlertDialog.Builder(this)
+                .setTitle("Feeling Sad?")
+                .setMessage("You've logged Sad 3 times in a row. Are you okay?")
+                .setPositiveButton("I'm OK", (dialog, which) -> dialog.dismiss())
+                .setNegativeButton("I need help", (dialog, which) -> {
+                    // Handle help action here, e.g., navigate to a resources page
+                    dialog.dismiss();
+                })
+                .show();
+    }
+
 
     // -------------------------------------------------------------------------
     // Helper Classes
