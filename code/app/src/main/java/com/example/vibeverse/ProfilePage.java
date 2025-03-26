@@ -71,7 +71,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     /** Button to logout the user. */
 
 
-    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing;
+    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing, textPosts;
     private ImageView profilePicture;
 
 
@@ -137,6 +137,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         textFollowing = findViewById(R.id.textFollowing);
         drawerLayout = findViewById(R.id.drawer_layout);
         rightNavView = findViewById(R.id.right_nav_view);
+        textPosts = findViewById(R.id.textPosts);
 
         // Then call a helper method to load the profile
         loadUserProfile();
@@ -250,6 +251,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(snapshots -> {
+
+                    // Update the posts TextView
+                    int postCount = snapshots.size();
+                    textPosts.setText(String.valueOf(postCount));
+
                     allMoodEvents.clear();
                     for (QueryDocumentSnapshot doc : snapshots) {
                         try {
@@ -528,6 +534,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                             .delete()
                             .addOnSuccessListener(aVoid -> {
                                 allMoodEvents.remove(position);
+                                textPosts.setText(String.valueOf(allMoodEvents.size()));
                                 moodEventAdapter.updateMoodEvents(new ArrayList<>(allMoodEvents));
                                 if (progressLoading != null) {
                                     progressLoading.setVisibility(View.GONE);
