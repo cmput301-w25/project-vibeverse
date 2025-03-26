@@ -60,6 +60,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
     private final Map<String, Integer> moodColors = new HashMap<>();
     /** Flag to show or hide the menu button in the mood event items. */
     private boolean showMenuButton = true;
+    private boolean showProfileInfo = false;
 
     /**
      * Constructs a new MoodEventAdapter.
@@ -111,6 +112,16 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
         notifyDataSetChanged(); // Refresh all items
     }
 
+    /**
+     * Sets the visibility of the profile picture and username.
+     *
+     * @param shouldShow True to show the profile info, false to hide it.
+     */
+    public void setProfileVisibility(boolean shouldShow) {
+        this.showProfileInfo = shouldShow;
+        notifyDataSetChanged(); // Refresh all items
+    }
+
     @NonNull
     @Override
     public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -124,6 +135,14 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
         // Set the menu button visibility.
         holder.buttonPostMenu.setVisibility(showMenuButton ? View.VISIBLE : View.GONE);
+
+        // Handle profile picture and username visibility
+        if (holder.imageProfile != null) {
+            holder.imageProfile.setVisibility(showProfileInfo ? View.VISIBLE : View.GONE);
+        }
+        if (holder.textUsername != null) {
+            holder.textUsername.setVisibility(showProfileInfo ? View.VISIBLE : View.GONE);
+        }
 
         // Set the emoji for the mood event.
         holder.textEmoji.setText(moodEvent.getEmoji());

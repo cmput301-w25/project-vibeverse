@@ -67,6 +67,8 @@ public class MoodEventViewHolder extends RecyclerView.ViewHolder {
     // Updated button type for Material Design
     /** MaterialButton representing a "like" action. */
     MaterialButton buttonLike;
+    ImageView imageProfile;
+    TextView textUsername;
 
     /**
      * Constructs a new MoodEventViewHolder and initializes all view references.
@@ -96,6 +98,10 @@ public class MoodEventViewHolder extends RecyclerView.ViewHolder {
         contentContainer = itemView.findViewById(R.id.contentContainer);
         imageContainer = itemView.findViewById(R.id.imageContainer);
         socialContainer = itemView.findViewById(R.id.socialContainer);
+        imageProfile = itemView.findViewById(R.id.imageProfile);
+        textUsername = itemView.findViewById(R.id.textUsername);
+
+
 
     }
 }

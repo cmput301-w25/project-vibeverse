@@ -27,17 +27,47 @@
             android:id="@+id/itemPostRoot"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+
             android:padding="20dp">
 
-            <!-- Emoji circle with background -->
+            <!-- New Profile Picture Section -->
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/imageProfile"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginEnd="12dp"
+                android:src="@drawable/user_icon"
+                android:visibility="gone"
+                app:civ_border_width="2dp"
+                app:civ_border_color="@android:color/black"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+
+            <!-- New Username TextView -->
+            <TextView
+                android:id="@+id/textUsername"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="Username"
+                android:textColor="#212121"
+                android:textSize="16sp"
+                android:visibility="gone"
+                android:textStyle="bold"
+                android:layout_marginStart="12dp"
+                app:layout_constraintStart_toEndOf="@+id/imageProfile"
+                app:layout_constraintTop_toTopOf="@+id/imageProfile"
+                app:layout_constraintEnd_toStartOf="@+id/buttonPostMenu"/>
+
+            <!-- Existing Emoji circle with background - Adjusted top constraint -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/emojiContainer"
                 android:layout_width="54dp"
                 android:layout_height="54dp"
+                android:layout_marginTop="16dp"
                 app:cardCornerRadius="27dp"
                 app:cardElevation="2dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintTop_toBottomOf="@+id/imageProfile">
 
                 <TextView
                     android:id="@+id/textEmoji"

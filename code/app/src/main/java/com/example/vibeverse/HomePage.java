@@ -137,6 +137,9 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         allMoodEvents = new ArrayList<>();
         moodEventAdapter = new MoodEventAdapter(this, new ArrayList<>());
         recyclerFeed.setAdapter(moodEventAdapter);
+        // Hide menu button for other users' profiles
+        moodEventAdapter.setMenuButtonVisibility(false);
+        moodEventAdapter.setProfileVisibility(true);
     }
 
     private void fetchFollowedUsersPosts() {
