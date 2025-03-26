@@ -601,7 +601,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         int consecutiveSadCount = 0;
         for (int i = 0; i < 3; i++) {
             MoodEvent event = sortedMoods.get(i);
-            if (event.getMoodTitle().equals("😢")) {
+            if (event.getEmoji().equals("😢")) {
                 consecutiveSadCount++;
             } else {
                 break; // stop if a non-sad mood is encountered
