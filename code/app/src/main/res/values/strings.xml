@@ -65,5 +65,12 @@
     <string name="reasonWhyHint">Give a reason for the mood event (up to 200 characters)</string>
     <string name="backButtonDescription">Back</string>
     <string name="profile_picture">Profile Picture</string>
-    <string name="title_activity_maps">MapsActivity</string>
+    <string name="public_visibility">Public Visibility</string>
+    <string name="private_mood">Private</string>
+    <string name="public_mood">Public</string>
+    <string name="vibestore_menu_text">VibeStore</string>
+    <string name="vibestatus_menu_text">VibeStatus</string>
+    <string name="edit_profile_menu_text">Edit Profile</string>
+    <string name="logout_menu_text">Logout</string>
+    <string name="save_changes_edit_profile">Save Changes</string>
 </resources>

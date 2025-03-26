@@ -232,7 +232,10 @@ public class CommentSectionActivity extends AppCompatActivity {
                         }
                         commentAdapter.notifyDataSetChanged();
                         // Optionally scroll to the bottom.
-                        recyclerComments.smoothScrollToPosition(commentList.size() - 1);
+                        if (!commentList.isEmpty()) {
+                            recyclerComments.smoothScrollToPosition(commentList.size() - 1);
+                        }
+
                     }
                 });
     }
@@ -352,7 +355,8 @@ public class CommentSectionActivity extends AppCompatActivity {
                                                                     Notification.NotifType.COMMENT_REPLIED_TO,
                                                                     currentUserId,
                                                                     parentAuthorId,
-                                                                    moodDocId
+                                                                    moodDocId,
+                                                                    moodUserId
                                                             );
                                                         } else {
                                                             replyNotification = new Notification(
@@ -362,7 +366,8 @@ public class CommentSectionActivity extends AppCompatActivity {
                                                                     Notification.NotifType.COMMENT_REPLIED_TO,
                                                                     currentUserId,
                                                                     parentAuthorId,
-                                                                    moodDocId
+                                                                    moodDocId,
+                                                                    moodUserId
                                                             );
                                                         }
 
@@ -376,6 +381,7 @@ public class CommentSectionActivity extends AppCompatActivity {
                                                         notifData.put("isRead", replyNotification.isRead());
                                                         notifData.put("requestStatus", replyNotification.getRequestStatus());
                                                         notifData.put("moodEventId", replyNotification.getMoodEventId());
+                                                        notifData.put("moodOwnerId", replyNotification.getMoodOwnerId());
                                                         notifData.put("id", notifId);
 
                                                         // Save the notification to the parent comment's author's notifications subcollection.
@@ -472,7 +478,8 @@ public class CommentSectionActivity extends AppCompatActivity {
                                                         Notification.NotifType.POST_COMMENTED_ON,
                                                         currentUserId,
                                                         moodUserId,
-                                                        moodDocId
+                                                        moodDocId,
+                                                        moodUserId
                                                 );
                                             } else {
                                                 commentNotification = new Notification(
@@ -482,7 +489,8 @@ public class CommentSectionActivity extends AppCompatActivity {
                                                         Notification.NotifType.POST_COMMENTED_ON,
                                                         currentUserId,
                                                         moodUserId,
-                                                        moodDocId
+                                                        moodDocId,
+                                                        moodUserId
                                                 );
                                             }
 
@@ -496,6 +504,7 @@ public class CommentSectionActivity extends AppCompatActivity {
                                             notifData.put("isRead", commentNotification.isRead());
                                             notifData.put("requestStatus", commentNotification.getRequestStatus());
                                             notifData.put("moodEventId", commentNotification.getMoodEventId());
+                                            notifData.put("moodOwnerId", commentNotification.getMoodOwnerId());
                                             notifData.put("id", notifId);
 
                                             // Save the notification to the post author's notifications subcollection.
