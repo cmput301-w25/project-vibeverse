@@ -25,7 +25,7 @@
             android:src="@drawable/ic_back_arrow"
             android:contentDescription="Back"
             android:background="@null"
-            android:tint="@android:color/black"
+            app:tint="@android:color/black"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"/>

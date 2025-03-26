@@ -54,7 +54,7 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
     // UI Elements
     private CircleImageView profilePicture;
 
-    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing;
+    private TextView textName, textBioContent, textFollowers, textFollowing;
 
     private Button buttonFollowStateFollow;
     private Button buttonFollowStateRequested;

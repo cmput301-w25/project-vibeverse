@@ -122,8 +122,15 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         if (currentUserId.equals(authorUserId)) {
             holder.deleteIcon.setVisibility(View.VISIBLE);
+            holder.itemView.setOnClickListener(null);
+
         } else {
             holder.deleteIcon.setVisibility(View.GONE);
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(context, UsersProfile.class);
+                intent.putExtra("userId", authorUserId);
+                context.startActivity(intent);
+            });
         }
 
         holder.deleteIcon.setOnClickListener(v -> {
@@ -180,11 +187,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                         holder.repliesRecycler.setVisibility(repliesList.isEmpty() ? View.GONE : View.VISIBLE);
                     }
                 });
-        holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(context, UsersProfile.class);
-            intent.putExtra("userId", authorUserId);
-            context.startActivity(intent);
-        });
+
     }
 
     @Override
