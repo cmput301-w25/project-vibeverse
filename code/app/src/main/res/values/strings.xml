@@ -73,4 +73,5 @@
     <string name="edit_profile_menu_text">Edit Profile</string>
     <string name="logout_menu_text">Logout</string>
     <string name="save_changes_edit_profile">Save Changes</string>
+    <string name="title_activity_maps">MapsActivity</string>
 </resources>
