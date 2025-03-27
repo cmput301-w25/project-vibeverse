@@ -438,11 +438,34 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             String updatedPhotoUri = data.getStringExtra("updatedPhotoUri");
             boolean isPublic = data.getBooleanExtra("isPublic", false);
 
+            // Add these lines to retrieve location data
+            String updatedMoodLocation = data.getStringExtra("updatedMoodLocation");
+            Double updatedMoodLatitude = null;
+            Double updatedMoodLongitude = null;
+            boolean locationRemoved = data.getBooleanExtra("locationRemoved", false);
+
+            if (data.hasExtra("updatedMoodLatitude") && data.hasExtra("updatedMoodLongitude")) {
+                updatedMoodLatitude = data.getDoubleExtra("updatedMoodLatitude", 0);
+                updatedMoodLongitude = data.getDoubleExtra("updatedMoodLongitude", 0);
+            }
+
             if (moodPosition >= 0 && moodPosition < allMoodEvents.size()) {
                 MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
-                // Update Firestore
-                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood,
-                        updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri, isPublic);;
+                // Update Firestore with location info
+                updateMoodInFirestore(
+                        moodEventToUpdate.getDocumentId(),
+                        updatedEmoji,
+                        updatedMood,
+                        updatedReasonWhy,
+                        updatedSocialSituation,
+                        updatedIntensity,
+                        updatedPhotoUri,
+                        isPublic,
+                        updatedMoodLocation,
+                        updatedMoodLatitude,
+                        updatedMoodLongitude,
+                        locationRemoved
+                );
             }
         }
     }
@@ -464,7 +487,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
     private void updateMoodInFirestore(String documentId, String emoji, String mood,
                                        String reasonWhy, String socialSituation,
-                                       int intensity, String photoUri, boolean isPublic) {
+                                       int intensity, String photoUri, boolean isPublic,
+                                       String moodLocation, Double latitude, Double longitude,
+                                       boolean locationRemoved) {
         // Show loading indicator
         if (progressLoading != null) {
             progressLoading.setVisibility(View.VISIBLE);
@@ -484,6 +509,19 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             updatedMood.put("photoUri", photoUri);
         } else {
             updatedMood.put("hasPhoto", false);
+        }
+
+        // Handle location data
+        if (locationRemoved) {
+            // Remove location fields if location was explicitly removed
+            updatedMood.put("moodLocation", null);
+            updatedMood.put("moodLatitude", null);
+            updatedMood.put("moodLongitude", null);
+        } else if (moodLocation != null && latitude != null && longitude != null) {
+            // Update with new location
+            updatedMood.put("moodLocation", moodLocation);
+            updatedMood.put("moodLatitude", latitude);
+            updatedMood.put("moodLongitude", longitude);
         }
 
         db.collection("Usermoods")

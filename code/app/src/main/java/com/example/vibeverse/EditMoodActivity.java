@@ -443,37 +443,60 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Set the click listener for the location button
         locationButton.setOnClickListener(v -> {
-            if (currentLocationAddress != null && !currentLocationAddress.isEmpty()) {
-                // Show dialog with options
+            // First, check if a location already exists for this mood in the database
+            if (selectedLocationName != null && !selectedLocationName.isEmpty()) {
+                // A location already exists for this mood
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Choose Location")
-                        .setItems(new CharSequence[]{"Use Current Location: " + currentLocationAddress, "Search for a different location", "Remove Location"},
-                                (dialog, which) -> {
-                                    if (which == 0) {
-                                        // Use current location
-                                        selectedLocationName = currentLocationAddress;
-                                        if (currentLocation != null) {
-                                            selectedLocationCoords = new LatLng(
-                                                    currentLocation.getLatitude(),
-                                                    currentLocation.getLongitude());
-                                        }
-                                        selectedLocationText.setText(selectedLocationName);
-                                        selectedLocationText.setTextColor(Color.BLACK);
-                                    } else if (which == 1) {
-                                        // Search for a different location
-                                        startPlacesAutocomplete();
-                                    } else {
-                                        // Remove location
-                                        selectedLocationName = null;
-                                        selectedLocationCoords = null;
-                                        selectedLocationText.setText("Add Location (Optional)");
-                                        selectedLocationText.setTextColor(Color.parseColor("#757575"));
-                                    }
-                                })
+                        .setItems(new CharSequence[]{
+                                "Keep existing: " + selectedLocationName,
+                                "Search for a different location",
+                                "Remove location"
+                        }, (dialog, which) -> {
+                            if (which == 0) {
+                                // Keep existing location - no action needed
+                            } else if (which == 1) {
+                                // Search for a different location
+                                startPlacesAutocomplete();
+                            } else if (which == 2) {
+                                // Remove location
+                                selectedLocationName = null;
+                                selectedLocationCoords = null;
+                                selectedLocationText.setText("Add Location (Optional)");
+                                selectedLocationText.setTextColor(Color.parseColor("#757575"));
+                            }
+                        })
                         .show();
             } else {
-                // If current location isn't available, just open the search
-                startPlacesAutocomplete();
+                // No location exists for this mood yet
+                if (currentLocationAddress != null && !currentLocationAddress.isEmpty()) {
+                    // Current device location is available
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Choose Location")
+                            .setItems(new CharSequence[]{
+                                    "Use Current Location: " + currentLocationAddress,
+                                    "Search for a different location"
+                            }, (dialog, which) -> {
+                                if (which == 0) {
+                                    // Use current location
+                                    selectedLocationName = currentLocationAddress;
+                                    if (currentLocation != null) {
+                                        selectedLocationCoords = new LatLng(
+                                                currentLocation.getLatitude(),
+                                                currentLocation.getLongitude());
+                                    }
+                                    selectedLocationText.setText(selectedLocationName);
+                                    selectedLocationText.setTextColor(Color.BLACK);
+                                } else {
+                                    // Search for a different location
+                                    startPlacesAutocomplete();
+                                }
+                            })
+                            .show();
+                } else {
+                    // No existing location and no current location available
+                    startPlacesAutocomplete();
+                }
             }
         });
 
