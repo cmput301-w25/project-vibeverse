@@ -1,56 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:background="@color/white"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="#1A1A2E"
+    tools:context=".MoodInsightsActivity">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
-        <!-- Toggle Buttons -->
-        <RadioGroup
-            android:id="@+id/time_filter_group"
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp">
-
-            <RadioButton android:id="@+id/past_week"
-                android:text="Past Week" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-
-            <RadioButton android:id="@+id/last2_weeks"
-                android:text="Last 2 Weeks" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-
-            <RadioButton android:id="@+id/this_month"
-                android:text="This Month" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-        </RadioGroup>
-
-        <!-- Emoji Mood Summary -->
-        <TextView
-            android:id="@+id/mood_summary_text"
-            android:text="😊 Mood Summary"
-            android:textSize="24sp"
-            android:layout_marginTop="16dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <!-- Pie Chart -->
-        <com.github.mikephil.charting.charts.PieChart
-            android:id="@+id/pie_chart"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="16dp" />
-
-        <!-- RecyclerView for Daily Mood Cards -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/dailyMoodRecyclerView"
+        <!-- AppBarLayout with Toolbar -->
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:clipToPadding="false"
-            android:layout_marginTop="16dp"/>
-    </LinearLayout>
-</ScrollView>
+            android:background="@android:color/transparent"
+            app:elevation="0dp"
+            app:expanded="true">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@android:color/transparent"
+                app:layout_scrollFlags="scroll|enterAlways"
+                app:title="VibeStatus"
+                app:titleTextColor="@android:color/white"/>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <!-- Scrollable Content -->
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            android:clipToPadding="false">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Time Period Selector -->
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/time_filter_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/past_week"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Week"
+                        android:textColor="@color/white"
+                        app:strokeColor="@color/black"
+                        app:strokeWidth="2dp"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/last2_weeks"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="2 Weeks"
+                        android:textColor="@color/white"
+                        app:strokeColor="@color/black"
+                        app:strokeWidth="2dp"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/this_month"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Month"
+                        android:textColor="@color/white"
+                        app:strokeColor="@color/black"
+                        app:strokeWidth="2dp"/>
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+
+                <!-- Mood Summary Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/moodSummaryCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#16213E"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="8dp"
+                    app:strokeColor="@android:color/transparent"
+                    app:strokeWidth="0dp"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/mood_summary_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="You mostly felt 🙂 (😟)"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"/>
+
+                        <com.github.mikephil.charting.charts.PieChart
+                            android:id="@+id/pie_chart"
+                            android:layout_width="match_parent"
+                            android:layout_height="300dp"
+                            android:layout_marginTop="16dp"/>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Daily Mood RecyclerView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/dailyMoodRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clipToPadding="false"
+                    android:layout_marginTop="16dp"/>
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</FrameLayout>
