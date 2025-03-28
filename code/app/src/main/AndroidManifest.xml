@@ -128,5 +128,8 @@
         <activity android:name=".CommentSectionActivity"
             android:exported="false"/>
 
+        <activity android:name=".VibeStoreActivity"
+            android:exported="false"/>
+
     </application>
 </manifest>

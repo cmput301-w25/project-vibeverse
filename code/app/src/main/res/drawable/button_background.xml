@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Disabled state -->
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="#CCCCCC" />
+            <!-- Increased corner radius for a more rounded look -->
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+    <!-- Default (enabled) state -->
+    <item>
+        <shape android:shape="rectangle">
+            <!-- Gradient for a modern touch -->
+            <gradient
+                android:startColor="#000000"
+                android:endColor="#000000"
+                android:angle="90" />
+            <corners android:radius="24dp" />
+            <!-- Optional padding inside the shape -->
+            <padding
+                android:left="12dp"
+                android:top="12dp"
+                android:right="12dp"
+                android:bottom="12dp" />
+        </shape>
+    </item>
+</selector>

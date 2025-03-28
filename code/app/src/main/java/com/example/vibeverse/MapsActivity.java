@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -86,6 +87,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Maps to store mood colors and emojis (copied from SelectMoodActivity)
     private final Map<String, Integer> moodColors = new HashMap<>();
     private final Map<String, String> moodEmojis = new HashMap<>();
+
+    private String selectedTheme = "default";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -310,13 +313,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else {
             SharedPreferences prefs = getSharedPreferences("VibeVersePrefs", Context.MODE_PRIVATE);
             userId = prefs.getString("device_id", null);
-
-            // If no device ID exists, create one
             if (userId == null) {
                 userId = java.util.UUID.randomUUID().toString();
                 prefs.edit().putString("device_id", userId).apply();
             }
         }
+
+        // Retrieve the selectedTheme from the "users" collection
+        db.collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && documentSnapshot.contains("selectedTheme")) {
+                        selectedTheme = documentSnapshot.getString("selectedTheme");
+                    }
+                })
+                .addOnFailureListener(e -> Log.e(TAG, "Failed to retrieve selected theme", e));
     }
 
     /**
@@ -613,7 +625,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         }
 
                         // Create marker with username on the bitmap
-                        Bitmap markerBitmap = createCustomMarkerBitmap(emoji, moodTitle, moodColor, username);
+                        Bitmap markerBitmap = createCustomMarkerBitmap(moodTitle, moodColor, username);
 
                         // Add the marker with the custom bitmap
                         mMap.addMarker(new MarkerOptions()
@@ -625,7 +637,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Error getting user info for marker", e);
                         // Fallback: create marker without username
-                        Bitmap markerBitmap = createCustomMarkerBitmap(emoji, moodTitle, moodColor, null);
+                        Bitmap markerBitmap = createCustomMarkerBitmap(moodTitle, moodColor, null);
                         mMap.addMarker(new MarkerOptions()
                                 .position(position)
                                 .title(moodTitle)
@@ -634,7 +646,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     });
         } else {
             // Create marker for own mood (without username)
-            Bitmap markerBitmap = createCustomMarkerBitmap(emoji, moodTitle, moodColor, null);
+            Bitmap markerBitmap = createCustomMarkerBitmap(moodTitle, moodColor, null);
             mMap.addMarker(new MarkerOptions()
                     .position(position)
                     .title(moodTitle) // Just the mood title, no username
@@ -646,95 +658,88 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      * Creates a custom marker bitmap with mood and username (if available)
      *
-     * @param emoji The emoji representing the mood
      * @param moodTitle The mood title text
      * @param color The background color for the marker
      * @param username Optional username to display (for followers' moods)
      * @return A bitmap for the custom marker
      */
-    private Bitmap createCustomMarkerBitmap(String emoji, String moodTitle, int color, String username) {
-        // Adjust height if username is present
+    private Bitmap createCustomMarkerBitmap(String moodTitle, int color, String username) {
+        // Marker dimensions: extra height if username is provided
         int width = 240;
-        int height = username != null ? 310 : 280; // Extra height for username
+        int height = username != null ? 310 : 280;
 
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
-        // Calculate dimensions
+        // Calculate dimensions for the pin
         float pinWidth = width * 0.85f;
-        float pinHeight = username != null ? height * 0.7f : height * 0.75f; // Slightly shorter to make room for username
+        float pinHeight = username != null ? height * 0.7f : height * 0.75f;
         float pinLeft = (width - pinWidth) / 2;
         float pinTop = 0;
         float pinBottom = pinTop + pinHeight;
         float pinRadius = dpToPx(12);
 
-        // Create drop shadow
+        // ---------------------- Draw Drop Shadow ---------------------- //
         Paint shadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         shadowPaint.setColor(Color.parseColor("#44000000"));
         shadowPaint.setMaskFilter(new BlurMaskFilter(dpToPx(4), BlurMaskFilter.Blur.NORMAL));
         Path shadowPath = new Path();
 
-        // Main pin body for shadow
+        // Shadow for main pin body
         RectF shadowRect = new RectF(pinLeft + dpToPx(2), pinTop + dpToPx(2),
                 pinLeft + pinWidth + dpToPx(2), pinBottom + dpToPx(2));
         shadowPath.addRoundRect(shadowRect, pinRadius, pinRadius, Path.Direction.CW);
 
-        // Pin pointer for shadow
+        // Shadow for pin pointer
         float pointerTip = height - dpToPx(2);
         float pointerWidth = pinWidth * 0.3f;
-        float pointerLeft = width/2 - pointerWidth/2 + dpToPx(2);
-        float pointerRight = width/2 + pointerWidth/2 + dpToPx(2);
+        float pointerLeft = width / 2 - pointerWidth / 2 + dpToPx(2);
+        float pointerRight = width / 2 + pointerWidth / 2 + dpToPx(2);
 
-        // Shadow pointer path
         shadowPath.moveTo(pointerLeft, pinBottom + dpToPx(2));
-        shadowPath.lineTo(width/2 + dpToPx(2), pointerTip);
+        shadowPath.lineTo(width / 2 + dpToPx(2), pointerTip);
         shadowPath.lineTo(pointerRight, pinBottom + dpToPx(2));
         shadowPath.close();
 
         canvas.drawPath(shadowPath, shadowPaint);
 
-        // Main background color with subtle gradient for dimension
+        // ---------------------- Draw Pin Body ---------------------- //
         Paint pinPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         int lighterColor = adjustColorBrightness(color, 1.1f);
         int darkerColor = adjustColorBrightness(color, 0.9f);
 
-        // Create gradient
+        // Create gradient for the pin background
         LinearGradient gradient = new LinearGradient(
                 0, pinTop, 0, pinBottom,
                 lighterColor, darkerColor,
                 Shader.TileMode.CLAMP);
         pinPaint.setShader(gradient);
 
-        // Create pin path
         Path pinPath = new Path();
-
-        // Main pin body
         RectF pinRect = new RectF(pinLeft, pinTop, pinLeft + pinWidth, pinBottom);
         pinPath.addRoundRect(pinRect, pinRadius, pinRadius, Path.Direction.CW);
 
-        // Pin pointer
+        // Pin pointer path
         float pointerTipY = height - dpToPx(4);
-        float pointerLeftX = width/2 - pointerWidth/2;
-        float pointerRightX = width/2 + pointerWidth/2;
-
+        float pointerLeftX = width / 2 - pointerWidth / 2;
+        float pointerRightX = width / 2 + pointerWidth / 2;
         pinPath.moveTo(pointerLeftX, pinBottom);
-        pinPath.lineTo(width/2, pointerTipY);
+        pinPath.lineTo(width / 2, pointerTipY);
         pinPath.lineTo(pointerRightX, pinBottom);
         pinPath.close();
 
         canvas.drawPath(pinPath, pinPaint);
 
-        // Add subtle highlight for depth
+        // ---------------------- Add Highlight for Depth ---------------------- //
         Paint highlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         highlightPaint.setColor(Color.WHITE);
-        highlightPaint.setAlpha(40); // Very subtle
+        highlightPaint.setAlpha(40); // Very subtle highlight
 
         Path highlightPath = new Path();
         float highlightHeight = pinHeight * 0.4f;
         RectF highlightRect = new RectF(pinLeft, pinTop, pinLeft + pinWidth, pinTop + highlightHeight);
         highlightPath.addRoundRect(highlightRect, pinRadius, pinRadius, Path.Direction.CW);
 
-        // Only add highlight to top portion with proper clipping
         canvas.save();
         Path clipPath = new Path();
         clipPath.addRoundRect(pinRect, pinRadius, pinRadius, Path.Direction.CW);
@@ -742,30 +747,33 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         canvas.drawPath(highlightPath, highlightPaint);
         canvas.restore();
 
-        // Add subtle outline
+        // ---------------------- Draw Outline ---------------------- //
         Paint outlinePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         outlinePaint.setStyle(Paint.Style.STROKE);
         outlinePaint.setStrokeWidth(dpToPx(0.5f));
         outlinePaint.setColor(Color.parseColor("#22000000"));
         canvas.drawPath(pinPath, outlinePaint);
 
-        // Draw emoji with proper scaling
-        float emojiSize = Math.min(width, height) * 0.28f;
-        float emojiY = pinTop + (pinHeight * 0.35f);
+        // ---------------------- Draw The Mood Icon (PNG) ---------------------- //
+        // Use the helper function to get the resource ID based on moodTitle and selectedTheme
+        int iconResId = getEmojiResourceId(moodTitle, selectedTheme);
+        Bitmap moodIcon = BitmapFactory.decodeResource(getResources(), iconResId);
 
-        Paint emojiPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        emojiPaint.setTextSize(emojiSize);
-        emojiPaint.setTextAlign(Paint.Align.CENTER);
-        canvas.drawText(emoji, width/2, emojiY, emojiPaint);
+        // Scale the icon to fit within the pin
+        float iconSize = Math.min(width, height) * 0.28f;
+        Bitmap scaledIcon = Bitmap.createScaledBitmap(moodIcon, (int) iconSize, (int) iconSize, true);
+        float iconX = (width - iconSize) / 2f;
+        float iconY = pinTop + (pinHeight * 0.35f) - (iconSize / 2f);
+        canvas.drawBitmap(scaledIcon, iconX, iconY, null);
 
-        // Draw mood title with modern typography
+        // ---------------------- Draw Mood Title ---------------------- //
         Paint titlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         titlePaint.setColor(getContrastColor(color));
         titlePaint.setTextSize(dpToPx(12));
         titlePaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         titlePaint.setTextAlign(Paint.Align.CENTER);
 
-        // Add minimal divider
+        // Draw a minimal divider for visual separation
         Paint dividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         dividerPaint.setColor(Color.parseColor("#22000000"));
         dividerPaint.setStyle(Paint.Style.STROKE);
@@ -776,11 +784,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         canvas.drawLine(pinLeft + dividerPadding, dividerY,
                 pinLeft + pinWidth - dividerPadding, dividerY, dividerPaint);
 
-        // Draw mood label
         float titleY = pinTop + (pinHeight * 0.75f);
-        canvas.drawText(moodTitle.toUpperCase(), width/2, titleY, titlePaint);
+        canvas.drawText(moodTitle.toUpperCase(), width / 2, titleY, titlePaint);
 
-        // Draw username if provided (for followers' moods)
+        // ---------------------- Draw Username (if provided) ---------------------- //
         if (username != null && !username.isEmpty()) {
             Paint usernamePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             usernamePaint.setColor(getContrastColor(color));
@@ -789,8 +796,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             usernamePaint.setTextAlign(Paint.Align.CENTER);
 
             // Draw "@username" below the mood title
-            float usernameY = titleY + dpToPx(14); // Position below the mood title
-            canvas.drawText("@" + username, width/2, usernameY, usernamePaint);
+            float usernameY = titleY + dpToPx(14);
+            canvas.drawText("@" + username, width / 2, usernameY, usernamePaint);
         }
 
         return bitmap;
@@ -934,5 +941,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onPause();
         // Stop location updates when the activity is paused
         stopLocationUpdates();
+    }
+
+    private int getEmojiResourceId(String moodId, String theme) {
+        String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
+        return getResources().getIdentifier(resourceName, "drawable", getPackageName());
     }
 }

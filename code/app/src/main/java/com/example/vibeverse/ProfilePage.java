@@ -154,7 +154,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         rightNavView.setNavigationItemSelectedListener(menuItem -> {
             int id = menuItem.getItemId();
             if (id == R.id.menu_vibestore) {
-                // to be added
+                startActivity(new Intent(ProfilePage.this, VibeStoreActivity.class));
             } else if (id == R.id.menu_vibestatus) {
                 // to be added
             } else if (id == R.id.menu_editprofile) {

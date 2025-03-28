@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -367,7 +368,34 @@ public class UserDetails extends AppCompatActivity {
             // Get Firestore instance and save data
             userDocRef.set(userData)
                     .addOnSuccessListener(aVoid -> {
-                        // 2) Create subcollections:
+
+                        String[] themes = getResources().getStringArray(R.array.theme_options);
+                        List<String> unlockedThemesList = new ArrayList<>();
+                        List<String> lockedThemesList = new ArrayList<>();
+
+                        if (themes != null && themes.length > 0) {
+                            // The first theme (e.g., "default") goes into unlockedThemes
+                            unlockedThemesList.add(themes[0]);
+
+                            // All subsequent themes go into lockedThemes
+                            for (int i = 1; i < themes.length; i++) {
+                                lockedThemesList.add(themes[i]);
+                            }
+                        }
+
+                        // Create the unlockedThemes subcollection with the default theme
+                        Map<String, Object> unlockedThemesMap = new HashMap<>();
+                        unlockedThemesMap.put("themeNames", unlockedThemesList);
+                        userDocRef.collection("unlockedThemes")
+                                .document("list")
+                                .set(unlockedThemesMap);
+
+                        // Create the lockedThemes subcollection with the rest of the themes
+                        Map<String, Object> lockedThemesMap = new HashMap<>();
+                        lockedThemesMap.put("themeNames", lockedThemesList);
+                        userDocRef.collection("lockedThemes")
+                                .document("list")
+                                .set(lockedThemesMap);
 
                         // (a) followers subcollection with an empty array of follower IDs
                         Map<String, Object> followersMap = new HashMap<>();
