@@ -41,11 +41,11 @@ import java.util.Map;
 
 public class CommentSectionActivity extends AppCompatActivity {
 
-    private TextView textTitle, textSubtitle, textEmoji, socialSituationView;
+    private TextView textTitle, textSubtitle, socialSituationView;
     private RecyclerView recyclerComments;
     private EditText editComment;
     private Button buttonSendComment;
-    private ImageView imagePost; // Added for loading the image
+    private ImageView imagePost, imageEmoji; // Added for loading the image
 
     private View imageContainer, moodColorStrip;
 
@@ -72,6 +72,8 @@ public class CommentSectionActivity extends AppCompatActivity {
 
     private Comment replyingToComment = null; // null means not in reply mode
 
+    private String selectedTheme;
+
 
 
     @Override
@@ -79,6 +81,7 @@ public class CommentSectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_comment_section);
         findViewById(android.R.id.content).setBackgroundColor(ContextCompat.getColor(this, android.R.color.white));
+
 
         // Retrieve only moodOwnerId and moodDocId from the intent.
         moodUserId = getIntent().getStringExtra("moodOwnerId");
@@ -91,7 +94,7 @@ public class CommentSectionActivity extends AppCompatActivity {
         View postView = findViewById(R.id.includedPost);
         textTitle = postView.findViewById(R.id.textTitle);
         textSubtitle = postView.findViewById(R.id.textSubtitle);
-        textEmoji = postView.findViewById(R.id.textEmoji);
+        imageEmoji = postView.findViewById(R.id.imageEmoji);
         imagePost = postView.findViewById(R.id.imagePost); // Image view for loading photo
         imageContainer = postView.findViewById(R.id.imageContainer);
         socialSituationView = findViewById(R.id.socialText);
@@ -105,70 +108,8 @@ public class CommentSectionActivity extends AppCompatActivity {
 
         postMenuButton.setVisibility(View.GONE);
 
-        // Retrieve mood details from Firestore dynamically.
-        db.collection("Usermoods")
-                .document(moodUserId)
-                .collection("moods")
-                .document(moodDocId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        // Retrieve mood details from Firestore.
-                        String reasonWhy = documentSnapshot.getString("reasonWhy");
-                        String moodTitle = documentSnapshot.getString("mood");  // moodTitle now comes from the "mood" field.
-                        String emoji = documentSnapshot.getString("emoji");
-                        Boolean hasPhoto = documentSnapshot.getBoolean("hasPhoto");
-                        Long intensity = documentSnapshot.getLong("intensity");
-                        String socialSituation = documentSnapshot.getString("socialSituation");
-                        // Retrieve the timestamp (adjust based on how you store it)
-                        String timestampStr = documentSnapshot.getString("timestamp");
-                        // Optionally, if stored as a Timestamp object:
-                        // Date timestamp = documentSnapshot.getTimestamp("timestamp").toDate();
+        fetchUserTheme(() -> loadMoodDetails());
 
-                        // Update the post view UI.
-                        textTitle.setText(reasonWhy);
-                        textSubtitle.setText(timestampStr + " • " + moodTitle);
-                        textEmoji.setText(emoji);
-                        socialSituationView.setText(socialSituation);
-
-                        // Dynamically compute the mood color based on the moodTitle.
-                        String colorName = moodTitle.toLowerCase() + "_color";
-                        int colorResId = getResources().getIdentifier(colorName, "color", getPackageName());
-                        int moodColor = ContextCompat.getColor(this, colorResId);
-
-                        // Set background color for the mood color strip.
-                        if (moodColorStrip != null) {
-                            moodColorStrip.setBackgroundColor(moodColor);
-                        }
-
-                        // Tint the emoji container with a lighter version of the mood color.
-                        if (emojiContainer != null) {
-                            emojiContainer.setCardBackgroundColor(lightenColor(moodColor, 0.7f));
-                        }
-
-                        // Set the intensity progress bar.
-                        if (intensityProgressBar != null && intensity != null) {
-                            intensityProgressBar.setProgress(intensity.intValue());
-                            intensityProgressBar.setProgressTintList(ColorStateList.valueOf(moodColor));
-                        }
-
-                        // Load the image if available.
-                        String photoUri = documentSnapshot.getString("photoUri");
-                        if (hasPhoto != null && hasPhoto && photoUri != null && !photoUri.isEmpty()) {
-                            imageContainer.setVisibility(View.VISIBLE);
-                            Glide.with(this)
-                                    .load(Uri.parse(photoUri))
-                                    .into(imagePost);
-                        } else {
-                            imageContainer.setVisibility(View.GONE);
-                        }
-                    } else {
-                        Toast.makeText(CommentSectionActivity.this, "Mood data not found.", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(CommentSectionActivity.this, "Error retrieving mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
 
         // Setup the comment section
         recyclerComments = findViewById(R.id.recyclerComments);
@@ -247,6 +188,25 @@ public class CommentSectionActivity extends AppCompatActivity {
         if (commentListener != null) {
             commentListener.remove();
         }
+    }
+
+
+    private void fetchUserTheme(final Runnable onComplete) {
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        db.collection("users").document(currentUserId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && documentSnapshot.contains("selectedTheme")) {
+                        selectedTheme = documentSnapshot.getString("selectedTheme");
+                    } else {
+                        selectedTheme = "default";
+                    }
+                    onComplete.run();
+                })
+                .addOnFailureListener(e -> {
+                    selectedTheme = "default";
+                    onComplete.run();
+                });
     }
 
 
@@ -553,6 +513,72 @@ public class CommentSectionActivity extends AppCompatActivity {
         int green = (int) ((Color.green(color) * (1 - factor) + 255 * factor));
         int blue = (int) ((Color.blue(color) * (1 - factor) + 255 * factor));
         return Color.rgb(red, green, blue);
+    }
+
+
+    private int getEmojiResourceId(String moodId, String theme) {
+        String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
+        return getResources().getIdentifier(resourceName, "drawable", getPackageName());
+    }
+
+
+    private void loadMoodDetails() {
+        db.collection("Usermoods")
+                .document(moodUserId)
+                .collection("moods")
+                .document(moodDocId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String reasonWhy = documentSnapshot.getString("reasonWhy");
+                        String moodTitle = documentSnapshot.getString("mood"); // Mood title from "mood" field
+                        // We no longer fetch emoji as text since it's computed locally.
+                        Boolean hasPhoto = documentSnapshot.getBoolean("hasPhoto");
+                        Long intensity = documentSnapshot.getLong("intensity");
+                        String socialSituation = documentSnapshot.getString("socialSituation");
+                        String timestampStr = documentSnapshot.getString("timestamp");
+
+                        // Update UI elements.
+                        textTitle.setText(reasonWhy);
+                        textSubtitle.setText(timestampStr + " • " + moodTitle);
+                        socialSituationView.setText(socialSituation);
+
+                        // Compute mood color.
+                        String colorName = moodTitle.toLowerCase() + "_color";
+                        int colorResId = getResources().getIdentifier(colorName, "color", getPackageName());
+                        int moodColor = ContextCompat.getColor(this, colorResId);
+                        if (moodColorStrip != null) {
+                            moodColorStrip.setBackgroundColor(moodColor);
+                        }
+                        if (emojiContainer != null) {
+                            emojiContainer.setCardBackgroundColor(lightenColor(moodColor, 0.7f));
+                        }
+                        if (intensityProgressBar != null && intensity != null) {
+                            intensityProgressBar.setProgress(intensity.intValue());
+                            intensityProgressBar.setProgressTintList(ColorStateList.valueOf(moodColor));
+                        }
+
+                        // Set the PNG emoji using the helper method.
+                        int emojiResId = getEmojiResourceId(moodTitle, selectedTheme);
+                        imageEmoji.setImageResource(emojiResId);
+
+                        // Load the image if available.
+                        String photoUri = documentSnapshot.getString("photoUri");
+                        if (hasPhoto != null && hasPhoto && photoUri != null && !photoUri.isEmpty()) {
+                            imageContainer.setVisibility(View.VISIBLE);
+                            Glide.with(this)
+                                    .load(Uri.parse(photoUri))
+                                    .into(imagePost);
+                        } else {
+                            imageContainer.setVisibility(View.GONE);
+                        }
+                    } else {
+                        Toast.makeText(CommentSectionActivity.this, "Mood data not found.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(CommentSectionActivity.this, "Error retrieving mood: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
 

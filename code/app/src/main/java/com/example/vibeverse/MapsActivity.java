@@ -440,30 +440,38 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         // Check if the mood has location data
                         if (document.contains("moodLatitude") && document.contains("moodLongitude")) {
-                            double latitude = document.getDouble("moodLatitude");
-                            double longitude = document.getDouble("moodLongitude");
-                            String locationName = document.getString("moodLocation");
-                            String moodTitle = document.getString("mood");
-                            String emoji = document.getString("emoji");
-                            Long intensity = document.getLong("intensity");
-                            String reasonWhy = document.getString("reasonWhy");
+                            Double latitudeObj = document.getDouble("moodLatitude");
+                            Double longitudeObj = document.getDouble("moodLongitude");
 
-                            // Get mood color
-                            int moodColor = Color.GRAY; // Default color
-                            if (moodColors.containsKey(moodTitle)) {
-                                moodColor = moodColors.get(moodTitle);
-                            }
+                            if (latitudeObj != null && longitudeObj != null) {
+                                double latitude = latitudeObj;
+                                double longitude = longitudeObj;
+                                String locationName = document.getString("moodLocation");
+                                String moodTitle = document.getString("mood");
+                                String emoji = document.getString("emoji");
+                                Long intensity = document.getLong("intensity");
+                                String reasonWhy = document.getString("reasonWhy");
 
-                            // Adjust color based on intensity if available
-                            if (intensity != null) {
-                                moodColor = adjustColorIntensity(moodColor, intensity.intValue());
-                            }
+                                // Get mood color
+                                int moodColor = Color.GRAY; // Default color
+                                if (moodColors.containsKey(moodTitle)) {
+                                    moodColor = moodColors.get(moodTitle);
+                                }
 
-                            // Create a LatLng object for the mood location
-                            LatLng moodLocation = new LatLng(latitude, longitude);
+                                // Adjust color based on intensity if available
+                                if (intensity != null) {
+                                    moodColor = adjustColorIntensity(moodColor, intensity.intValue());
+                                }
 
-                            // Add a custom marker for this mood
-                            addMoodMarker(moodLocation, moodTitle, emoji, moodColor, reasonWhy, locationName, userId, true);
+                                // Create a LatLng object for the mood location
+                                LatLng moodLocation = new LatLng(latitude, longitude);
+
+                                // Add a custom marker for this mood
+                                addMoodMarker(moodLocation, moodTitle, emoji, moodColor, reasonWhy, locationName, userId, true);
+                        } else {
+                            Log.e(TAG, "Latitude or longitude is null for document: " + document.getId());
+                        }
+
                         }
                     }
                 })
@@ -517,33 +525,41 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         // Check if the mood has location data
                         if (document.contains("moodLatitude") && document.contains("moodLongitude")) {
-                            double latitude = document.getDouble("moodLatitude");
-                            double longitude = document.getDouble("moodLongitude");
+                            Double latitudeObj = document.getDouble("moodLatitude");
+                            Double longitudeObj = document.getDouble("moodLongitude");
 
+
+                            if (latitudeObj != null && longitudeObj != null) {
+                                double latitude = latitudeObj;
+                                double longitude = longitudeObj;
+
+                                LatLng moodLocation = new LatLng(latitude, longitude);
+
+                                // Check if the mood is within the current radius of the user's location
+                                if (isWithinRange(moodLocation, currentUserLocation, currentRadiusKm)) {
+                                    String locationName = document.getString("moodLocation");
+                                    String moodTitle = document.getString("mood");
+                                    String emoji = document.getString("emoji");
+                                    Long intensity = document.getLong("intensity");
+                                    String reasonWhy = document.getString("reasonWhy");
+
+                                    // Get mood color
+                                    int moodColor = Color.GRAY; // Default color
+                                    if (moodColors.containsKey(moodTitle)) {
+                                        moodColor = moodColors.get(moodTitle);
+                                    }
+
+                                    // Adjust color based on intensity if available
+                                    if (intensity != null) {
+                                        moodColor = adjustColorIntensity(moodColor, intensity.intValue());
+                                    }
+
+                                    // Add a custom marker for this mood
+                                    addMoodMarker(moodLocation, moodTitle, emoji, moodColor, reasonWhy, locationName, followedUserId, false);
+                            }else {
+                                Log.e(TAG, "Latitude or longitude is null for document: " + document.getId());
+                            }
                             // Create a LatLng object for the mood location
-                            LatLng moodLocation = new LatLng(latitude, longitude);
-
-                            // Check if the mood is within the current radius of the user's location
-                            if (isWithinRange(moodLocation, currentUserLocation, currentRadiusKm)) {
-                                String locationName = document.getString("moodLocation");
-                                String moodTitle = document.getString("mood");
-                                String emoji = document.getString("emoji");
-                                Long intensity = document.getLong("intensity");
-                                String reasonWhy = document.getString("reasonWhy");
-
-                                // Get mood color
-                                int moodColor = Color.GRAY; // Default color
-                                if (moodColors.containsKey(moodTitle)) {
-                                    moodColor = moodColors.get(moodTitle);
-                                }
-
-                                // Adjust color based on intensity if available
-                                if (intensity != null) {
-                                    moodColor = adjustColorIntensity(moodColor, intensity.intValue());
-                                }
-
-                                // Add a custom marker for this mood
-                                addMoodMarker(moodLocation, moodTitle, emoji, moodColor, reasonWhy, locationName, followedUserId, false);
                             }
                         }
                     }

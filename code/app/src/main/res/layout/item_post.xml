@@ -69,14 +69,14 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/imageProfile">
 
-                <TextView
-                    android:id="@+id/textEmoji"
+                <ImageView
+                    android:id="@+id/imageEmoji"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:textSize="34sp"
-                    tools:text="😃"/>
+                    android:scaleType="centerInside"
+                    tools:src="@drawable/emoji_happy_default" />
             </androidx.cardview.widget.CardView>
+
 
             <!-- Title - contains text/content -->
             <TextView

@@ -13,6 +13,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -42,6 +43,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
@@ -127,6 +129,8 @@ public class SelectMoodActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private String userId;
 
+    private String selectedTheme;
+
     /**
      * Called when the activity is starting. Initializes the UI, sets up mood data,
      * creates mood buttons, configures the image picker, and sets the click listener for the continue button.
@@ -165,6 +169,15 @@ public class SelectMoodActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
+        setupToolbar();
+        setupContinueButton();
+        initializeMoodData();
+        setupMoodIntensitySlider();
+        setupInputFields();
+        setupImageSelector();
+
+
+
         // Get current user ID or use a device ID if not logged in
         if (mAuth.getCurrentUser() != null) {
             userId = mAuth.getCurrentUser().getUid();
@@ -179,31 +192,34 @@ public class SelectMoodActivity extends AppCompatActivity {
             }
         }
 
-        // Create a custom toolbar
-        setupToolbar();
+        db.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && documentSnapshot.contains("selectedTheme")) {
+                        selectedTheme = documentSnapshot.getString("selectedTheme");
+                    } else {
+                        selectedTheme = "default"; // default value if not set
+                    }
+                    // Continue initializing after setting the theme
 
-        // Set continue button text and style
-        setupContinueButton();
+                    // Create a custom toolbar, set up UI elements, etc.
 
-        // Initialize mood colors and emojis
-        initializeMoodData();
 
-        // Style the mood intensity slider
-        setupMoodIntensitySlider();
+                    // Build the mood selection grid with a polished, uniform design
+                    GridLayout moodGrid = findViewById(R.id.moodGrid);
+                    createMoodButtons(moodGrid);
 
-        // Style the input fields
-        setupInputFields();
+                    // Set the initial mood and apply its style
+                    selectMood(selectedMood);
+                })
+                .addOnFailureListener(e -> {
+                    // In case of error, fallback to default theme and continue initializing
+                    selectedTheme = "default";
 
-        // Enhance the image selector
-        setupImageSelector();
-
-        // Build the mood selection grid with a polished, uniform design
-        GridLayout moodGrid = findViewById(R.id.moodGrid);
-        createMoodButtons(moodGrid);
-
-        // Set the initial mood and apply its style
-        selectMood(selectedMood);
-
+                    GridLayout moodGrid = findViewById(R.id.moodGrid);
+                    createMoodButtons(moodGrid);
+                    selectMood(selectedMood);
+                });
         // Set up continue button to create a MoodEvent and pass it to MainActivity
         continueButton.setOnClickListener(v -> {
 
@@ -877,17 +893,27 @@ public class SelectMoodActivity extends AppCompatActivity {
             buttonContent.setGravity(Gravity.CENTER);
             buttonContent.setPadding(dpToPx(4), dpToPx(8), dpToPx(4), dpToPx(8));
 
-            TextView emojiView = new TextView(this);
-            emojiView.setText(moodEmojis.get(mood));
-            emojiView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 32);
-            emojiView.setGravity(Gravity.CENTER);
+            View emojiView;
+
+            ImageView imageEmojiView = new ImageView(this);
+            int resId = getEmojiResourceId(mood, selectedTheme);
+            imageEmojiView.setImageResource(resId);
+
+            LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(dpToPx(48), dpToPx(48));
+            imageEmojiView.setLayoutParams(imageParams);
+            imageEmojiView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            imageEmojiView.setAdjustViewBounds(true);
+            emojiView = imageEmojiView;
 
             TextView moodNameView = new TextView(this);
+
             moodNameView.setText(mood);
             moodNameView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
             moodNameView.setTextColor(Color.WHITE);
             moodNameView.setGravity(Gravity.CENTER);
             moodNameView.setTypeface(null, Typeface.BOLD);
+
+
 
             buttonContent.addView(emojiView);
             buttonContent.addView(moodNameView);
@@ -953,9 +979,34 @@ public class SelectMoodActivity extends AppCompatActivity {
         selectedColor = moodColors.get(mood);
 
         selectedMoodContainer.animate().alpha(0f).setDuration(150).withEndAction(() -> {
-            selectedMoodText.setText(mood);
-            selectedMoodEmoji.setText(selectedEmoji);
 
+            // Themed mode: show PNG emoji.
+            selectedMoodEmoji.setText("");
+            selectedMoodEmoji.setBackground(null);
+
+            // Load the themed drawable.
+            Drawable drawable = ContextCompat.getDrawable(this, getEmojiResourceId(mood, selectedTheme));
+            // Size roughly equivalent to 80sp.
+            int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 80, getResources().getDisplayMetrics());
+            drawable.setBounds(0, 0, size, size);
+            // Set the drawable as the top compound drawable.
+            selectedMoodEmoji.setCompoundDrawables(null, drawable, null, null);
+            // Add some padding between the image and any potential text.
+            selectedMoodEmoji.setCompoundDrawablePadding(dpToPx(8));
+            // Force a fixed height so the image appears centered.
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) selectedMoodEmoji.getLayoutParams();
+            params.height = dpToPx(100); // Adjust this value as needed.
+            selectedMoodEmoji.setLayoutParams(params);
+            // Center the drawable.
+            selectedMoodEmoji.setGravity(Gravity.CENTER);
+
+            // Make sure the mood label below remains visible with the same style as default.
+            selectedMoodText.setText(mood);
+            selectedMoodText.setTextColor(Color.WHITE);
+            selectedMoodText.setVisibility(View.VISIBLE);
+
+
+            // Update the container background.
             GradientDrawable moodContainerBg = new GradientDrawable();
             moodContainerBg.setColor(selectedColor);
             moodContainerBg.setCornerRadius(dpToPx(12));
@@ -968,6 +1019,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         moodIntensitySlider.setProgressTintList(ColorStateList.valueOf(selectedColor));
         setupContinueButton();
     }
+
 
     /**
      * Utility class for color manipulation.
@@ -1164,5 +1216,11 @@ public class SelectMoodActivity extends AppCompatActivity {
                 Toast.makeText(this, "Error selecting location", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private int getEmojiResourceId(String moodId, String theme) {
+        // For local assets, use naming conventions. For instance:
+        String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
+        return getResources().getIdentifier(resourceName, "drawable", getPackageName());
     }
 }
