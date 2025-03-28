@@ -27,6 +27,7 @@ import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.card.MaterialCardView;
@@ -124,6 +125,13 @@ public class MoodInsightsActivity extends AppCompatActivity {
         loadMoodsFromFirestore();
 
         checkConsecutiveSadMoods(allMoodEvents);
+
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        toolbar.setNavigationOnClickListener(v -> {
+            // Return to profile page
+            finish();
+        });
+
     }
 
     /**
