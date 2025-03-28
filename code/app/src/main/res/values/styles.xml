@@ -46,6 +46,13 @@
     </style>
 
 
+    <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">@color/deep_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
 
 
 
