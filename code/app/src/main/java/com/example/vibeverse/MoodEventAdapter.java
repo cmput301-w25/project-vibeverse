@@ -15,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.view.ContextThemeWrapper;
@@ -199,6 +200,38 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
                     holder.socialLabel.setVisibility(View.GONE);
                     holder.socialText.setVisibility(View.GONE);
                 }
+            }
+        }
+
+        if (showProfileInfo) {
+            // Set username
+            if (holder.textUsername != null && moodEvent.getUsername() != null) {
+                holder.textUsername.setText(moodEvent.getUsername());
+                holder.textUsername.setVisibility(View.VISIBLE);
+            } else {
+                holder.textUsername.setVisibility(View.GONE);
+            }
+
+            // Set profile picture
+            if (holder.imageProfile != null) {
+                holder.imageProfile.setVisibility(View.VISIBLE);
+//                String profilePicUrl = moodEvent.getProfilePictureUrl();
+//                Toast.makeText(context, profilePicUrl, Toast.LENGTH_SHORT).show();
+//                if (moodEvent.getProfilePictureUrl() != null && !(moodEvent.getProfilePictureUrl().isEmpty())) {
+//                    Toast.makeText(context, "123", Toast.LENGTH_SHORT).show();
+                    Glide.with(context)
+                            .load(moodEvent.getProfilePictureUrl())
+                            .placeholder(R.drawable.user_icon) // fallback placeholder
+                            .error(R.drawable.user_icon)       // error placeholder// Make the image circular
+                            .into(holder.imageProfile);
+//                }
+            }
+        } else {
+            if (holder.textUsername != null) {
+                holder.textUsername.setVisibility(View.GONE);
+            }
+            if (holder.imageProfile != null) {
+                holder.imageProfile.setVisibility(View.GONE);
             }
         }
 
