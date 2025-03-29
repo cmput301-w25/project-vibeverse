@@ -68,7 +68,7 @@ public class AchievementChecker {
      *
      * @param mood The mood event that was just created.
      */
-    public void checkMoodEventAchievements(Mood mood) {
+    public void checkMoodEventAchievements(MoodEvent mood) {
         updateAchievement("ach1", 1);
         updateAchievement("ach2", 3);
         updateAchievement("ach3", 10);
@@ -292,7 +292,8 @@ public class AchievementChecker {
      * Requirements: Post a mood event on October 31.
      * Assumes the Mood model has a method getDate() returning a Date object.
      */
-    public void checkAch20(Date moodDate) {
+    public void checkAch20(MoodEvent mood) {
+        Date moodDate = mood.getDate();
         Calendar cal = Calendar.getInstance();
         cal.setTime(moodDate);
         // Calendar.MONTH is 0-based (January = 0), so October is 9.

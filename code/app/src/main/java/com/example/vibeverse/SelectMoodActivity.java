@@ -255,6 +255,7 @@ public class SelectMoodActivity extends AppCompatActivity {
 
 
                         MoodEvent moodEvent;
+                        Date currentDate = new Date();
                         if (imageUri != null && currentBitmap != null) {
                             // If an image is selected, create a Photograph instance and attach it to the mood event
                             // Using the existing Photograph constructor that matches your implementation
@@ -269,6 +270,7 @@ public class SelectMoodActivity extends AppCompatActivity {
                             moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph, isPublic);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
+                            moodEvent.setDate(currentDate);
                         } else {
                             Log.d("SelectMoodActivity", "onClick: Emoji before assignment= " + selectedEmoji);
                             moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, isPublic);
@@ -276,7 +278,49 @@ public class SelectMoodActivity extends AppCompatActivity {
                             Log.d("SelectMoodActivity", "onClick: Title after assignment= " + moodEvent.getMoodTitle());
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
+                            moodEvent.setDate(currentDate);
                         }
+
+                        AchievementChecker achievementChecker = new AchievementChecker(userId);
+
+                        // Check mood event achievements (ach1, ach2, ach3, ach4)
+                        achievementChecker.checkMoodEventAchievements(moodEvent);
+
+                        // Check for early bird achievement (ach5) and night owl achievement (ach6)
+                        achievementChecker.checkAch5(moodEvent);
+                        achievementChecker.checkAch6(moodEvent);
+
+                        // Check for public (ach7) vs private mood event achievement (ach8)
+                        if (isPublic) {
+                            achievementChecker.checkAch7(moodEvent);
+                        } else {
+                            achievementChecker.checkAch8(moodEvent);
+                        }
+
+                        // Check for emoji-based achievements (ach9 and ach10)
+                        achievementChecker.checkAch9(moodEvent);
+                        achievementChecker.checkAch10(moodEvent);
+
+                        // Check for photo mood achievement (ach22) if a photo is attached
+                        if (moodEvent.getPhotograph() != null) {
+                            achievementChecker.checkAch22(moodEvent);
+                        }
+
+                        // Check for location-based achievement (ach13) if a location is attached
+                        if (selectedLocationName != null && !selectedLocationName.isEmpty()) {
+                            achievementChecker.checkAch13();
+                        }
+
+                        // Check for special date achievements:
+                        // Halloween: ach20
+                        achievementChecker.checkAch20(moodEvent);
+
+                        // Valentine's Day: ach21
+                        achievementChecker.checkAch21(moodEvent);
+                        // Christmas: ach24
+                        achievementChecker.checkAch24(moodEvent);
+                        // New Year: ach25
+                        achievementChecker.checkAch25(moodEvent);
 
                         // Save to Firestore
                         saveMoodToFirestore(moodEvent);
@@ -1220,7 +1264,19 @@ public class SelectMoodActivity extends AppCompatActivity {
 
     private int getEmojiResourceId(String moodId, String theme) {
         // For local assets, use naming conventions. For instance:
+
+        if (moodId == null) {
+            moodId = "happy";
+        }
+
+        else if (theme == null){
+            theme = "default";
+        }
+
+
+        // Use the provided moodId and theme to generate the resource name
         String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
         return getResources().getIdentifier(resourceName, "drawable", getPackageName());
+
     }
 }
