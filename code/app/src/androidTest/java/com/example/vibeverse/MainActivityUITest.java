@@ -16,6 +16,8 @@ import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 
 /**
+ * Basic UI tests for MainActivity using Espresso.
+ *
  * These tests verify the redirection logic based on the authentication state
  * and Firestore data:
  * - No user logged in -> redirect to Login.
@@ -30,6 +32,7 @@ public class MainActivityUITest {
 
     @Before
     public void setUp() {
+        // Initialize Espresso Intents so we can verify launched activities
         Intents.init();
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -37,6 +40,7 @@ public class MainActivityUITest {
 
     @After
     public void tearDown() {
+        // Release Espresso Intents
         Intents.release();
     }
 
@@ -46,11 +50,13 @@ public class MainActivityUITest {
      */
     @Test
     public void testNoUserRedirectsToLogin() throws InterruptedException {
-
+        // Ensure no user is signed in
         mAuth.signOut();
 
+        // Launch MainActivity
         ActivityScenario.launch(MainActivity.class);
 
+        // Verify that Login activity is launched
         intended(hasComponent(Login.class.getName()));
     }
 
@@ -60,24 +66,27 @@ public class MainActivityUITest {
      */
     @Test
     public void testLoggedInNoDocRedirectsToUserDetails() throws InterruptedException {
-
+        // Sign out any existing user
         mAuth.signOut();
 
+        // Sign in the test user (ensure this user exists in Firebase Auth)
         mAuth.signInWithEmailAndPassword("test_no_doc@example.com", "password")
                 .addOnCompleteListener(task -> {
-
+                    // Log sign-in success or failure as needed.
                 });
-        Thread.sleep(2000);
+        Thread.sleep(2000); // Wait for sign-in to complete
 
+        // Delete the Firestore document (if it exists) to simulate "no user doc"
         if (mAuth.getCurrentUser() != null) {
             String uid = mAuth.getCurrentUser().getUid();
             db.collection("users").document(uid).delete();
         }
-        Thread.sleep(2000);
+        Thread.sleep(2000); // Wait for deletion to propagate
 
-
+        // Launch MainActivity
         ActivityScenario.launch(MainActivity.class);
 
+        // Verify that UserDetails activity is launched
         intended(hasComponent(UserDetails.class.getName()));
     }
 
@@ -87,33 +96,39 @@ public class MainActivityUITest {
      */
     @Test
     public void testLoggedInWithDocRedirectsToHomePage() throws InterruptedException {
-
+        // Sign out any existing user
         mAuth.signOut();
 
+        // Sign in the test user (ensure this user exists in Firebase Auth)
         mAuth.signInWithEmailAndPassword("test_with_doc@example.com", "password")
                 .addOnCompleteListener(task -> {
-
+                    // Log sign-in success or failure as needed.
                 });
-        Thread.sleep(2000);
+        Thread.sleep(2000); // Wait for sign-in to complete
 
+        // Create the Firestore document for the user if it doesn't exist
         if (mAuth.getCurrentUser() != null) {
             String uid = mAuth.getCurrentUser().getUid();
             db.collection("users").document(uid)
                     .set(new UserProfile("Test User", "testuser", "Test Bio"));
         }
-        Thread.sleep(2000);
+        Thread.sleep(2000); // Wait for the document to be created
 
+        // Launch MainActivity
         ActivityScenario.launch(MainActivity.class);
 
+        // Verify that HomePage activity is launched
         intended(hasComponent(HomePage.class.getName()));
     }
 
+    // Simple POJO representing a user document in Firestore.
     public static class UserProfile {
         public String fullName;
         public String username;
         public String bio;
 
         public UserProfile() {
+            // Firestore requires an empty constructor
         }
 
         public UserProfile(String fullName, String username, String bio) {
