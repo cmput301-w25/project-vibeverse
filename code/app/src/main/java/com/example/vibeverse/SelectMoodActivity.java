@@ -20,6 +20,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ParseException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -57,10 +58,12 @@ import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -177,7 +180,6 @@ public class SelectMoodActivity extends AppCompatActivity {
         setupImageSelector();
 
 
-
         // Get current user ID or use a device ID if not logged in
         if (mAuth.getCurrentUser() != null) {
             userId = mAuth.getCurrentUser().getUid();
@@ -267,13 +269,13 @@ public class SelectMoodActivity extends AppCompatActivity {
                                     "VibeVerse Location" // Default location - get location functionality not yet implemented
                             );
 
-                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph, isPublic);
+                            moodEvent = new MoodEvent(userId, selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph, isPublic);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
                             moodEvent.setDate(currentDate);
                         } else {
                             Log.d("SelectMoodActivity", "onClick: Emoji before assignment= " + selectedEmoji);
-                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, isPublic);
+                            moodEvent = new MoodEvent(userId, selectedMood, selectedEmoji, reasonWhy, socialSituation, isPublic);
                             Log.d("SelectMoodActivity", "onClick: Emoji after assignment= " + moodEvent.getEmoji());
                             Log.d("SelectMoodActivity", "onClick: Title after assignment= " + moodEvent.getMoodTitle());
                             // Add intensity to the mood event
@@ -321,6 +323,8 @@ public class SelectMoodActivity extends AppCompatActivity {
                         achievementChecker.checkAch24(moodEvent);
                         // New Year: ach25
                         achievementChecker.checkAch25(moodEvent);
+
+                        updateMoodStreak(currentDate);
 
                         // Save to Firestore
                         saveMoodToFirestore(moodEvent);
@@ -428,10 +432,12 @@ public class SelectMoodActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onStatusChanged(String provider, int status, Bundle extras) {}
+                    public void onStatusChanged(String provider, int status, Bundle extras) {
+                    }
 
                     @Override
-                    public void onProviderEnabled(String provider) {}
+                    public void onProviderEnabled(String provider) {
+                    }
 
                     @Override
                     public void onProviderDisabled(String provider) {
@@ -958,7 +964,6 @@ public class SelectMoodActivity extends AppCompatActivity {
             moodNameView.setTypeface(null, Typeface.BOLD);
 
 
-
             buttonContent.addView(emojiView);
             buttonContent.addView(moodNameView);
             cardView.addView(buttonContent);
@@ -1267,9 +1272,7 @@ public class SelectMoodActivity extends AppCompatActivity {
 
         if (moodId == null) {
             moodId = "happy";
-        }
-
-        else if (theme == null){
+        } else if (theme == null) {
             theme = "default";
         }
 
@@ -1279,4 +1282,62 @@ public class SelectMoodActivity extends AppCompatActivity {
         return getResources().getIdentifier(resourceName, "drawable", getPackageName());
 
     }
+
+    private void updateMoodStreak(Date currentDate) {
+        // Use a simple date format (e.g., "yyyy-MM-dd") to compare dates
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String currentDateStr = sdf.format(currentDate);
+        DocumentReference userDocRef = db.collection("users").document(userId);
+
+        userDocRef.get().addOnSuccessListener(documentSnapshot -> {
+            String lastMoodDate = documentSnapshot.contains("last_mood_date")
+                    ? documentSnapshot.getString("last_mood_date") : null;
+            Long streakLong = documentSnapshot.contains("mood_streak")
+                    ? documentSnapshot.getLong("mood_streak") : 0L;
+            int currentStreak = streakLong != null ? streakLong.intValue() : 0;
+            int newStreak = 0;
+
+            if (lastMoodDate != null) {
+                if (lastMoodDate.equals(currentDateStr)) {
+                    // If the user has already posted a mood today, do not increment the streak
+                    newStreak = currentStreak;
+                } else {
+                    try {
+                        Date lastDate = sdf.parse(lastMoodDate);
+                        Date today = sdf.parse(currentDateStr);
+                        // Calculate difference in days (in millis)
+                        long diffInMillis = today.getTime() - lastDate.getTime();
+                        long diffInDays = diffInMillis / (24 * 60 * 60 * 1000);
+                        if (diffInDays == 1) {
+                            // Consecutive day – increment the streak
+                            newStreak = currentStreak + 1;
+                        } else {
+                            // Not consecutive – reset streak
+                            newStreak = 1;
+                        }
+                    } catch (ParseException | java.text.ParseException e) {
+                        e.printStackTrace();
+                        newStreak = 1;
+                    }
+                }
+            } else {
+                // No previous mood posted – start with streak 1
+                newStreak = 1;
+            }
+
+            // Update the user's document with the new streak and today's date
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("mood_streak", newStreak);
+            updates.put("last_mood_date", currentDateStr);
+            userDocRef.update(updates);
+
+            // Call the achievement checker with the new streak value
+            AchievementChecker achievementChecker = new AchievementChecker(userId);
+            achievementChecker.checkAch23(newStreak);
+        });
+    }
+
+
+
+
 }

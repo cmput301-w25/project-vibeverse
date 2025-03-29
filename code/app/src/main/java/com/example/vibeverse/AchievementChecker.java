@@ -346,15 +346,22 @@ public class AchievementChecker {
     /**
      * Checker for "Mood Marathon" (ach23).
      * Requirement: Keep the streak alive – post mood events every day for a week (7 consecutive days).
-     * Note: This method assumes that streak verification is handled externally.
-     * For example, you might call this method with a flag indicating the streak was achieved.
      *
-     * @param streakAchieved A boolean flag indicating if a 7-day streak was detected.
+     * @param currentStreak The current consecutive days streak.
      */
-    public void checkAch23(boolean streakAchieved) {
-        if (streakAchieved) {
-            updateAchievement("ach23", 7);
-        }
+    public void checkAch23(int currentStreak) {
+        final DocumentReference doc = getAchievementDoc("ach23");
+        doc.get().addOnSuccessListener(documentSnapshot -> {
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("progress", currentStreak);
+            // Mark as unclaimed if streak reaches 7 or more
+            if (currentStreak >= 7) {
+                updates.put("completion_status", "unclaimed");
+            } else {
+                updates.put("completion_status", "incomplete");
+            }
+            doc.update(updates);
+        });
     }
 
     /**

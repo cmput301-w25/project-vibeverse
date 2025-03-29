@@ -240,6 +240,8 @@ public class CommentSectionActivity extends AppCompatActivity {
                 parentCommentId
         );
 
+        AchievementChecker achievementChecker = new AchievementChecker(currentUserId);
+
         if (replyingToComment != null) {
             // Save as a reply in the parent's "replies" subcollection.
             db.collection("Usermoods")
@@ -254,6 +256,8 @@ public class CommentSectionActivity extends AppCompatActivity {
                     .addOnSuccessListener(unused -> {
                         Toast.makeText(CommentSectionActivity.this, "Reply added", Toast.LENGTH_SHORT).show();
                         editComment.setText("");
+
+                        achievementChecker.checkAch14();
 
                         // Store the parent comment's author before resetting reply mode.
                         String parentAuthorId = replyingToComment.getAuthorUserId();
@@ -399,6 +403,8 @@ public class CommentSectionActivity extends AppCompatActivity {
                                 .collection("replies")
                                 .document("init")
                                 .set(Collections.singletonMap("init", true));
+
+                        achievementChecker.checkAch14();
 
                         // Only generate notification if the commenter is not commenting on their own post.
                         if (!moodUserId.equals(currentUserId)) {

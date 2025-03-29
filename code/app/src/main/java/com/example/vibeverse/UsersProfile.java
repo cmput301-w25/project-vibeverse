@@ -244,7 +244,6 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
                                 Toast.LENGTH_SHORT).show();
                     });
         });
-
         buttonFollowStateFollowing.setOnClickListener(v -> {
             String profileUsername = textTopUsername.getText().toString();
 
@@ -283,11 +282,20 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
                                     .addOnSuccessListener(aVoid2 -> {
                                         // Decrement counts: page user's followerCount and active user's followingCount.
                                         pageUserRef.update("followerCount", FieldValue.increment(-1));
-                                        activeUserRef.update("followingCount", FieldValue.increment(-1));
-                                        showFollowState();
-                                        loadUserPosts(); // reload the posts
-                                        Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
-                                        alertDialog.dismiss();
+                                        activeUserRef.update("followingCount", FieldValue.increment(-1))
+                                                .addOnSuccessListener(aVoid3 -> {
+                                                    // Check the unfollow achievement ("I don't like you anymore" - ach12)
+                                                    AchievementChecker achievementChecker = new AchievementChecker(activeUserId);
+                                                    achievementChecker.checkAch12();
+
+                                                    showFollowState();
+                                                    loadUserPosts(); // reload the posts
+                                                    Toast.makeText(UsersProfile.this, "Unfollowed.", Toast.LENGTH_SHORT).show();
+                                                    alertDialog.dismiss();
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Toast.makeText(UsersProfile.this, "Failed to update following count: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                                });
                                     })
                                     .addOnFailureListener(e -> {
                                         Toast.makeText(UsersProfile.this, "Failed to update following list: " + e.getMessage(), Toast.LENGTH_SHORT).show();

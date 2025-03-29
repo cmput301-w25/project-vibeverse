@@ -353,6 +353,8 @@ public class UserDetails extends AppCompatActivity {
             userData.put("selectedTheme", "default");
             userData.put("totalXP", 0);
             userData.put("level", 1);
+            userData.put("mood_streak", 0);
+            userData.put("last_mood", "none");
 
 
 
