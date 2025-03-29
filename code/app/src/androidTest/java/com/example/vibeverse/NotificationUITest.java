@@ -28,7 +28,7 @@ public class NotificationUITest {
 
     @Before
     public void setUp() {
-        Intents.init(); // Required for verifying intent-based navigation
+        Intents.init();
     }
 
     @After
