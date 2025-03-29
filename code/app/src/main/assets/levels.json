@@ -2,83 +2,103 @@
   "levels": [
     {
       "level": 1,
-      "xpRequired": 0
+      "xpRequired": 0,
+      "unlocks": "N/A"
     },
     {
       "level": 2,
-      "xpRequired": 52
+      "xpRequired": 52,
+      "unlocks": "N/A"
     },
     {
       "level": 3,
-      "xpRequired": 104
+      "xpRequired": 104,
+      "unlocks": "N/A"
     },
     {
       "level": 4,
-      "xpRequired": 157
+      "xpRequired": 157,
+      "unlocks": "N/A"
     },
     {
       "level": 5,
-      "xpRequired": 209
+      "xpRequired": 209,
+      "unlocks": "clown"
     },
     {
       "level": 6,
-      "xpRequired": 261
+      "xpRequired": 261,
+      "unlocks": "N/A"
     },
     {
       "level": 7,
-      "xpRequired": 313
+      "xpRequired": 313,
+      "unlocks": "N/A"
     },
     {
       "level": 8,
-      "xpRequired": 365
+      "xpRequired": 365,
+      "unlocks": "N/A"
     },
     {
       "level": 9,
-      "xpRequired": 417
+      "xpRequired": 417,
+      "unlocks": "N/A"
     },
     {
       "level": 10,
-      "xpRequired": 469
+      "xpRequired": 469,
+      "unlocks": "alien"
     },
     {
       "level": 11,
-      "xpRequired": 521
+      "xpRequired": 521,
+      "unlocks": "N/A"
     },
     {
       "level": 12,
-      "xpRequired": 573
+      "xpRequired": 573,
+      "unlocks": "N/A"
     },
     {
       "level": 13,
-      "xpRequired": 625
+      "xpRequired": 625,
+      "unlocks": "N/A"
     },
     {
       "level": 14,
-      "xpRequired": 677
+      "xpRequired": 677,
+      "unlocks": "N/A"
     },
     {
       "level": 15,
-      "xpRequired": 729
+      "xpRequired": 729,
+      "unlocks": "lion"
     },
     {
       "level": 16,
-      "xpRequired": 781
+      "xpRequired": 781,
+      "unlocks": "N/A"
     },
     {
       "level": 17,
-      "xpRequired": 833
+      "xpRequired": 833,
+      "unlocks": "N/A"
     },
     {
       "level": 18,
-      "xpRequired": 885
+      "xpRequired": 885,
+      "unlocks": "N/A"
     },
     {
       "level": 19,
-      "xpRequired": 937
+      "xpRequired": 937,
+      "unlocks": "N/A"
     },
     {
       "level": 20,
-      "xpRequired": 995
+      "xpRequired": 995,
+      "unlocks": "cold"
     }
   ]
 }
