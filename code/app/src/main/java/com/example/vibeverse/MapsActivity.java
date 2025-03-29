@@ -515,6 +515,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+
+                        // Check if mood is public
+                        Boolean isPublic = (Boolean) document.getData().get("isPublic");
+                        if (isPublic == null || !isPublic) {
+                            continue;
+                        }
+
                         // Check if the mood has location data
                         if (document.contains("moodLatitude") && document.contains("moodLongitude")) {
                             double latitude = document.getDouble("moodLatitude");
