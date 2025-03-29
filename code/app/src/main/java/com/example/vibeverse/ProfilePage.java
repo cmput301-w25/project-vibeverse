@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -20,15 +19,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.PopupMenu;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -71,11 +71,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     /** Button to logout the user. */
 
 
-    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing;
+    private TextView textName, textUsername, textBioContent, textFollowers, textFollowing, textPosts;
     private ImageView profilePicture;
 
 
-    private ImageButton logoutButton;
+    private ImageButton profileSettingsMenu;
     /** BottomNavigationView for navigating between app sections. */
     private BottomNavigationView bottomNavigationView;
     /** Button to open the FilterDialog. */
@@ -88,6 +88,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private FirebaseAuth mAuth;
     /** ID of the current user. */
     private String userId;
+
+    private DrawerLayout drawerLayout;
+    private NavigationView rightNavView;
 
     /** Formatter for parsing and formatting timestamps. */
     private final SimpleDateFormat sourceFormat =
@@ -132,19 +135,40 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         profilePicture = findViewById(R.id.profilePicture);
         textFollowers = findViewById(R.id.textFollowers);
         textFollowing = findViewById(R.id.textFollowing);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        rightNavView = findViewById(R.id.right_nav_view);
+        textPosts = findViewById(R.id.textPosts);
 
         // Then call a helper method to load the profile
         loadUserProfile();
         // Logout button
-        logoutButton = findViewById(R.id.buttonOverflowMenu);
+        profileSettingsMenu = findViewById(R.id.buttonOverflowMenu);
 
 
         // Set up logout button to sign out the user.
-        logoutButton = findViewById(R.id.buttonOverflowMenu);
-        logoutButton.setOnClickListener(v -> {
-            mAuth.signOut();
-            startActivity(new Intent(ProfilePage.this, Login.class));
-            finish();
+        profileSettingsMenu = findViewById(R.id.buttonOverflowMenu);
+        profileSettingsMenu.setOnClickListener(v -> {
+            drawerLayout.openDrawer(GravityCompat.END);
+        });
+
+        rightNavView.setNavigationItemSelectedListener(menuItem -> {
+            int id = menuItem.getItemId();
+            if (id == R.id.menu_vibestore) {
+                // to be added
+            } else if (id == R.id.menu_vibestatus) {
+                // to be added
+            } else if (id == R.id.menu_editprofile) {
+                Intent intent = new Intent(ProfilePage.this, UserDetails.class);
+                intent.putExtra("source", "edit_profile");
+                startActivity(intent);
+            } else if (id == R.id.menu_logout) {
+                mAuth.signOut();
+                startActivity(new Intent(ProfilePage.this, Login.class));
+                finish();
+            }
+            // Close the drawer after a selection is made
+            drawerLayout.closeDrawer(GravityCompat.END);
+            return true;
         });
 
         // Set up bottom navigation.
@@ -227,6 +251,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(snapshots -> {
+
+                    // Update the posts TextView
+                    int postCount = snapshots.size();
+                    textPosts.setText(String.valueOf(postCount));
+
                     allMoodEvents.clear();
                     for (QueryDocumentSnapshot doc : snapshots) {
                         try {
@@ -298,7 +327,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
                         // Populate the TextViews
                         if (fullName != null) textName.setText(fullName);
-                        if (username != null) textUsername.setText(username);
+                        if (username != null) textUsername.setText("@"+username);
                         if (bio != null) textBioContent.setText(bio);
                         textFollowers.setText(followerCount);
                         textFollowing.setText(followingCount);
@@ -334,6 +363,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     public void onResume() {
         super.onResume();
         loadMoodsFromFirestore();
+        loadUserProfile(); // Reload updated user details
     }
 
     /**
@@ -406,12 +436,36 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             int updatedIntensity = data.getIntExtra("updatedIntensity", 5);
             int moodPosition = data.getIntExtra("moodPosition", -1);
             String updatedPhotoUri = data.getStringExtra("updatedPhotoUri");
+            boolean isPublic = data.getBooleanExtra("isPublic", false);
+
+            // Add these lines to retrieve location data
+            String updatedMoodLocation = data.getStringExtra("updatedMoodLocation");
+            Double updatedMoodLatitude = null;
+            Double updatedMoodLongitude = null;
+            boolean locationRemoved = data.getBooleanExtra("locationRemoved", false);
+
+            if (data.hasExtra("updatedMoodLatitude") && data.hasExtra("updatedMoodLongitude")) {
+                updatedMoodLatitude = data.getDoubleExtra("updatedMoodLatitude", 0);
+                updatedMoodLongitude = data.getDoubleExtra("updatedMoodLongitude", 0);
+            }
 
             if (moodPosition >= 0 && moodPosition < allMoodEvents.size()) {
                 MoodEvent moodEventToUpdate = allMoodEvents.get(moodPosition);
-                // Update Firestore
-                updateMoodInFirestore(moodEventToUpdate.getDocumentId(), updatedEmoji, updatedMood,
-                        updatedReasonWhy, updatedSocialSituation, updatedIntensity, updatedPhotoUri);;
+                // Update Firestore with location info
+                updateMoodInFirestore(
+                        moodEventToUpdate.getDocumentId(),
+                        updatedEmoji,
+                        updatedMood,
+                        updatedReasonWhy,
+                        updatedSocialSituation,
+                        updatedIntensity,
+                        updatedPhotoUri,
+                        isPublic,
+                        updatedMoodLocation,
+                        updatedMoodLatitude,
+                        updatedMoodLongitude,
+                        locationRemoved
+                );
             }
         }
     }
@@ -433,7 +487,9 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
 
     private void updateMoodInFirestore(String documentId, String emoji, String mood,
                                        String reasonWhy, String socialSituation,
-                                       int intensity, String photoUri) {
+                                       int intensity, String photoUri, boolean isPublic,
+                                       String moodLocation, Double latitude, Double longitude,
+                                       boolean locationRemoved) {
         // Show loading indicator
         if (progressLoading != null) {
             progressLoading.setVisibility(View.VISIBLE);
@@ -446,12 +502,26 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         updatedMood.put("socialSituation", socialSituation);
         updatedMood.put("intensity", intensity);
         updatedMood.put("reasonWhy", reasonWhy);
+        updatedMood.put("isPublic", isPublic);
 
         if (photoUri != null && !photoUri.equals("N/A")) {
             updatedMood.put("hasPhoto", true);
             updatedMood.put("photoUri", photoUri);
         } else {
             updatedMood.put("hasPhoto", false);
+        }
+
+        // Handle location data
+        if (locationRemoved) {
+            // Remove location fields if location was explicitly removed
+            updatedMood.put("moodLocation", null);
+            updatedMood.put("moodLatitude", null);
+            updatedMood.put("moodLongitude", null);
+        } else if (moodLocation != null && latitude != null && longitude != null) {
+            // Update with new location
+            updatedMood.put("moodLocation", moodLocation);
+            updatedMood.put("moodLatitude", latitude);
+            updatedMood.put("moodLongitude", longitude);
         }
 
         db.collection("Usermoods")
@@ -502,6 +572,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                             .delete()
                             .addOnSuccessListener(aVoid -> {
                                 allMoodEvents.remove(position);
+                                textPosts.setText(String.valueOf(allMoodEvents.size()));
                                 moodEventAdapter.updateMoodEvents(new ArrayList<>(allMoodEvents));
                                 if (progressLoading != null) {
                                     progressLoading.setVisibility(View.GONE);

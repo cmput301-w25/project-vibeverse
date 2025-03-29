@@ -20,9 +20,12 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -63,12 +66,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseAuth mAuth;
     private String userId;
 
+    // New UI elements
+    private ToggleButton mapToggleButton;
+    private SeekBar radiusSlider;
+    private TextView radiusValueText;
+
+    // Map mode and radius
+    private boolean showFollowersMoods = false;
+    private float currentRadiusKm = 5.0f;
+    private static final float MIN_RADIUS_KM = 5.0f;
+    private static final float MAX_RADIUS_KM = 100.0f;
+
     // Location-related fields
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private LatLng currentUserLocation;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
-    private static final float MAX_DISTANCE_KM = 5.0f; // 5 kilometers
 
     // Maps to store mood colors and emojis (copied from SelectMoodActivity)
     private final Map<String, Integer> moodColors = new HashMap<>();
@@ -84,6 +97,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Initialize Firebase
         initializeFirebase();
+
+        // Initialize UI elements
+        initializeUIElements();
 
         // Initialize location services
         initializeLocationServices();
@@ -103,6 +119,90 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Set Map as the selected item - put this AFTER everything else
         bottomNavigationView.setSelectedItemId(R.id.nav_map);
+    }
+
+    /**
+     * Initialize UI elements for map control
+     */
+    private void initializeUIElements() {
+        // Initialize toggle button
+        mapToggleButton = findViewById(R.id.map_toggle_button);
+        mapToggleButton.setTextOff("MY MOODS");
+        mapToggleButton.setTextOn("FOLLOWERS' MOODS");
+        mapToggleButton.setChecked(false); // Default to showing own moods
+
+        // Find the radius control panel to show/hide it entirely
+        View radiusControlPanel = findViewById(R.id.radius_control_panel);
+
+        mapToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                showFollowersMoods = isChecked;
+
+                // Show/hide radius panel based on mode
+                if (isChecked) {
+                    // When switching to followers mode, show the radius panel
+                    radiusControlPanel.setVisibility(View.VISIBLE);
+                    // Reset to default radius
+                    currentRadiusKm = MIN_RADIUS_KM;
+                    radiusSlider.setProgress(0); // First position
+                    updateRadiusText();
+                } else {
+                    // In personal mode, hide the radius panel
+                    radiusControlPanel.setVisibility(View.GONE);
+                }
+
+                // Refresh the map
+                if (mMap != null) {
+                    loadMoodData();
+                }
+            }
+        });
+
+        // Initialize radius slider
+        radiusSlider = findViewById(R.id.radius_slider);
+        radiusValueText = findViewById(R.id.radius_value_text);
+
+        // Configure slider range
+        int maxProgress = 95; // For 95 intervals between 5 and 100
+        radiusSlider.setMax(maxProgress);
+        radiusSlider.setProgress(0); // Default to minimum (5km)
+
+        radiusSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // Calculate radius based on progress (5km to 100km)
+                currentRadiusKm = MIN_RADIUS_KM + (progress * (MAX_RADIUS_KM - MIN_RADIUS_KM) / maxProgress);
+                updateRadiusText();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Not needed
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Refresh the map when user stops dragging
+                if (mMap != null) {
+                    loadMoodData();
+                }
+            }
+        });
+
+        // Initially hide radius panel if starting in personal mode
+        if (!showFollowersMoods) {
+            radiusControlPanel.setVisibility(View.GONE);
+        }
+
+        updateRadiusText();
+    }
+
+    /**
+     * Update the radius text display
+     */
+    private void updateRadiusText() {
+        radiusValueText.setText(String.format("Radius: %.1f km", currentRadiusKm));
     }
 
     /**
@@ -297,7 +397,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * Call this method to load both user's own moods and followed users' moods
+     * Call this method to load moods based on current toggle state
      */
     private void loadMoodData() {
         // Show loading toast
@@ -306,9 +406,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Clear the map
         mMap.clear();
 
-        // Load user's own moods and followed users' moods without changing map center
-        loadUserMoodsWithoutCentering();
-        loadFollowedUsersMoods();
+        if (showFollowersMoods) {
+            // Load only followers' moods with current radius
+            loadFollowedUsersMoods();
+            Toast.makeText(this, "Showing followers' moods within " +
+                    String.format("%.1f", currentRadiusKm) + " km", Toast.LENGTH_SHORT).show();
+        } else {
+            // Load only user's own moods
+            loadUserMoodsWithoutCentering();
+            Toast.makeText(this, "Showing your moods", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -389,6 +496,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         } else {
                             Log.d(TAG, "User is not following anyone");
+                            Toast.makeText(MapsActivity.this, "You are not following anyone yet", Toast.LENGTH_SHORT).show();
                         }
                     }
                 })
@@ -415,8 +523,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             // Create a LatLng object for the mood location
                             LatLng moodLocation = new LatLng(latitude, longitude);
 
-                            // Check if the mood is within 5km of the user's location
-                            if (isWithinRange(moodLocation, currentUserLocation, MAX_DISTANCE_KM)) {
+                            // Check if the mood is within the current radius of the user's location
+                            if (isWithinRange(moodLocation, currentUserLocation, currentRadiusKm)) {
                                 String locationName = document.getString("moodLocation");
                                 String moodTitle = document.getString("mood");
                                 String emoji = document.getString("emoji");

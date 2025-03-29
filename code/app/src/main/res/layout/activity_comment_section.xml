@@ -1,83 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A vertical layout: an included post view at the top, a header and comments list, and a bottom comment input section -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/commentActivityRoot"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <!-- Top: Included post item (reuse your item_post layout) -->
-    <include
-        android:id="@+id/includedPost"
-        layout="@layout/item_post" />
-
-    <!-- Header for comments -->
-    <TextView
-        android:id="@+id/tvCommentsHeader"
+    <!-- AppBarLayout containing the post that can collapse -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="Comments"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-    <!-- Middle: RecyclerView to show list of comments -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerComments"
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/collapsingToolbarLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed">
+
+            <!-- The included post view -->
+            <include
+                android:id="@+id/includedPost"
+                layout="@layout/item_post"
+                app:layout_collapseMode="parallax" />
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Scrollable content: comments header and list -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nestedScroll"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="16dp" />
+        android:layout_height="match_parent"
+        android:layout_marginBottom="120dp"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <!-- Reply banner: will be shown when replying to a comment -->
     <LinearLayout
-        android:id="@+id/replyBanner"
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#DDDDDD"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:visibility="gone">
+        android:padding="16dp">
 
+        <!-- Header for comments -->
         <TextView
-            android:id="@+id/replyBannerText"
-            android:layout_width="0dp"
+            android:id="@+id/tvCommentsHeader"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Replying to [username]" />
+            android:text="Comments"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
 
-        <ImageButton
-            android:id="@+id/replyBannerClose"
-            android:layout_width="wrap_content"
+        <!-- Comments list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerComments"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/baseline_close_24" />
+            android:nestedScrollingEnabled="false" />
+
     </LinearLayout>
+</androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom: Comment input area -->
-    <LinearLayout
-        android:id="@+id/commentInputContainer"
-        android:layout_width="match_parent"
+    <!-- Fixed bottom container for reply banner and comment input -->
+<LinearLayout
+android:id="@+id/fixedBottomContainer"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_gravity="bottom"
+android:orientation="vertical"
+android:background="@android:color/white">
+
+<!-- Reply banner (fixed above the comment input) -->
+<LinearLayout
+    android:id="@+id/replyBanner"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#DDDDDD"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:visibility="gone">
+
+    <TextView
+        android:id="@+id/replyBannerText"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:background="#EEEEEE">
+        android:layout_weight="1"
+        android:text="Replying to [username]" />
 
-        <EditText
-            android:id="@+id/editComment"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Add a comment..."
-            android:padding="8dp"
-            android:background="@android:drawable/edit_text" />
-
-        <Button
-            android:id="@+id/buttonSendComment"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Send"
-            android:layout_marginStart="8dp" />
-    </LinearLayout>
-
+    <ImageButton
+        android:id="@+id/replyBannerClose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/baseline_close_24" />
 </LinearLayout>
+
+<!-- Comment input area -->
+<LinearLayout
+    android:id="@+id/commentInputContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:background="#EEEEEE">
+
+    <EditText
+        android:id="@+id/editComment"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:hint="Add a comment..."
+        android:padding="8dp"
+        android:background="@android:drawable/edit_text" />
+
+    <Button
+        android:id="@+id/buttonSendComment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send"
+        android:layout_marginStart="8dp" />
+</LinearLayout>
+</LinearLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>

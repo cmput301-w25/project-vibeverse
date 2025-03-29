@@ -61,11 +61,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             }
         });
 
-        // You can add follow button logic here if needed
-        holder.buttonFollow.setOnClickListener(v -> {
-            // Implement follow logic here
-            // For example: toggleFollowStatus(user.getUserId());
-        });
     }
 
     @Override
@@ -77,13 +72,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     public static class UserViewHolder extends RecyclerView.ViewHolder {
         ImageView imageProfile;
         TextView textUsername;
-        Button buttonFollow;
+
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
             imageProfile = itemView.findViewById(R.id.imageProfile);
             textUsername = itemView.findViewById(R.id.textUsername);
-            buttonFollow = itemView.findViewById(R.id.buttonFollow);
+
         }
     }
 }

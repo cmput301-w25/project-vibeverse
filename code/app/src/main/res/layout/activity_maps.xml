@@ -16,6 +16,70 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Toggle button for switching map modes -->
+    <ToggleButton
+        android:id="@+id/map_toggle_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:textOff="MY MOODS"
+        android:textOn="FOLLOWERS' MOODS"
+        android:textAllCaps="true"
+        android:padding="8dp"
+        android:textColor="@android:color/black"
+        android:background="@drawable/toggle_button_background"
+        android:elevation="4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Radius control panel (container) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/radius_control_panel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="80dp"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:cardBackgroundColor="#FFFFFF"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Radius value display -->
+            <TextView
+                android:id="@+id/radius_value_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Radius: 5.0 km"
+                android:textAlignment="center"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:textStyle="bold" />
+
+            <!-- Radius slider -->
+            <SeekBar
+                android:id="@+id/radius_slider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:min="0"
+                android:max="95"
+                android:progress="0"
+                android:thumbTint="@android:color/black"
+                android:progressTint="@android:color/black" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
     <include
         android:id="@+id/bottom_navigation"
         layout="@layout/bottom_navigation"

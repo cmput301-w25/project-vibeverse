@@ -37,10 +37,19 @@ public class MoodEvent implements Serializable {
     private Date date;
     private String subtitle;
 
+    private boolean isPublic;
 
+
+    public boolean isPublic() {
+        return this.isPublic;
+    }
+
+    public void setPrivacy(boolean privacy) {
+        this.isPublic = privacy;
+    }
 
     public String getOwnerUserId() {
-        return ownerUserId;
+        return this.ownerUserId;
     }
 
     public void setOwnerUserId(String ownerUserId) {
@@ -128,13 +137,14 @@ public class MoodEvent implements Serializable {
      * @param reasonWhy       The reason for the mood.
      * @param socialSituation The social situation when the mood was recorded.
      */
-    public MoodEvent(String ownerUserId, String moodTitle, String moodEmoji, String reasonWhy, String socialSituation) {
+    public MoodEvent(String ownerUserId, String moodTitle, String moodEmoji, String reasonWhy, String socialSituation, boolean privacy) {
         this.ownerUserId = ownerUserId;
         this.reasonWhy = reasonWhy;
         this.moodEmoji = moodEmoji;
         this.moodTitle = moodTitle;
         this.socialSituation = socialSituation;
         this.timestamp = getCurrentFormattedTime();
+        this.isPublic = privacy;
     }
 
 
@@ -148,7 +158,7 @@ public class MoodEvent implements Serializable {
      * @param photograph      The Photograph associated with this mood event.
      */
 
-    public MoodEvent(String ownerUserId, String moodTitle, String moodEmoji, String reasonWhy, String socialSituation, Photograph photograph) {
+    public MoodEvent(String ownerUserId, String moodTitle, String moodEmoji, String reasonWhy, String socialSituation, Photograph photograph, boolean privacy) {
         this.ownerUserId = ownerUserId;
         this.reasonWhy = reasonWhy;
         this.moodTitle = moodTitle;
@@ -156,6 +166,7 @@ public class MoodEvent implements Serializable {
         this.socialSituation = socialSituation;
         this.timestamp = getCurrentFormattedTime();
         this.photograph = photograph;
+        this.isPublic = privacy;
     }
 
     /**
@@ -170,6 +181,7 @@ public class MoodEvent implements Serializable {
         moodMap.put("timestamp", this.timestamp);
         moodMap.put("intensity", this.intensity);
         moodMap.put("reasonWhy", this.reasonWhy);
+
 
         // Store emoji and mood title
         moodMap.put("emoji", getEmoji());
@@ -204,12 +216,12 @@ public class MoodEvent implements Serializable {
         String socialSituation = (String) data.get("socialSituation");
         String reasonWhy = (String) data.get("reasonWhy");
         String ownerUserId = (String) data.get("ownerUserId");
-        String color = (String) data.get("color");
+        boolean isPublic = (boolean) data.get("isPublic");
 
 
 
 
-        MoodEvent moodEvent = new MoodEvent(ownerUserId,moodTitle, moodEmoji, reasonWhy, socialSituation);
+        MoodEvent moodEvent = new MoodEvent(ownerUserId,moodTitle, moodEmoji, reasonWhy, socialSituation, isPublic);
 
         if (data.containsKey("documentId")) {
             moodEvent.setDocumentId((String) data.get("documentId"));
