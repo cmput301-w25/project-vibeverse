@@ -794,6 +794,8 @@ public class UserDetails extends AppCompatActivity {
                     .update(userData)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(UserDetails.this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
+                        AchievementChecker achievementChecker = new AchievementChecker(user.getUid());
+                        achievementChecker.checkAch11();
                         // Optionally, navigate back or finish activity
                         finish();
                     })

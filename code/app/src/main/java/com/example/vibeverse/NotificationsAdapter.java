@@ -226,6 +226,20 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
                             }
                         });
 
+                // --- Achievement Checkers for Follow/Following Achievements ---
+                // For the active user (receiving a follower), check:
+                // "Target on your back I" (ach18) and "Target on your back II" (ach19).
+                AchievementChecker activeUserAchievements = new AchievementChecker(currentUserId);
+                activeUserAchievements.checkAch18();
+                activeUserAchievements.checkAch19();
+
+                // For the sender (now following someone), check:
+                // "Making Connections I" (ach15), "Making Connections II" (ach16), and "Making Connections III" (ach17).
+                AchievementChecker senderAchievements = new AchievementChecker(notification.getSenderUserId());
+                senderAchievements.checkAch15();
+                senderAchievements.checkAch16();
+                senderAchievements.checkAch17();
+
             });
 
             rejectButton.setOnClickListener(v -> {

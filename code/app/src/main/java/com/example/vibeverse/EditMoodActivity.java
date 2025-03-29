@@ -499,6 +499,37 @@ public class EditMoodActivity extends AppCompatActivity {
                     .alpha(0.8f)
                     .setDuration(200)
                     .withEndAction(() -> {
+
+                        MoodEvent updatedMoodEvent;
+                        Date currentDate = new Date();
+                        // Assuming selectedMood and selectedEmoji are available in the current scope.
+                        String tempSocialSituation = socialSituationInput.getSelectedItem().toString().trim();
+                        if (currentImageUri != null && currentBitmap != null) {
+                            // Create a Photograph instance and attach it to the mood event
+                            Photograph photograph = new Photograph(
+                                    currentImageUri,
+                                    photoSize, // Estimated file size in KB
+                                    currentDate,
+                                    "VibeVerse Location" // Default location or get from your location functionality
+                            );
+                            updatedMoodEvent = new MoodEvent(userId, selectedMood, selectedEmoji, newReasonWhy, tempSocialSituation, photograph, isPublic);
+                        } else {
+                            updatedMoodEvent = new MoodEvent(userId, selectedMood, selectedEmoji, newReasonWhy, tempSocialSituation, isPublic);
+                        }
+                        updatedMoodEvent.setIntensity(moodIntensitySlider.getProgress());
+                        updatedMoodEvent.setDate(currentDate);
+
+                        // Instantiate AchievementChecker and perform visibility and photo achievement checks
+                        AchievementChecker achievementChecker = new AchievementChecker(userId);
+                        if (isPublic) {
+                            achievementChecker.checkAch7(updatedMoodEvent);
+                        } else {
+                            achievementChecker.checkAch8(updatedMoodEvent);
+                        }
+                        if (updatedMoodEvent.getPhotograph() != null) {
+                            achievementChecker.checkAch22(updatedMoodEvent);
+                        }
+
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("updatedMood", selectedMood);
                         resultIntent.putExtra("updatedEmoji", selectedEmoji);

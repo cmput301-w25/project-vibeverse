@@ -157,7 +157,7 @@
       "description": "Follow 5 other participants",
       "unlocks": "N/A",
       "iconRes": "icon_making_connections",
-      "total": 1,
+      "total": 5,
       "tier": 2,
       "completion_xp": 30
     },
@@ -168,7 +168,7 @@
       "description": "Follow 20 other participants",
       "unlocks": "N/A",
       "iconRes": "icon_making_connections",
-      "total": 1,
+      "total": 20,
       "tier": 3,
       "completion_xp": 60
     },
