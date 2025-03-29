@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -258,6 +259,7 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
     protected void onResume() {
         super.onResume();
         fetchFollowedUsersPosts();
+        checkAndResetStreak();
     }
 
     @Override
@@ -284,4 +286,37 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
             moodEventAdapter.filter(currentSearchText);
         }
     }
+
+    private void checkAndResetStreak() {
+        // Use a simple date format to compare dates (e.g., "yyyy-MM-dd")
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String currentDateStr = sdf.format(new Date());
+
+        DocumentReference userDocRef = db.collection("users").document(currentUserId);
+        userDocRef.get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                // Get the stored last mood date and mood streak
+                String lastMoodDate = documentSnapshot.contains("last_mood_date") ?
+                        documentSnapshot.getString("last_mood_date") : null;
+                Long streakLong = documentSnapshot.contains("mood_streak") ?
+                        documentSnapshot.getLong("mood_streak") : 0L;
+
+                // If lastMoodDate exists and is not today's date, reset the streak.
+                if (lastMoodDate != null && !lastMoodDate.equals(currentDateStr)) {
+                    // Reset the mood streak to 0 since the user has not posted a mood today
+                    userDocRef.update("mood_streak", 0)
+                            .addOnSuccessListener(aVoid -> {
+                                Log.d(TAG, "Mood streak reset to 0");
+                                // Also update the achievement checker
+                                AchievementChecker achievementChecker = new AchievementChecker(currentUserId);
+                                achievementChecker.checkAch23(0);
+                            })
+                            .addOnFailureListener(e -> Log.e(TAG, "Error resetting mood streak", e));
+                }
+            }
+        }).addOnFailureListener(e -> {
+            Log.e(TAG, "Error fetching user data for streak check", e);
+        });
+    }
+
 }
