@@ -33,6 +33,13 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <style name="RibbonShapeAppearance" parent="">
+        <!-- Use cut corners for a modern, ribbon-like look -->
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+
+
 
 
 

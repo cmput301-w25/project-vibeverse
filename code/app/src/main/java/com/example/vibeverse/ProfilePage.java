@@ -156,7 +156,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             if (id == R.id.menu_vibestore) {
                 startActivity(new Intent(ProfilePage.this, VibeStoreActivity.class));
             } else if (id == R.id.menu_vibestatus) {
-                // to be added
+                startActivity(new Intent(ProfilePage.this, AchievementActivity.class));
             } else if (id == R.id.menu_editprofile) {
                 Intent intent = new Intent(ProfilePage.this, UserDetails.class);
                 intent.putExtra("source", "edit_profile");

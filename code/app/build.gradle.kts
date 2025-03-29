@@ -112,6 +112,7 @@ dependencies {
     implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.android.libraries.places:places:2.7.0")
     implementation ("com.google.maps.android:android-maps-utils:2.3.0")
+    implementation ("androidx.cardview:cardview:1.0.0")
 
     configurations.all {
         resolutionStrategy {

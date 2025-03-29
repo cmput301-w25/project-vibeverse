@@ -131,5 +131,8 @@
         <activity android:name=".VibeStoreActivity"
             android:exported="false"/>
 
+        <activity android:name=".AchievementActivity"
+            android:exported="false"/>
+
     </application>
 </manifest>

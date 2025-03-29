@@ -32,7 +32,7 @@
     "id": "robot",
     "name": "Robot",
     "bundleTitle": "Automaton Bundle",
-    "unlockedBy": "completing achievement 'You're a machine'",
+    "unlockedBy": "completing achievement 'Mood Machine'",
     "backgroundRes": "theme_robot"
   }
 
@@ -48,14 +48,14 @@
     "id": "ghost",
     "name": "Ghost",
     "bundleTitle": "Haunted Bundle",
-    "unlockedBy": "completing achievement 'Follow-een'",
+    "unlockedBy": "completing achievement 'It's getting spooky'",
     "backgroundRes": "theme_ghost"
   },
    {
     "id": "skull",
     "name": "Skull",
     "bundleTitle": "Graveyard Bundle",
-    "unlockedBy": "completing achievement 'Target on your back'",
+    "unlockedBy": "completing achievement 'Target on your back II'",
     "backgroundRes": "theme_skull"
   },
   {

@@ -351,6 +351,8 @@ public class UserDetails extends AppCompatActivity {
             userData.put("newNotificationCount", 0);
             userData.put("usernameLowercase", username.getText().toString().trim().toLowerCase()); // Lowercase version
             userData.put("selectedTheme", "default");
+            userData.put("totalXP", 0);
+            userData.put("level", 1);
 
 
 
@@ -429,6 +431,23 @@ public class UserDetails extends AppCompatActivity {
                         userDocRef.collection("notifications")
                                 .document("placeholder")
                                 .set(new HashMap<String, Object>());
+
+                        // ----- New Code: Load achievements.json and create achievement docs -----
+                        List<Achievement> achievements = loadAchievementsFromAssets(); // Your helper to parse achievements.json
+                        if (achievements != null && !achievements.isEmpty()) {
+                            for (Achievement achievement : achievements) {
+                                // For each achievement, create a document with:
+                                // progress = 0, completion_status = "incomplete", unique_entities = empty array
+                                Map<String, Object> achData = new HashMap<>();
+                                achData.put("progress", 0);
+                                achData.put("completion_status", "incomplete");
+                                achData.put("unique_entities", new ArrayList<String>());
+
+                                userDocRef.collection("achievements")
+                                        .document(achievement.getId())
+                                        .set(achData);
+                            }
+                        }
 
                         Toast.makeText(UserDetails.this, "Profile created successfully!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(UserDetails.this, MainActivity.class);
@@ -799,4 +818,20 @@ public class UserDetails extends AppCompatActivity {
             return new ArrayList<>();
         }
     }
+
+    private List<Achievement> loadAchievementsFromAssets() {
+        try {
+            InputStream inputStream = getAssets().open("achievements.json");
+            InputStreamReader reader = new InputStreamReader(inputStream);
+            AchievementsWrapper wrapper = new Gson().fromJson(reader, AchievementsWrapper.class);
+            reader.close();
+            return wrapper != null ? wrapper.getAchievements() : new ArrayList<>();
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading achievements from assets", e);
+            return new ArrayList<>();
+        }
+    }
+
+
+
 }

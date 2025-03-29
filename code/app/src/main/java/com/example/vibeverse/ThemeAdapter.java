@@ -162,45 +162,48 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHol
         boolean isLocked = lockedThemes.contains(themeData.getId());
 
 
+        final androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(context)
+                .setView(popupView)
+                .create();
 
         if (isLocked) {
-            // Show the "Unlocked by ..." text.
+            // For locked themes, show the "Unlocked by ..." text.
             lockedMessage.setText("Unlocked by " + themeData.getUnlockedBy());
             lockedMessage.setVisibility(View.VISIBLE);
             selectButton.setVisibility(View.GONE);
         } else {
-            // Show the select button.
-            selectButton.setText("Select");
-            selectButton.setBackgroundTintList(null);
+            // For unlocked themes
             selectButton.setVisibility(View.VISIBLE);
             lockedMessage.setVisibility(View.GONE);
-            // Declare the dialog as final so it can be dismissed in the listener.
-            final androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(context)
-                    .setView(popupView)
-                    .create();
 
-            selectButton.setOnClickListener(v -> {
-                // Update the Firestore selected theme
-                db.collection("users").document(userId)
-                        .update("selectedTheme", themeData.getId())
-                        .addOnSuccessListener(aVoid -> {
-                            updateSelectedTheme(themeData.getId());
-                        })
-                        .addOnFailureListener(e -> {
-                            // Handle error if needed.
-                        });
-                // Dismiss the dialog
-                dialog.dismiss();
-            });
-            // Create and show the dialog.
-            dialog.show();
+            if (themeData.getId().equals(selectedTheme)) {
+                selectButton.setText("Selected");
+                selectButton.setEnabled(false);
+                selectButton.setBackgroundTintList(ColorStateList.valueOf(Color.GRAY)); // grey tint for selected
+            } else {
+                selectButton.setText("Select");
+                selectButton.setEnabled(true);
+                selectButton.setBackgroundTintList(null);
+                selectButton.setOnClickListener(v -> {
+                    // Update the Firestore selected theme
+                    db.collection("users").document(userId)
+                            .update("selectedTheme", themeData.getId())
+                            .addOnSuccessListener(aVoid -> {
+                                updateSelectedTheme(themeData.getId());
+                            })
+                            .addOnFailureListener(e -> {
+                                // Handle error if needed.
+                            });
+                    // Dismiss the dialog
+                    dialog.dismiss();
+                });
+            }
+
+        dialog.show();
+
             return; // Exit early so that we don’t show the dialog twice.
         }
 
-        // For locked themes, show the popup without the select button.
-        final androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(context)
-                .setView(popupView)
-                .create();
         dialog.show();
     }
 

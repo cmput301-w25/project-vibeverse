@@ -1,0 +1,263 @@
+{
+  "achievements": [
+    {
+      "id": "ach1",
+      "name": "First Mood",
+      "description": "Post your first mood event",
+      "unlocks": "N/A",
+      "iconRes": "icon_first_mood",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 10
+    },
+    {
+      "id": "ach2",
+      "name": "Mood Starter",
+      "description": "Add 3 mood events to get started",
+      "unlocks": "N/A",
+      "iconRes": "icon_3_moods",
+      "total": 3,
+      "tier": 1,
+      "completion_xp": 20
+    },
+    {
+      "id": "ach3",
+      "name": "Mood Enthusiast",
+      "description": "Keep it coming – add 10 mood events",
+      "unlocks": "N/A",
+      "iconRes": "icon_10_moods",
+      "total": 10,
+      "tier": 2,
+      "completion_xp": 50
+    },
+    {
+      "id": "ach4",
+      "name": "Mood Machine",
+      "description": "You're on fire – add 50 mood events",
+      "unlocks": "robot",
+      "iconRes": "icon_50_moods",
+      "total": 50,
+      "tier": 3,
+      "completion_xp": 150
+    },
+    {
+      "id": "ach5",
+      "name": "Early Bird",
+      "description": "Post a mood event before 6AM",
+      "unlocks": "N/A",
+      "iconRes": "icon_early_bird",
+      "total": 1,
+      "tier": 2,
+      "completion_xp": 30
+    },
+    {
+      "id": "ach6",
+      "name": "Night Owl",
+      "description": "Post a mood event after midnight",
+      "unlocks": "N/A",
+      "iconRes": "icon_night_owl",
+      "total": 1,
+      "tier": 2,
+      "completion_xp": 30
+    },
+    {
+      "id": "ach7",
+      "name": "Social Butterfly",
+      "description": "Share your mood publicly",
+      "unlocks": "N/A",
+      "iconRes": "icon_social_butterfly",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 15
+    },
+    {
+      "id": "ach8",
+      "name": "Secret Journal",
+      "description": "Keep it private – post a private mood event",
+      "unlocks": "N/A",
+      "iconRes": "icon_secret_journal",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 15
+    },
+    {
+      "id": "ach9",
+      "name": "Emoji Explorer I",
+      "description": "Use 4 of the available emojis in mood events",
+      "unlocks": "N/A",
+      "iconRes": "icon_emoji_explorer",
+      "total": 4,
+      "tier": 1,
+      "completion_xp": 30
+    },
+    {
+      "id": "ach10",
+      "name": "Emoji Explorer II",
+      "description": "Express every emotion – use all available emojis at least once",
+      "unlocks": "N/A",
+      "iconRes": "icon_emoji_explorer",
+      "total": 8,
+      "tier": 2,
+      "completion_xp": 70
+    },
+
+    {
+      "id": "ach11",
+      "name": "It's a brand new world",
+      "description": "Have a fresh start - edit your profile",
+      "unlocks": "N/A",
+      "iconRes": "icon_brand_new_world",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 10
+    },
+    {
+      "id": "ach12",
+      "name": "I don't like you anymore",
+      "description": "It's okay to make new friends - unfollow someone",
+      "unlocks": "N/A",
+      "iconRes": "icon_i_dont_like_you_anymore",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 15
+    },
+    {
+      "id": "ach13",
+      "name": "On the radar",
+      "description": "Attach your location to a mood event",
+      "unlocks": "N/A",
+      "iconRes": "icon_on_the_radar",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 20
+    },
+    {
+      "id": "ach14",
+      "name": "Commentator",
+      "description": "Join the conversation – comment on a mood event",
+      "unlocks": "N/A",
+      "iconRes": "icon_commentator",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 15
+    },
+    {
+      "id": "ach15",
+      "name": "Making Connections I",
+      "description": "Connect with others – follow another participant",
+      "unlocks": "N/A",
+      "iconRes": "icon_making_connections",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 10
+    },
+    {
+      "id": "ach16",
+      "name": "Making Connections II",
+      "description": "Follow 5 other participants",
+      "unlocks": "N/A",
+      "iconRes": "icon_making_connections",
+      "total": 1,
+      "tier": 2,
+      "completion_xp": 30
+    },
+
+    {
+      "id": "ach17",
+      "name": "Making Connections III",
+      "description": "Follow 20 other participants",
+      "unlocks": "N/A",
+      "iconRes": "icon_making_connections",
+      "total": 1,
+      "tier": 3,
+      "completion_xp": 60
+    },
+
+    {
+      "id": "ach18",
+      "name": "Target on your back I",
+      "description": "Grow your influence – get 5 followers",
+      "unlocks": "N/A",
+      "iconRes": "icon_target_on_your_back",
+      "total": 5,
+      "tier": 2,
+      "completion_xp": 40
+    },
+    {
+      "id": "ach19",
+      "name": "Target on your back II",
+      "description": "Make an impact – have 20 followers",
+      "unlocks": "skull",
+      "iconRes": "icon_target_on_your_back",
+      "total": 20,
+      "tier": 3,
+      "completion_xp": 50
+    },
+    {
+      "id": "ach20",
+      "name": "It's getting spooky",
+      "description": "Post a mood event on 31st October",
+      "unlocks": "ghost",
+      "iconRes": "icon_its_getting_spooky",
+      "total": 1,
+      "tier": 3,
+      "completion_xp": 70
+    },
+    {
+      "id": "ach21",
+      "name": "Love is in the Air",
+      "description": "Post a mood event on 14th February",
+      "unlocks": "heart",
+      "iconRes": "icon_love_is_in_the_air",
+      "total": 1,
+      "tier": 3,
+      "completion_xp": 70
+    },
+
+    {
+      "id": "ach22",
+      "name": "Photo Mood",
+      "description": "Enhance your mood with a photo",
+      "unlocks": "N/A",
+      "iconRes": "icon_photo_mood",
+      "total": 1,
+      "tier": 1,
+      "completion_xp": 25
+    },
+
+    {
+      "id": "ach23",
+      "name": "Mood Marathon",
+      "description": "Keep the streak alive – post mood events every day for a week",
+      "unlocks": "N/A",
+      "iconRes": "icon_mood_marathon",
+      "total": 7,
+      "tier": 2,
+      "completion_xp": 60
+    },
+
+    {
+      "id": "ach24",
+      "name": "Ho Ho Ho!",
+      "description": "Post a mood event on 24th December",
+      "unlocks": "N/A",
+      "iconRes": "icon_ho_ho_ho",
+      "total": 1,
+      "tier": 3,
+      "completion_xp": 70
+    },
+
+    {
+      "id": "ach25",
+      "name": "New Year, New Me",
+      "description": "Post a mood event on 1st January",
+      "unlocks": "N/A",
+      "iconRes": "icon_new_year_new_me",
+      "total": 1,
+      "tier": 3,
+      "completion_xp": 70
+    }
+
+
+  ]
+}
