@@ -26,6 +26,8 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
     private List<Achievement> achievementList;
     private String userId;
 
+
+
     public AchievementAdapter(Context context, List<Achievement> achievementList) {
         this.context = context;
         this.achievementList = achievementList;
@@ -141,6 +143,47 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
                                                             holder.container.setAlpha(0.5f);
                                                             if (context instanceof AchievementActivity) {
                                                                 ((AchievementActivity) context).animateXpGain(holder.claimButton, achievement.getCompletion_xp());
+                                                            }
+
+                                                            if (achievement.getUnlocks() != null && !achievement.getUnlocks().equals("N/A")) {
+                                                                String themeToUnlock = achievement.getUnlocks();
+
+                                                                // Remove theme from lockedThemes
+                                                                FirebaseFirestore.getInstance()
+                                                                        .collection("users")
+                                                                        .document(userId)
+                                                                        .collection("lockedThemes")
+                                                                        .document("list")
+                                                                        .update("themeNames", FieldValue.arrayRemove(themeToUnlock))
+                                                                        .addOnSuccessListener(aVoid3 -> {
+                                                                            // Add theme to unlockedThemes
+                                                                            FirebaseFirestore.getInstance()
+                                                                                    .collection("users")
+                                                                                    .document(userId)
+                                                                                    .collection("unlockedThemes")
+                                                                                    .document("list")
+                                                                                    .update("themeNames", FieldValue.arrayUnion(themeToUnlock))
+                                                                                    .addOnSuccessListener(aVoid4 -> {
+                                                                                        // Show the unlocked theme popup.
+                                                                                        if (context instanceof AchievementActivity) {
+                                                                                            AchievementActivity achievementActivity = (AchievementActivity) context;
+                                                                                            // Load themes from assets if not already loaded
+                                                                                            if (achievementActivity.themeList == null) {
+                                                                                                achievementActivity.themeList = achievementActivity.loadThemesFromAssets();
+                                                                                            }
+                                                                                            ThemeData unlockedTheme = achievementActivity.findThemeData(themeToUnlock);
+                                                                                            if (unlockedTheme != null) {
+                                                                                                achievementActivity.showUnlockedThemePopup(unlockedTheme);
+                                                                                            }
+                                                                                        }
+                                                                                    })
+                                                                                    .addOnFailureListener(e -> {
+                                                                                        // Handle error adding theme to unlockedThemes if needed.
+                                                                                    });
+                                                                        })
+                                                                        .addOnFailureListener(e -> {
+                                                                            // Handle error removing theme from lockedThemes if needed.
+                                                                        });
                                                             }
                                                         });
                                             });

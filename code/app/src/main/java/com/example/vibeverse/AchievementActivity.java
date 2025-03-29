@@ -7,10 +7,14 @@ import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,9 +33,11 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +53,8 @@ public class AchievementActivity extends AppCompatActivity {
 
     // Hold the levels data from levels.json
     private List<Level> levelsList;
+
+    List<ThemeData> themeList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -365,6 +373,18 @@ public class AchievementActivity extends AppCompatActivity {
                                             Log.d(TAG, "User level updated successfully in Firestore");
                                             // Check and update themes if the new level unlocks one
                                             unlockThemeIfAvailable(newLevel);
+
+                                            String unlockedThemeId = getUnlockedThemeForLevel(newLevel); // See note below.
+                                            if (unlockedThemeId != null && !unlockedThemeId.equals("N/A")) {
+                                                // Make sure themes have been loaded:
+                                                if (themeList == null) {
+                                                    themeList = loadThemesFromAssets();
+                                                }
+                                                ThemeData unlockedTheme = findThemeData(unlockedThemeId);
+                                                if (unlockedTheme != null) {
+                                                    showUnlockedThemePopup(unlockedTheme);
+                                                }
+                                            }
                                         }
                                     })
                                     .addOnFailureListener(new OnFailureListener() {
@@ -410,14 +430,111 @@ public class AchievementActivity extends AppCompatActivity {
                     .update("themeNames", FieldValue.arrayUnion(themeToUnlock))
                     .addOnSuccessListener(aVoid -> {
                         Log.d(TAG, "Theme added to unlockedThemes: " + themeToUnlock);
-                        Intent intent = new Intent(AchievementActivity.this, VibeStoreActivity.class);
-                        intent.putExtra("newlyUnlockedTheme", themeToUnlock); // themeToUnlock is the ID you unlocked
-                        startActivity(intent);
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Error adding theme to unlockedThemes", e);
                     });
         }
+
+
+    }
+
+
+    public List<ThemeData> loadThemesFromAssets() {
+        try {
+            InputStream inputStream = getAssets().open("themes.json");
+            InputStreamReader reader = new InputStreamReader(inputStream);
+            Type listType = new TypeToken<List<ThemeData>>() {}.getType();
+            List<ThemeData> themes = new Gson().fromJson(reader, listType);
+            reader.close();
+            return themes;
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading themes from assets", e);
+            return new ArrayList<>();
+        }
+    }
+
+    public ThemeData findThemeData(String themeId) {
+        if (themeList != null) {
+            for (ThemeData theme : themeList) {
+                if (theme.getId().equals(themeId)) {
+                    return theme;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void showUnlockedThemePopup(ThemeData themeData) {
+        // Inflate the custom popup layout.
+        View popupView = LayoutInflater.from(this).inflate(R.layout.popup_theme_details, null);
+
+        // Bind views from the popup layout.
+        TextView bundleTitle = popupView.findViewById(R.id.popupBundleTitle);
+        GridLayout emojiGrid = popupView.findViewById(R.id.emojiGrid);
+        TextView lockedMessage = popupView.findViewById(R.id.lockedMessage);
+        Button selectButton = popupView.findViewById(R.id.selectThemeButton);
+        // NEW: TextView to show the new unlock message.
+        TextView newUnlockMessage = popupView.findViewById(R.id.newUnlockMessage);
+
+        // Set the bundle title.
+        bundleTitle.setText(themeData.getBundleTitle());
+
+        // Clear any existing views in the emoji grid.
+        emojiGrid.removeAllViews();
+
+        // Populate the emoji grid (same as in ThemeAdapter).
+        for (Mood mood : Mood.values()) {
+            FrameLayout emojiContainer = new FrameLayout(this);
+            GridLayout.LayoutParams containerParams = new GridLayout.LayoutParams();
+            int containerSize = (int) (70 * getResources().getDisplayMetrics().density);
+            containerParams.width = containerSize;
+            containerParams.height = containerSize;
+            containerParams.setMargins(8, 8, 8, 8);
+            emojiContainer.setLayoutParams(containerParams);
+            emojiContainer.setBackgroundResource(R.drawable.emoji_container);
+
+            ImageView emojiView = new ImageView(this);
+            int resId = getEmojiResourceId(mood.getName().toLowerCase(), themeData.getId());
+            emojiView.setImageResource(resId);
+            FrameLayout.LayoutParams emojiParams = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT);
+            emojiView.setLayoutParams(emojiParams);
+            emojiView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+            emojiContainer.addView(emojiView);
+            emojiGrid.addView(emojiContainer);
+        }
+
+        // For this popup, since the theme is unlocked via level up, hide locked message.
+        lockedMessage.setVisibility(View.GONE);
+        // Also, show the select button if you want the user to immediately choose it.
+        selectButton.setVisibility(View.GONE);
+
+        // Set the "newly unlocked" message at the bottom.
+        newUnlockMessage.setText("You just unlocked a new theme!");
+        newUnlockMessage.setVisibility(View.VISIBLE);
+
+
+        final androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setView(popupView)
+                .create();
+        dialog.show();
+    }
+
+    private int getEmojiResourceId(String moodId, String theme) {
+        String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
+        return getResources().getIdentifier(resourceName, "drawable", getPackageName());
+    }
+
+    private String getUnlockedThemeForLevel(int level) {
+        for (Level lvl : levelsList) {
+            if (lvl.getLevel() == level) {
+                return lvl.getUnlocks();
+            }
+        }
+        return "N/A";
     }
 
 

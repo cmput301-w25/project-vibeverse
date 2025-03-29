@@ -49,6 +49,17 @@
             android:gravity="center"
             android:visibility="gone" />
 
+        <TextView
+            android:id="@+id/newUnlockMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_green_dark"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:padding="8dp"
+            android:visibility="gone" />
+
+
         <!-- Select button -->
         <Button
             android:id="@+id/selectThemeButton"
