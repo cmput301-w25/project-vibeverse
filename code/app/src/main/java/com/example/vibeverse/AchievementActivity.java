@@ -15,6 +15,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -56,6 +57,8 @@ public class AchievementActivity extends AppCompatActivity {
 
     List<ThemeData> themeList;
 
+    ImageButton backButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +70,7 @@ public class AchievementActivity extends AppCompatActivity {
         xpProgressBar = findViewById(R.id.xpProgressBar);
         xpLeftTextView = findViewById(R.id.xpLeftTextView);
         achievementsRecyclerView = findViewById(R.id.achievementsRecyclerView);
+        backButton = findViewById(R.id.backButton);
 
         // Set header text
         headerTextView.setText("Achievements");
@@ -87,6 +91,13 @@ public class AchievementActivity extends AppCompatActivity {
 
         // Now, retrieve current user's data from Firestore
         loadCurrentUserData();
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish(); // Close the activity and go back
+            }
+        });
     }
 
     /**

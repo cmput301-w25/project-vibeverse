@@ -4,13 +4,21 @@
     <item
         android:id="@+id/menu_vibestore"
         android:title="@string/vibestore_menu_text"
-        android:icon="@drawable/ic_shop"
+        android:icon="@drawable/ic_shift"
         app:itemIconTint="@android:color/white"/>
     <item
         android:id="@+id/menu_vibestatus"
         android:title="@string/vibestatus_menu_text"
         android:icon="@drawable/ic_graph"
         app:itemIconTint="@android:color/white"/>
+
+    <item
+        android:id="@+id/menu_vibequests"
+        android:title="@string/vibequests_menu_text"
+        android:icon="@drawable/trophy"
+        app:itemIconTint="@android:color/white"/>
+
+
     <item
         android:id="@+id/menu_editprofile"
         android:title="@string/edit_profile_menu_text"
