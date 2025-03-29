@@ -1,5 +1,7 @@
 package com.example.vibeverse;
 
+import static android.content.ContentValues.TAG;
+
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -35,9 +37,14 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -369,17 +376,18 @@ public class UserDetails extends AppCompatActivity {
             userDocRef.set(userData)
                     .addOnSuccessListener(aVoid -> {
 
-                        String[] themes = getResources().getStringArray(R.array.theme_options);
+                        List<ThemeData> themes = loadThemesFromAssets();
                         List<String> unlockedThemesList = new ArrayList<>();
                         List<String> lockedThemesList = new ArrayList<>();
 
-                        if (themes != null && themes.length > 0) {
-                            // The first theme (e.g., "default") goes into unlockedThemes
-                            unlockedThemesList.add(themes[0]);
-
-                            // All subsequent themes go into lockedThemes
-                            for (int i = 1; i < themes.length; i++) {
-                                lockedThemesList.add(themes[i]);
+                        if (themes != null && !themes.isEmpty()) {
+                            for (ThemeData theme : themes) {
+                                // Default theme is "default" (or whatever id you designate)
+                                if ("default".equalsIgnoreCase(theme.getId())) {
+                                    unlockedThemesList.add(theme.getId());
+                                } else {
+                                    lockedThemesList.add(theme.getId());
+                                }
                             }
                         }
 
@@ -775,6 +783,20 @@ public class UserDetails extends AppCompatActivity {
                     );
         } else {
             Toast.makeText(this, "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private List<ThemeData> loadThemesFromAssets() {
+        try {
+            InputStream inputStream = getAssets().open("themes.json");
+            InputStreamReader reader = new InputStreamReader(inputStream);
+            Type listType = new TypeToken<List<ThemeData>>() {}.getType();
+            List<ThemeData> themes = new Gson().fromJson(reader, listType);
+            reader.close();
+            return themes;
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading themes from assets", e);
+            return new ArrayList<>();
         }
     }
 }

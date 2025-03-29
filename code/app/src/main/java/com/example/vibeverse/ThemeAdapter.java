@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,13 +23,13 @@ import java.util.Set;
 
 public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHolder> {
 
-    private List<String> themeList;
+    private List<ThemeData> themeList;
     private Set<String> lockedThemes;
     private FirebaseFirestore db;
     private String userId;
     private String selectedTheme; // current selected theme
 
-    public ThemeAdapter(List<String> themeList, Set<String> lockedThemes, FirebaseFirestore db, String userId, String selectedTheme) {
+    public ThemeAdapter(List<ThemeData> themeList, Set<String> lockedThemes, FirebaseFirestore db, String userId, String selectedTheme) {
         this.themeList = themeList;
         this.lockedThemes = lockedThemes;
         this.db = db;
@@ -51,76 +52,164 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHol
 
     @Override
     public void onBindViewHolder(@NonNull ThemeViewHolder holder, int position) {
-        String theme = themeList.get(position);
+        ThemeData themeData = themeList.get(position);
         Context context = holder.itemView.getContext();
 
-        // Set the title text (capitalize first letter and add "Bundle")
-        String title = theme.substring(0, 1).toUpperCase() + theme.substring(1) + " Bundle";
-        holder.themeTitle.setText(title);
+        // Use the bundleTitle for display
+        holder.themeTitle.setText(themeData.getBundleTitle());
 
-        // Set the background image using naming convention: "theme_" + theme
-        int bgResId = getThemeBackgroundResId(context, theme);
+        // Set the background image using naming convention
+        int bgResId = context.getResources().getIdentifier(themeData.getBackgroundRes(), "drawable", context.getPackageName());
         holder.backgroundImage.setImageResource(bgResId);
 
         // Retrieve the MaterialCardView (the root view)
-        // Ensure that your item_theme.xml has the MaterialCardView with id "cardView"
-        com.google.android.material.card.MaterialCardView cardView =
-                (com.google.android.material.card.MaterialCardView) holder.itemView.findViewById(R.id.cardView);
+        com.google.android.material.card.MaterialCardView cardView = holder.itemView.findViewById(R.id.cardView);
 
-        // Check if this theme is locked (if it appears in the locked set)
-        if (lockedThemes.contains(theme)) {
+        if (lockedThemes.contains(themeData.getId())) {
+            // For locked themes
             holder.lockedOverlay.setVisibility(View.VISIBLE);
             holder.selectButton.setVisibility(View.GONE); // no select button for locked themes
-            // Optionally, remove any border if locked
             cardView.setStrokeWidth(0);
         } else {
+            // For unlocked themes
             holder.lockedOverlay.setVisibility(View.GONE);
             holder.selectButton.setVisibility(View.VISIBLE);
-            // If this is the currently selected theme, change button appearance and container border
-            if (theme.equals(selectedTheme)) {
+
+            if (themeData.getId().equals(selectedTheme)) {
                 holder.selectButton.setText("Selected");
                 holder.selectButton.setBackgroundTintList(null);
                 holder.selectButton.setBackgroundResource(R.drawable.button_background_selected);
                 holder.selectButton.setEnabled(false);
-
-                // Set a more pronounced blue outline for the selected container
-                cardView.setStrokeColor(Color.parseColor("#2979FF")); // a vibrant blue
-                int strokeWidth = (int) (6 * context.getResources().getDisplayMetrics().density); // 6dp in pixels
+                cardView.setStrokeColor(Color.parseColor("#2979FF")); // blue outline
+                int strokeWidth = (int) (6 * context.getResources().getDisplayMetrics().density);
                 cardView.setStrokeWidth(strokeWidth);
             } else {
                 holder.selectButton.setText("Select");
                 holder.selectButton.setBackgroundResource(R.drawable.button_background);
                 holder.selectButton.setBackgroundTintList(null);
                 holder.selectButton.setEnabled(true);
-                // Remove any border for non-selected containers
                 cardView.setStrokeWidth(0);
-                // Add onClickListener as before...
                 holder.selectButton.setOnClickListener(v -> {
                     db.collection("users").document(userId)
-                            .update("selectedTheme", theme)
+                            .update("selectedTheme", themeData.getId())
                             .addOnSuccessListener(aVoid -> {
-                                Log.d("ThemeAdapter", "Selected theme updated to " + theme);
-                                updateSelectedTheme(theme);
+                                updateSelectedTheme(themeData.getId());
                             })
-                            .addOnFailureListener(e -> Log.e("ThemeAdapter", "Error updating selected theme", e));
+                            .addOnFailureListener(e -> {
+                                // Handle error if needed
+                            });
                 });
             }
         }
-    }
 
+        // Always set the onClickListener so the popup shows for both locked and unlocked themes.
+        holder.itemView.setOnClickListener(v -> {
+            showThemePopup(context, themeData);
+        });
+    }
 
     @Override
     public int getItemCount() {
         return themeList.size();
     }
 
-    /**
-     * Helper method that returns the drawable resource ID for a given theme string.
-     */
-    private int getThemeBackgroundResId(Context context, String theme) {
-        String resourceName = "theme_" + theme.toLowerCase();
+
+    private void showThemePopup(Context context, ThemeData themeData) {
+        // Inflate the custom popup layout.
+        View popupView = LayoutInflater.from(context).inflate(R.layout.popup_theme_details, null);
+
+        TextView bundleTitle = popupView.findViewById(R.id.popupBundleTitle);
+        GridLayout emojiGrid = popupView.findViewById(R.id.emojiGrid);
+        TextView lockedMessage = popupView.findViewById(R.id.lockedMessage);
+        Button selectButton = popupView.findViewById(R.id.selectThemeButton);
+
+        // Set the bundle title.
+        bundleTitle.setText(themeData.getBundleTitle());
+
+        // Clear any existing views (if reusing).
+        emojiGrid.removeAllViews();
+
+        // For each mood in your Mood enum, create a container with the emoji.
+        for (Mood mood : Mood.values()) {
+            // Create a container for the emoji.
+            FrameLayout emojiContainer = new FrameLayout(context);
+            GridLayout.LayoutParams containerParams = new GridLayout.LayoutParams();
+            int containerSize = (int) (70 * context.getResources().getDisplayMetrics().density);
+            containerParams.width = containerSize;
+            containerParams.height = containerSize;
+            containerParams.setMargins(8, 8, 8, 8);
+            emojiContainer.setLayoutParams(containerParams);
+            emojiContainer.setBackgroundResource(R.drawable.emoji_container);
+
+            // Create the ImageView for the emoji.
+            ImageView emojiView = new ImageView(context);
+            int resId = getEmojiResourceId(context, mood.getName().toLowerCase(), themeData.getId());
+            emojiView.setImageResource(resId);
+            // Set layout parameters for the emoji inside its container.
+            FrameLayout.LayoutParams emojiParams = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT);
+            emojiView.setLayoutParams(emojiParams);
+            emojiView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+            // Add the ImageView to the container.
+            emojiContainer.addView(emojiView);
+            // Add the container to the grid.
+            emojiGrid.addView(emojiContainer);
+        }
+
+        // Determine if this theme is locked.
+        boolean isLocked = lockedThemes.contains(themeData.getId());
+
+
+
+        if (isLocked) {
+            // Show the "Unlocked by ..." text.
+            lockedMessage.setText("Unlocked by " + themeData.getUnlockedBy());
+            lockedMessage.setVisibility(View.VISIBLE);
+            selectButton.setVisibility(View.GONE);
+        } else {
+            // Show the select button.
+            selectButton.setText("Select");
+            selectButton.setBackgroundTintList(null);
+            selectButton.setVisibility(View.VISIBLE);
+            lockedMessage.setVisibility(View.GONE);
+            // Declare the dialog as final so it can be dismissed in the listener.
+            final androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(context)
+                    .setView(popupView)
+                    .create();
+
+            selectButton.setOnClickListener(v -> {
+                // Update the Firestore selected theme
+                db.collection("users").document(userId)
+                        .update("selectedTheme", themeData.getId())
+                        .addOnSuccessListener(aVoid -> {
+                            updateSelectedTheme(themeData.getId());
+                        })
+                        .addOnFailureListener(e -> {
+                            // Handle error if needed.
+                        });
+                // Dismiss the dialog
+                dialog.dismiss();
+            });
+            // Create and show the dialog.
+            dialog.show();
+            return; // Exit early so that we don’t show the dialog twice.
+        }
+
+        // For locked themes, show the popup without the select button.
+        final androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(context)
+                .setView(popupView)
+                .create();
+        dialog.show();
+    }
+
+    private int getEmojiResourceId(Context context, String moodId, String theme) {
+        String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
         return context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
     }
+
+
 
     public static class ThemeViewHolder extends RecyclerView.ViewHolder {
         ImageView backgroundImage;
@@ -136,4 +225,6 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHol
             selectButton = itemView.findViewById(R.id.selectButton);
         }
     }
+
+
 }

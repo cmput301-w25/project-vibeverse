@@ -11,7 +11,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -23,8 +28,7 @@ public class VibeStoreActivity extends AppCompatActivity {
     private RecyclerView themeRecyclerView;
     private ThemeAdapter themeAdapter;
     // List of all theme strings
-    private List<String> themeList = new ArrayList<>();
-    // Set to track which themes are locked
+    private List<ThemeData> themeList;
     private Set<String> lockedThemesSet = new HashSet<>();
     private FirebaseFirestore db;
     private FirebaseAuth auth;
@@ -57,47 +61,49 @@ public class VibeStoreActivity extends AppCompatActivity {
                             selectedTheme = "";
                         }
                     }
+                    themeList = loadThemesFromAssets();
                     // Now create the adapter with the selected theme.
                     themeAdapter = new ThemeAdapter(themeList, lockedThemesSet, db, userId, selectedTheme);
                     themeRecyclerView.setAdapter(themeAdapter);
 
-                    // Load the themes from the subcollections
-                    loadThemes(userId);
+                    loadLockedThemes(userId);
                 })
                 .addOnFailureListener(e -> Log.e(TAG, "Error loading user data", e));
     }
 
-    private void loadThemes(String userId) {
-        // Load unlocked themes from the user's subcollection
+
+
+    private List<ThemeData> loadThemesFromAssets() {
+        try {
+            InputStream inputStream = getAssets().open("themes.json");
+            InputStreamReader reader = new InputStreamReader(inputStream);
+            Type listType = new TypeToken<List<ThemeData>>() {}.getType();
+            List<ThemeData> themes = new Gson().fromJson(reader, listType);
+            reader.close();
+            return themes;
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading themes from assets", e);
+            return new ArrayList<>();
+        }
+    }
+
+    // If you need to load locked themes from Firestore:
+    private void loadLockedThemes(String userId) {
+        // For example, load the names/IDs of locked themes and add them to lockedThemesSet.
         db.collection("users")
                 .document(userId)
-                .collection("unlockedThemes")
+                .collection("lockedThemes")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
-                        // Retrieve the array field "themeNames"
                         List<String> themes = (List<String>) document.get("themeNames");
                         if (themes != null && !themes.isEmpty()) {
-                            themeList.addAll(themes);
+                            lockedThemesSet.addAll(themes);
                         }
                     }
-                    // Then load locked themes from the user's subcollection
-                    db.collection("users")
-                            .document(userId)
-                            .collection("lockedThemes")
-                            .get()
-                            .addOnSuccessListener(queryDocumentSnapshots2 -> {
-                                for (DocumentSnapshot document : queryDocumentSnapshots2.getDocuments()) {
-                                    List<String> themes = (List<String>) document.get("themeNames");
-                                    if (themes != null && !themes.isEmpty()) {
-                                        themeList.addAll(themes);
-                                        lockedThemesSet.addAll(themes);
-                                    }
-                                }
-                                themeAdapter.notifyDataSetChanged();
-                            })
-                            .addOnFailureListener(e -> Log.e(TAG, "Error loading locked themes", e));
+                    themeAdapter.notifyDataSetChanged();
                 })
-                .addOnFailureListener(e -> Log.e(TAG, "Error loading unlocked themes", e));
+                .addOnFailureListener(e -> Log.e(TAG, "Error loading locked themes", e));
     }
+
 }

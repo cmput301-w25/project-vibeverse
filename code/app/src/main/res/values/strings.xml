@@ -75,15 +75,5 @@
     <string name="save_changes_edit_profile">Save Changes</string>
     <string name="title_activity_maps">MapsActivity</string>
 
-    <string-array name="theme_options">
-        <item>default</item>
-        <item>clown</item>
-        <item>heart</item>
-        <item>alien</item>
-        <item>robot</item>
-        <item>lion</item>
-        <item>ghost</item>
-        <item>skull</item>
-        <item>cold</item>
-    </string-array>
+
 </resources>
