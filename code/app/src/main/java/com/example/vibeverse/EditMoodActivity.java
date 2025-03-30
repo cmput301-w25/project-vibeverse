@@ -5,6 +5,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -12,6 +13,7 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -27,6 +29,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -57,6 +60,7 @@ import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -445,57 +449,67 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Set the click listener for the location button
         locationButton.setOnClickListener(v -> {
-            // First, check if a location already exists for this mood in the database
             if (selectedLocationName != null && !selectedLocationName.isEmpty()) {
-                // A location already exists for this mood
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Choose Location")
-                        .setItems(new CharSequence[]{
-                                "Keep existing: " + selectedLocationName,
-                                "Search for a different location",
-                                "Remove location"
-                        }, (dialog, which) -> {
-                            if (which == 0) {
-                                // Keep existing location - no action needed
-                            } else if (which == 1) {
-                                // Search for a different location
-                                startPlacesAutocomplete();
-                            } else if (which == 2) {
-                                // Remove location
-                                selectedLocationName = null;
-                                selectedLocationCoords = null;
-                                selectedLocationText.setText("Add Location (Optional)");
-                                selectedLocationText.setTextColor(Color.parseColor("#757575"));
-                                userRemovedLocation = true;
-                            }
-                        })
-                        .show();
+                // Location already exists for this mood
+                List<LocationOption> options = new ArrayList<>();
+
+                options.add(new LocationOption(
+                        "Keep existing: " + selectedLocationName,
+                        android.R.drawable.ic_menu_mylocation,
+                        () -> {
+                            // Keep existing location - no action needed
+                        }
+                ));
+
+                options.add(new LocationOption(
+                        "Search for a different location",
+                        android.R.drawable.ic_menu_search,
+                        this::startPlacesAutocomplete
+                ));
+
+                options.add(new LocationOption(
+                        "Remove location",
+                        android.R.drawable.ic_menu_close_clear_cancel,
+                        () -> {
+                            // Remove location
+                            selectedLocationName = null;
+                            selectedLocationCoords = null;
+                            selectedLocationText.setText("Add Location (Optional)");
+                            selectedLocationText.setTextColor(Color.parseColor("#757575"));
+                            userRemovedLocation = true;
+                        }
+                ));
+
+                showCustomLocationDialog("Choose Location", options);
             } else {
                 // No location exists for this mood yet
                 if (currentLocationAddress != null && !currentLocationAddress.isEmpty()) {
                     // Current device location is available
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Choose Location")
-                            .setItems(new CharSequence[]{
-                                    "Use Current Location: " + currentLocationAddress,
-                                    "Search for a different location"
-                            }, (dialog, which) -> {
-                                if (which == 0) {
-                                    // Use current location
-                                    selectedLocationName = currentLocationAddress;
-                                    if (currentLocation != null) {
-                                        selectedLocationCoords = new LatLng(
-                                                currentLocation.getLatitude(),
-                                                currentLocation.getLongitude());
-                                    }
-                                    selectedLocationText.setText(selectedLocationName);
-                                    selectedLocationText.setTextColor(Color.BLACK);
-                                } else {
-                                    // Search for a different location
-                                    startPlacesAutocomplete();
+                    List<LocationOption> options = new ArrayList<>();
+
+                    options.add(new LocationOption(
+                            "Use Current Location: " + currentLocationAddress,
+                            android.R.drawable.ic_menu_mylocation,
+                            () -> {
+                                // Use current location
+                                selectedLocationName = currentLocationAddress;
+                                if (currentLocation != null) {
+                                    selectedLocationCoords = new LatLng(
+                                            currentLocation.getLatitude(),
+                                            currentLocation.getLongitude());
                                 }
-                            })
-                            .show();
+                                selectedLocationText.setText(selectedLocationName);
+                                selectedLocationText.setTextColor(Color.BLACK);
+                            }
+                    ));
+
+                    options.add(new LocationOption(
+                            "Search for a different location",
+                            android.R.drawable.ic_menu_search,
+                            this::startPlacesAutocomplete
+                    ));
+
+                    showCustomLocationDialog("Choose Location", options);
                 } else {
                     // No existing location and no current location available
                     startPlacesAutocomplete();
@@ -575,6 +589,63 @@ public class EditMoodActivity extends AppCompatActivity {
             startActivity(goBackIntent);
             finish();
         });
+    }
+
+    private void showCustomLocationDialog(String title, List<LocationOption> options) {
+        // Create dialog
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_location_choice);
+
+        // Set dialog width to 90% of screen width
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setGravity(Gravity.CENTER);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        // Set dialog title
+        TextView dialogTitle = dialog.findViewById(R.id.dialog_title);
+        dialogTitle.setText(title);
+
+        // Get container for options
+        LinearLayout optionsContainer = dialog.findViewById(R.id.location_options_container);
+
+        // Add each option as a button
+        for (LocationOption option : options) {
+            View optionView = getLayoutInflater().inflate(R.layout.item_location_option, optionsContainer, false);
+
+            ImageView optionIcon = optionView.findViewById(R.id.option_icon);
+            TextView optionText = optionView.findViewById(R.id.option_text);
+
+            // Set option text and icon
+            optionIcon.setImageResource(option.iconResId);
+            optionText.setText(option.text);
+
+            // Set click listener
+            optionView.setOnClickListener(v -> {
+                option.clickListener.run();
+                dialog.dismiss();
+            });
+
+            optionsContainer.addView(optionView);
+        }
+
+        dialog.show();
+    }
+
+    // Class to represent location options
+    private static class LocationOption {
+        String text;
+        int iconResId;
+        Runnable clickListener;
+
+        LocationOption(String text, int iconResId, Runnable clickListener) {
+            this.text = text;
+            this.iconResId = iconResId;
+            this.clickListener = clickListener;
+        }
     }
 
     /**
