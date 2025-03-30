@@ -4,4 +4,6 @@
     <item name="action_delete" type="id"/>
     <item name="triggerInput" type="id" />
     <item name="buttonLogout" type="id" />
+    <item name="recyclerView" type="id" />
+    <item name="recyclerViewReplies" type="id" />
 </resources>
