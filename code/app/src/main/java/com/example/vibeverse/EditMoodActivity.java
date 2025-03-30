@@ -127,6 +127,8 @@ public class EditMoodActivity extends AppCompatActivity {
     private Location currentLocation;
     private String currentLocationAddress = null;
 
+    private boolean userRemovedLocation = false;
+
     /**
      * Called when the activity is first created.
      * <p>
@@ -464,6 +466,7 @@ public class EditMoodActivity extends AppCompatActivity {
                                 selectedLocationCoords = null;
                                 selectedLocationText.setText("Add Location (Optional)");
                                 selectedLocationText.setTextColor(Color.parseColor("#757575"));
+                                userRemovedLocation = true;
                             }
                         })
                         .show();
@@ -541,15 +544,25 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedphotoSizeKB", photoSize);
                         resultIntent.putExtra("isPublic", isPublic);
 
-                        // Add location information if available
-                        if (selectedLocationName != null && selectedLocationCoords != null) {
+                        if (userRemovedLocation) {
+                            // Only mark as removed if user explicitly chose to remove it
+                            resultIntent.putExtra("locationRemoved", true);
+                        } else if (selectedLocationName != null && selectedLocationCoords != null) {
+                            // User selected or kept a location
                             resultIntent.putExtra("updatedMoodLocation", selectedLocationName);
                             resultIntent.putExtra("updatedMoodLatitude", selectedLocationCoords.latitude);
                             resultIntent.putExtra("updatedMoodLongitude", selectedLocationCoords.longitude);
-                        } else {
-                            // Explicitly pass null to indicate location should be removed
-                            resultIntent.putExtra("locationRemoved", true);
                         }
+
+//                        // Add location information if available
+//                        if (selectedLocationName != null && selectedLocationCoords != null) {
+//                            resultIntent.putExtra("updatedMoodLocation", selectedLocationName);
+//                            resultIntent.putExtra("updatedMoodLatitude", selectedLocationCoords.latitude);
+//                            resultIntent.putExtra("updatedMoodLongitude", selectedLocationCoords.longitude);
+//                        } else {
+//                            // Explicitly pass null to indicate location should be removed
+//                            resultIntent.putExtra("locationRemoved", true);
+//                        }
 
                         setResult(RESULT_OK, resultIntent);
                         finish();
