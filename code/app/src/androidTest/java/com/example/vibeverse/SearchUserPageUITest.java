@@ -33,7 +33,7 @@ public class SearchUserPageUITest {
     public void testTypingInSearchFieldTriggersSearch() throws InterruptedException {
         activityRule.launchActivity(new Intent());
         onView(withId(R.id.editSearch)).perform(typeText("john"));
-        Thread.sleep(2000); 
+        Thread.sleep(2000);
         onView(withId(R.id.recyclerSearchResults)).check(matches(isDisplayed()));
     }
 
