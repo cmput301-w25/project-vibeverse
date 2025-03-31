@@ -1,6 +1,5 @@
 package com.example.vibeverse;
 
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -9,12 +8,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+/**
+ * SadnessCuresActivity displays a page for "cures for sadness" with a dynamic blue gradient
+ * background, a motivational quote, and a bullet list of static suggestions.
+ * It also provides a "Back" button to exit and a "More Tips?" button that shows additional suggestions in a custom-styled dialog.
+ */
 public class SadnessCuresActivity extends AppCompatActivity {
 
     private ScrollView rootScroll;
@@ -25,12 +28,12 @@ public class SadnessCuresActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sadness_cures);
 
-        // 1) Setup UI
+        // Initialize UI elements from XML
         rootScroll  = findViewById(R.id.rootScroll);
         btnBack     = findViewById(R.id.btnBack);
         btnMoreTips = findViewById(R.id.btnMoreTips);
 
-        // 2) Gradient background with #42A5F5 (blended darker -> lighter)
+        // Set the gradient background using #42A5F5 as the base color, blended with black and white.
         int baseColor   = Color.parseColor("#42A5F5");
         int darkerBlue  = blendColors(baseColor, Color.BLACK, 0.2f);
         int lighterBlue = blendColors(baseColor, Color.WHITE, 0.2f);
@@ -42,20 +45,25 @@ public class SadnessCuresActivity extends AppCompatActivity {
         gradient.setCornerRadius(0f);
         rootScroll.setBackground(gradient);
 
-        // 3) Style the buttons (optional: black background, white text)
+        // Style the buttons: black background with white text.
         btnBack.setBackgroundTintList(ColorStateList.valueOf(Color.BLACK));
         btnBack.setTextColor(Color.WHITE);
 
         btnMoreTips.setBackgroundTintList(ColorStateList.valueOf(Color.BLACK));
         btnMoreTips.setTextColor(Color.WHITE);
 
-        // 4) Button Listeners
+        // Set button listeners.
         btnBack.setOnClickListener(v -> finish());
         btnMoreTips.setOnClickListener(this::showMoreTipsDialog);
     }
 
     /**
-     * Blends two colors (ratio=0 => color2, ratio=1 => color1).
+     * Blends two colors by a specified ratio.
+     *
+     * @param color1 the first color
+     * @param color2 the second color
+     * @param ratio  the blending ratio; a ratio of 0 returns color2, a ratio of 1 returns color1
+     * @return the blended color as an integer
      */
     private int blendColors(int color1, int color2, float ratio) {
         final float inverseRatio = 1f - ratio;
@@ -66,8 +74,10 @@ public class SadnessCuresActivity extends AppCompatActivity {
     }
 
     /**
-     * Show the "More Tips?" dialog with black background + white text,
-     * same text as before, but styled like your second dialog.
+     * Displays an AlertDialog with additional suggestions for coping with sadness.
+     * The dialog uses a custom style (CustomAlertDialog) and forces the positive button's text color to blue.
+     *
+     * @param view the view that was clicked (unused)
      */
     private void showMoreTipsDialog(View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialog);
