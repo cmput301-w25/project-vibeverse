@@ -46,7 +46,7 @@ public class EditMoodActivityUITest {
                     .check(matches(withText("😃")));
             onView(withId(R.id.selectedMoodText))
                     .check(matches(withText("Happy")));
-            onView(withId(R.id.triggerInput))
+            onView(withId(R.id.reasonWhyInput))
                     .check(matches(withText("Birthday")));
             onView(withId(R.id.reasonWhyInput))
                     .check(matches(withText("Feeling great")));
@@ -62,7 +62,7 @@ public class EditMoodActivityUITest {
             // Clear the "reason why" field.
             onView(withId(R.id.reasonWhyInput)).perform(clearText());
             // Click the update button
-            onView(withId(R.id.updateButton)).perform(click());
+            onView(withId(R.id.continueButton)).perform(click());
             // Verify error message.
             onView(withId(R.id.reasonWhyInput))
                     .check(matches(hasErrorText("Reason why is required.")));
@@ -76,7 +76,7 @@ public class EditMoodActivityUITest {
             // Input more than 3 words into the reason why field.
             onView(withId(R.id.reasonWhyInput))
                     .perform(clearText(), typeText("This is definitely too many words"), closeSoftKeyboard());
-            onView(withId(R.id.updateButton)).perform(click());
+            onView(withId(R.id.continueButton)).perform(click());
             // Verify error message.
             onView(withId(R.id.reasonWhyInput))
                     .check(matches(hasErrorText("Reason why must be 3 words or less.")));

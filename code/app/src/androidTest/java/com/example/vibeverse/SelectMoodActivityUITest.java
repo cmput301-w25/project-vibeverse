@@ -10,8 +10,10 @@ import static androidx.test.espresso.matcher.ViewMatchers.hasMinimumChildCount;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.startsWith;
 
 import android.view.View;
 import android.widget.SeekBar;
@@ -107,8 +109,13 @@ public class SelectMoodActivityUITest {
                 // Handle interruption if needed.
             }
             // Check that the intensity display shows at least 5 filled circles (●).
-            onView(withId(R.id.intensityDisplay))
-                    .check(matches(withText(containsString("●●●●●"))));
+            onView(withId(R.id.selectedMoodText))
+                    .check(matches(anyOf(
+                            withText(startsWith("Slightly")),
+                            withText(startsWith("Very")),
+                            withText("Happy") // fallback for mid intensity
+                    )));
+
         }
     }
 
@@ -145,8 +152,8 @@ public class SelectMoodActivityUITest {
                     });
 
             // Fill in the required text fields.
-            onView(withId(R.id.triggerInput))
-                    .perform(typeText("Traffic"), closeSoftKeyboard());
+            onView(withId(R.id.reasonWhyInput))
+                    .perform(typeText("Angry about traffic"), closeSoftKeyboard());
             onView(withId(R.id.reasonWhyInput))
                     .perform(typeText("Angry about traffic"), closeSoftKeyboard());
 

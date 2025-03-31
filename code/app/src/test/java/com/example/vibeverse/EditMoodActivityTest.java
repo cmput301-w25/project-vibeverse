@@ -99,7 +99,7 @@ public class EditMoodActivityTest {
 
         assertEquals("●●●●●●○○○○○", intensityBuilder.toString());
     }
-    
+
 
     //------------------------------------------------------------------------------
     // FORM VALIDATION TESTS
