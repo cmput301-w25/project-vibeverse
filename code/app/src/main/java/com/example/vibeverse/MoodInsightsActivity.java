@@ -49,8 +49,9 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Shows a pie chart and a RecyclerView that lists daily mood cards for the selected time range,
- * plus a dynamic gradient background based on the user's most frequent mood in the filtered data.
+ * Displays mood insights with a PieChart and a RecyclerView for daily moods,
+ * along with a dynamic background that reflects the most frequent mood in the selected range.
+ * Users can switch between time filters (past week, two weeks, or month).
  */
 public class MoodInsightsActivity extends AppCompatActivity {
 
@@ -60,19 +61,20 @@ public class MoodInsightsActivity extends AppCompatActivity {
     private String userId;
 
     // UI Components
-    private FrameLayout rootContainer;        // For dynamic background
-    private MaterialCardView moodSummaryCard; // For coloring behind summary text
+    private FrameLayout rootContainer;         // Dynamically colored background
+    private MaterialCardView moodSummaryCard;  // Colored card behind summary text
     private PieChart pieChart;
     private TextView summaryText;
     private MaterialButtonToggleGroup timeFilterGroup;
     private RecyclerView dailyMoodRecyclerView;
-    private int backgroundColorForNoMoods = Color.parseColor("#000000");
+    private int backgroundColorForNoMoods = Color.parseColor("#000000"); // Default fallback color
 
-
+    // Data
     private ArrayList<MoodEvent> allMoodEvents = new ArrayList<>();
     private final SimpleDateFormat sourceFormat =
             new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
 
+    // Map linking mood titles to colors (loaded from XML resources)
     private final Map<String, Integer> moodColorMap = new HashMap<>();
 
     @Override
@@ -80,7 +82,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mood_insight_main);
 
-        // Initialize UI
+        // 1) Initialize UI
         rootContainer = findViewById(R.id.rootContainer);
         moodSummaryCard = findViewById(R.id.moodSummaryCard);
         timeFilterGroup = findViewById(R.id.time_filter_group);
@@ -90,26 +92,26 @@ public class MoodInsightsActivity extends AppCompatActivity {
         dailyMoodRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         dailyMoodRecyclerView.setHasFixedSize(true);
 
-        // Initialize color map from XML
+        // 2) Initialize color map for moods
         initMoodColorMap();
 
-        // ToggleGroup logic
+        // 3) Set up time filter toggles
         timeFilterGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (!isChecked) return; // Only handle "checked"
             if (checkedId == R.id.past_week) {
-                updateInsights(6);  // Past 6 days + today = 7
+                updateInsights(6);  // 6 days ago + today = 7
             } else if (checkedId == R.id.last2_weeks) {
-                updateInsights(13); // Past 13 days + today = 14
+                updateInsights(13); // 13 days ago + today = 14
             } else if (checkedId == R.id.this_month) {
-                updateInsights(29); // Past 29 days + today = 30
+                updateInsights(29); // 29 days ago + today = 30
             }
         });
 
-        // Firebase
+        // 4) Firebase initialization
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        // Determine user ID
+        // 5) Determine the user's ID
         if (mAuth.getCurrentUser() != null) {
             userId = mAuth.getCurrentUser().getUid();
         } else {
@@ -121,21 +123,19 @@ public class MoodInsightsActivity extends AppCompatActivity {
             }
         }
 
-        // Load moods
+        // 6) Load moods from Firestore
         loadMoodsFromFirestore();
 
+        // 7) Check for consecutive sad moods
         checkConsecutiveSadMoods(allMoodEvents);
 
+        // 8) Toolbar back button
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
-        toolbar.setNavigationOnClickListener(v -> {
-            // Return to profile page
-            finish();
-        });
-
+        toolbar.setNavigationOnClickListener(v -> finish());
     }
 
     /**
-     * Load color resources from XML into our moodColorMap.
+     * Loads mood -> color mappings from XML resources and populates moodColorMap.
      */
     private void initMoodColorMap() {
         moodColorMap.put("Happy", ContextCompat.getColor(this, R.color.happy_color));
@@ -150,7 +150,8 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Fetch moods from Firestore, order by timestamp desc, store in allMoodEvents.
+     * Fetches mood entries from Firestore, ordered by timestamp descending,
+     * and populates allMoodEvents.
      */
     private void loadMoodsFromFirestore() {
         db.collection("Usermoods")
@@ -185,7 +186,10 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Filter moods by last X days
+     * Filters moods to only include entries from the past {@code days} days, plus today.
+     *
+     * @param days number of days to look back
+     * @return a filtered list of MoodEvent objects
      */
     private ArrayList<MoodEvent> filterMoods(int days) {
         ArrayList<MoodEvent> filtered = new ArrayList<>();
@@ -200,19 +204,22 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Update the UI (pie chart, daily mood cards, summary, dynamic background) based on last X days.
+     * Updates insights (pie chart, daily list, summary, background) for the past {@code days}.
+     *
+     * @param days the number of days to include in the analysis
      */
     private void updateInsights(int days) {
         ArrayList<MoodEvent> filteredMoods = filterMoods(days);
         drawPieChart(filteredMoods);
         updateDailyMoodCards(filteredMoods, days);
         updateEmojiSummary(filteredMoods);
-        // Also apply dynamic background & button outlines
         setDynamicBackground(filteredMoods);
     }
 
     /**
-     * Pie chart with no center color, no description label, using mood colors for slices.
+     * Draws a pie chart representing the breakdown of moods in the given list of MoodEvents.
+     *
+     * @param moods the list of moods to plot
      */
     private void drawPieChart(ArrayList<MoodEvent> moods) {
         HashMap<String, Integer> moodCount = new HashMap<>();
@@ -221,7 +228,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
             moodCount.put(mood, moodCount.getOrDefault(mood, 0) + 1);
         }
 
-        // 1) Map moods to emojis
+        // Map moods to emojis
         HashMap<String, String> moodEmojis = new HashMap<>();
         moodEmojis.put("Angry", "😠");
         moodEmojis.put("Sad", "😢");
@@ -233,19 +240,20 @@ public class MoodInsightsActivity extends AppCompatActivity {
         moodEmojis.put("Happy", "😄");
         moodEmojis.put("Neutral", "🙂");
 
-        // 2) Build the PieEntries with emojis in the label
         ArrayList<PieEntry> entries = new ArrayList<>();
         ArrayList<Integer> colors = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : moodCount.entrySet()) {
             String mood = entry.getKey();
             int count = entry.getValue();
 
+            // Create a label with emoji
             String emoji = moodEmojis.getOrDefault(mood, "🙂");
             String label = emoji + " " + mood;
 
+            // Pie entry
             entries.add(new PieEntry(count, label));
 
-            // Use your moodColorMap for slice color
+            // Slice color from moodColorMap, or white if not found
             if (moodColorMap.containsKey(mood)) {
                 colors.add(moodColorMap.get(mood));
             } else {
@@ -253,36 +261,39 @@ public class MoodInsightsActivity extends AppCompatActivity {
             }
         }
 
-        // 3) Create the DataSet
-        PieDataSet dataSet = new PieDataSet(entries, /* chart label */ "");
+        // Create PieDataSet
+        PieDataSet dataSet = new PieDataSet(entries, "");
         dataSet.setColors(colors);
-        // If you only want slice labels (not numeric values)
-        dataSet.setDrawValues(false);
+        dataSet.setDrawValues(false); // Hide numeric slice values
 
-        // 4) Assign data to the PieChart
         PieData data = new PieData(dataSet);
         pieChart.setData(data);
 
-        // 5) Enable slice labels and set styling
+        // Entry labels
         pieChart.setDrawEntryLabels(true);
         pieChart.setEntryLabelColor(Color.WHITE);
         pieChart.setEntryLabelTextSize(12f);
 
+        // Hide center hole background
         pieChart.setDrawHoleEnabled(true);
         pieChart.setHoleColor(Color.TRANSPARENT);
         pieChart.setTransparentCircleAlpha(0);
+
+        // Disable description text
         pieChart.getDescription().setEnabled(false);
 
-        // Add some padding to prevent clipping
+        // Add padding
         pieChart.setExtraOffsets(10f, 10f, 10f, 10f);
 
-        // Refresh
+        // Refresh the chart
         pieChart.invalidate();
     }
 
-
     /**
-     * Groups moods by day, sets RecyclerView adapter.
+     * Groups the moods by day and sets up a RecyclerView adapter to display daily mood cards.
+     *
+     * @param moods the list of mood events
+     * @param days  the number of days used in filtering
      */
     private void updateDailyMoodCards(ArrayList<MoodEvent> moods, int days) {
         Map<String, ArrayList<MoodEvent>> moodsByDay = new HashMap<>();
@@ -293,6 +304,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
                 moodsByDay.computeIfAbsent(dayKey, k -> new ArrayList<>()).add(event);
             }
         }
+
         ArrayList<DailyMood> dailyMoodsList = new ArrayList<>();
         Calendar startCal = Calendar.getInstance();
         startCal.setTimeInMillis(System.currentTimeMillis() - (days * 24L * 60L * 60L * 1000L));
@@ -300,40 +312,43 @@ public class MoodInsightsActivity extends AppCompatActivity {
         Calendar endCal = Calendar.getInstance();
         truncateToDay(endCal);
 
+        // Build the daily range from 'startCal' to 'endCal'
         while (!startCal.after(endCal)) {
             String dayLabel = dayFormat.format(startCal.getTime());
             ArrayList<MoodEvent> dayMoods = moodsByDay.getOrDefault(dayLabel, new ArrayList<>());
             dailyMoodsList.add(new DailyMood(dayLabel, dayMoods));
             startCal.add(Calendar.DAY_OF_YEAR, 1);
         }
+        // Reverse so the most recent day is at the top
         Collections.reverse(dailyMoodsList);
 
-        // Pass moodColorMap to the adapter so we can color the cards & chips
         DailyMoodAdapter adapter = new DailyMoodAdapter(dailyMoodsList, moodColorMap);
         dailyMoodRecyclerView.setAdapter(adapter);
     }
 
     /**
-     * Show "You mostly felt 😄 Happy" and color the summary card.
+     * Updates the summary text to reflect the most frequent mood in the provided list
+     * and colors the summary card accordingly.
+     *
+     * @param moods the list of filtered mood events
      */
     private void updateEmojiSummary(ArrayList<MoodEvent> moods) {
         if (moods.isEmpty()) {
             summaryText.setText("No mood data 😶");
-            // Reset card color if no data
             moodSummaryCard.setCardBackgroundColor(
                     ContextCompat.getColor(this, R.color.card_background)
             );
             return;
         }
 
-        // 1) Count each mood
+        // Count each mood
         HashMap<String, Integer> moodCount = new HashMap<>();
         for (MoodEvent event : moods) {
             String mood = event.getMoodTitle();
             moodCount.put(mood, moodCount.getOrDefault(mood, 0) + 1);
         }
 
-        // 2) Find top mood
+        // Find top mood
         String topMood = "";
         int maxCount = 0;
         for (Map.Entry<String, Integer> entry : moodCount.entrySet()) {
@@ -343,7 +358,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
             }
         }
 
-        // 3) Moods to emojis
+        // Map moods to emojis
         HashMap<String, String> moodEmojis = new HashMap<>();
         moodEmojis.put("Angry", "😠");
         moodEmojis.put("Sad", "😢");
@@ -356,15 +371,13 @@ public class MoodInsightsActivity extends AppCompatActivity {
 
         String emoji = moodEmojis.getOrDefault(topMood, " ");
 
-        // 4) "You mostly felt Happy"
-        summaryText.setText("You mostly felt " + topMood +" " + emoji);
+        summaryText.setText("You mostly felt " + topMood + " " + emoji);
 
-        // 5) Color the summary card to match top mood
+        // Color the summary card
         int moodColor = moodColorMap.containsKey(topMood)
                 ? moodColorMap.get(topMood)
                 : moodColorMap.get("Neutral");
 
-        // Option B: gradient from a slightly darker color to moodColor
         GradientDrawable gradient = new GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 new int[] {
@@ -377,7 +390,9 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper to set date to 00:00:00
+     * Resets the given Calendar to midnight (00:00:00).
+     *
+     * @param cal the Calendar instance to truncate
      */
     private void truncateToDay(Calendar cal) {
         cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -387,7 +402,10 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Check if the three most recent moods are "😢"
+     * Checks if the user has logged "Sad" moods at least three times in a row.
+     * If so, displays a supportive popup.
+     *
+     * @param moods the complete list of mood events
      */
     private void checkConsecutiveSadMoods(ArrayList<MoodEvent> moods) {
         if (moods == null || moods.size() < 3) {
@@ -411,7 +429,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Show a popup if user has 3 consecutive sad moods
+     * Displays a popup dialog if the user has three consecutive "Sad" moods logged.
      */
     private void showAreYouOkPopup() {
         new AlertDialog.Builder(this)
@@ -430,10 +448,13 @@ public class MoodInsightsActivity extends AppCompatActivity {
     // -------------------------------------------------------------------------
 
     /**
-     * Apply dynamic background to root container, and update the toggle button outlines.
+     * Analyzes the filtered moods, determines the most frequent mood color,
+     * applies a gradient background, and updates toggle button outlines.
+     *
+     * @param moods the list of mood events to analyze
      */
     private void setDynamicBackground(ArrayList<MoodEvent> moods) {
-        // Determine top mood color across all filtered moods
+        // Find most frequent mood
         ArrayList<String> moodTitles = new ArrayList<>();
         for (MoodEvent event : moods) {
             moodTitles.add(event.getMoodTitle());
@@ -444,18 +465,21 @@ public class MoodInsightsActivity extends AppCompatActivity {
                 ? moodColorMap.get(mostFrequent)
                 : moodColorMap.get("Neutral");
 
-        // Store this color so we can use it for no-mood days
+        // For no-mood days
         backgroundColorForNoMoods = primaryColor;
 
-        // Animate gradient on the root
+        // Animate gradient background
         applyGradientBackground(primaryColor);
-        // Toggle button outlines
+        // Update button outlines
         updateButtonOutlines(primaryColor);
     }
 
 
     /**
-     * Finds the most frequent mood or "Neutral" if none
+     * Finds the most frequent mood in a list of mood titles, or returns "Neutral" if empty.
+     *
+     * @param moods a list of mood titles
+     * @return the most frequent mood string
      */
     private String findMostFrequentMood(ArrayList<String> moods) {
         if (moods.isEmpty()) return "Neutral";
@@ -475,7 +499,10 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Animates a gradient from dark->light->baseColor on the root container
+     * Applies a vertical gradient background to the root container,
+     * blending from a dark color to the base mood color.
+     *
+     * @param baseColor the color representing the top mood
      */
     private void applyGradientBackground(int baseColor) {
         int lighterColor = ColorUtils.blendColors(baseColor, Color.WHITE, 0.7f);
@@ -489,7 +516,9 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Update stroke color of each button in timeFilterGroup
+     * Updates the stroke (outline) color of each button in the toggle group to the given color.
+     *
+     * @param color the color to apply to the button outlines
      */
     private void updateButtonOutlines(int color) {
         int count = timeFilterGroup.getChildCount();
@@ -513,6 +542,12 @@ public class MoodInsightsActivity extends AppCompatActivity {
         public String dayLabel;
         public ArrayList<MoodEvent> moods;
 
+        /**
+         * Constructs a DailyMood object with a label and a list of mood events.
+         *
+         * @param dayLabel a string label (e.g., "Monday, Mar 24")
+         * @param moods    the list of MoodEvent objects for that day
+         */
         public DailyMood(String dayLabel, ArrayList<MoodEvent> moods) {
             this.dayLabel = dayLabel;
             this.moods = moods;
@@ -520,13 +555,19 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Adapter for daily moods (item_daily_mood.xml)
+     * Adapter for displaying daily mood data, grouped by day, in a RecyclerView.
      */
     private class DailyMoodAdapter extends RecyclerView.Adapter<DailyMoodAdapter.DailyMoodViewHolder> {
 
         private final ArrayList<DailyMood> dailyMoods;
         private final Map<String, Integer> moodColorMap;
 
+        /**
+         * Constructs the adapter with daily moods and a mood-color mapping.
+         *
+         * @param dailyMoods   the list of DailyMood objects
+         * @param moodColorMap a Map linking mood titles to their integer color values
+         */
         public DailyMoodAdapter(ArrayList<DailyMood> dailyMoods, Map<String, Integer> moodColorMap) {
             this.dailyMoods = dailyMoods;
             this.moodColorMap = moodColorMap;
@@ -542,13 +583,13 @@ public class MoodInsightsActivity extends AppCompatActivity {
         public void onBindViewHolder(DailyMoodViewHolder holder, int position) {
             DailyMood dailyMood = dailyMoods.get(position);
 
-            // 1) Set the day label
+            // Set day header
             holder.dayHeader.setText(dailyMood.dayLabel);
 
-            // 2) Find the day's top mood color
+            // Determine top mood color for the day
             int topMoodColor = getTopMoodColorForDay(dailyMood.moods);
 
-            // 3) Create a gradient background for the card
+            // Create a gradient background for the day's card
             GradientDrawable gradient = new GradientDrawable(
                     GradientDrawable.Orientation.TOP_BOTTOM,
                     new int[] {
@@ -559,7 +600,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
             gradient.setCornerRadius(16f);
             holder.dayCard.setBackground(gradient);
 
-            // 4) Clear any existing Chips
+            // Clear any existing chips
             holder.moodChipGroup.removeAllViews();
 
             // If no moods logged that day
@@ -567,7 +608,6 @@ public class MoodInsightsActivity extends AppCompatActivity {
                 Chip noMoodsChip = new Chip(holder.itemView.getContext());
                 noMoodsChip.setText("No moods");
                 noMoodsChip.setTextColor(Color.WHITE);
-                // Give the "No moods" chip a subtle background
                 noMoodsChip.setChipBackgroundColor(
                         ColorStateList.valueOf(ColorUtils.blendColors(topMoodColor, Color.BLACK, 0.4f))
                 );
@@ -575,13 +615,13 @@ public class MoodInsightsActivity extends AppCompatActivity {
                 return;
             }
 
-            // 5) Add a Chip for each MoodEvent, colored by that mood
+            // For each MoodEvent, create a Chip
             for (MoodEvent event : dailyMood.moods) {
                 Chip chip = new Chip(holder.itemView.getContext());
                 chip.setText(event.getMoodTitle());
                 chip.setTextColor(Color.WHITE);
 
-                // Base color from the mood map or fallback to the top mood color
+                // Base color from mood map or fallback
                 int moodBaseColor = moodColorMap.getOrDefault(event.getMoodTitle(), topMoodColor);
                 // Darken slightly for contrast
                 int chipColor = ColorUtils.blendColors(moodBaseColor, Color.BLACK, 0.2f);
@@ -597,7 +637,10 @@ public class MoodInsightsActivity extends AppCompatActivity {
         }
 
         /**
-         * Returns the color of the most frequent mood for that day.
+         * Determines the top mood color for a given day by finding the most frequent mood.
+         *
+         * @param dayMoods the list of MoodEvent objects for the day
+         * @return the integer color value corresponding to the top mood
          */
         private int getTopMoodColorForDay(ArrayList<MoodEvent> dayMoods) {
             if (dayMoods == null || dayMoods.isEmpty()) {
@@ -612,7 +655,7 @@ public class MoodInsightsActivity extends AppCompatActivity {
                 moodCount.put(moodTitle, moodCount.getOrDefault(moodTitle, 0) + 1);
             }
 
-            // Find the top mood
+            // Find highest count
             int maxCount = 0;
             String topMood = "Neutral";
             for (Map.Entry<String, Integer> entry : moodCount.entrySet()) {
@@ -622,15 +665,23 @@ public class MoodInsightsActivity extends AppCompatActivity {
                 }
             }
 
-            // Return that mood's color, or a default
+            // Return color from map or default
             return moodColorMap.getOrDefault(topMood, moodColorMap.get("Neutral"));
         }
 
+        /**
+         * Holds references to the views for each daily mood item.
+         */
         class DailyMoodViewHolder extends RecyclerView.ViewHolder {
             MaterialCardView dayCard;
             TextView dayHeader;
             ChipGroup moodChipGroup;
 
+            /**
+             * Constructs the ViewHolder for daily mood items.
+             *
+             * @param itemView the item view containing dayCard, dayHeader, and moodChipGroup
+             */
             DailyMoodViewHolder(View itemView) {
                 super(itemView);
                 dayCard = itemView.findViewById(R.id.dayCard);
@@ -641,11 +692,17 @@ public class MoodInsightsActivity extends AppCompatActivity {
     }
 
     /**
-     * Helper class for blending colors
+     * Utility class for blending two colors.
      */
     private static class ColorUtils {
         /**
-         * Blends two colors with the given ratio (0..1).
+         * Blends two colors with a given ratio.
+         * A ratio of 0f returns color2, 1f returns color1.
+         *
+         * @param color1 the first color
+         * @param color2 the second color
+         * @param ratio  blending ratio between 0..1
+         * @return the blended color as an int
          */
         public static int blendColors(int color1, int color2, float ratio) {
             float inverseRatio = 1f - ratio;
