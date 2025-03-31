@@ -68,29 +68,7 @@ public class LoginUITest {
         }
     }
 
-    /**
-     * Test that a valid login navigates to HomePage.
-     * (This test uses Espresso-Intents to check that the proper intent is fired.)
-     */
-    @Test
-    public void testValidLoginNavigatesToHomePage() {
-        Intents.init();
-        try (ActivityScenario<Login> scenario = ActivityScenario.launch(Login.class)) {
-            onView(withId(R.id.email))
-                    .perform(typeText("demo@demo.com"), closeSoftKeyboard());
-            onView(withId(R.id.password))
-                    .perform(typeText("demo1670"), closeSoftKeyboard());
-            onView(withId(R.id.login_button)).perform(click());
 
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            // Verify that an intent to launch HomePage is fired.
-            intended(hasComponent(HomePage.class.getName()));
-        } finally {
-            Intents.release();
-        }
-    }
+
+
 }

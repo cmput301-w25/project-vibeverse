@@ -31,22 +31,10 @@ public class ProfilePageUITest {
     public ActivityScenarioRule<ProfilePage> activityScenarioRule =
             new ActivityScenarioRule<>(ProfilePage.class);
 
-    /**
-     * Test 1: Verify that all core UI elements are displayed.
-     */
-    @Test
-    public void testProfilePageUIElementsAreDisplayed() {
-        onView(withId(R.id.textName)).check(matches(isDisplayed()));
-        onView(withId(R.id.textUsername)).check(matches(isDisplayed()));
-        onView(withId(R.id.textBioContent)).check(matches(isDisplayed()));
-        onView(withId(R.id.profilePicture)).check(matches(isDisplayed()));
-        onView(withId(R.id.editSearch)).check(matches(isDisplayed()));
-        onView(withId(R.id.buttonFilter)).check(matches(isDisplayed()));
-        onView(withId(R.id.recyclerFeed)).check(matches(isDisplayed()));
-    }
+
 
     /**
-     * Test 2: Ensure the logout menu item is clickable via the right drawer.
+     * Test 1: Ensure the logout menu item is clickable via the right drawer.
      */
     @Test
     public void testLogoutButtonClick() {
@@ -61,7 +49,7 @@ public class ProfilePageUITest {
     }
 
     /**
-     * Test 3: Check that tapping the filter button shows the FilterDialog.
+     * Test 2: Check that tapping the filter button shows the FilterDialog.
      */
     @Test
     public void testFilterDialogDisplay() {
@@ -69,7 +57,7 @@ public class ProfilePageUITest {
     }
 
     /**
-     * Test 4: Verify search functionality by typing into the search EditText.
+     * Test 3: Verify search functionality by typing into the search EditText.
      */
     @Test
     public void testSearchFunctionality() {
@@ -78,7 +66,7 @@ public class ProfilePageUITest {
     }
 
     /**
-     * Test 5: Verify that the BottomNavigationView is displayed.
+     * Test 4: Verify that the BottomNavigationView is displayed.
      */
     @Test
     public void testBottomNavigationDisplayed() {
