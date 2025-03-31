@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootScroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="#20202A">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Page Title -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CURES FOR SADNESS"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="20dp"
+            android:shadowColor="#000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2" />
+
+        <!-- Motivational Quote -->
+        <TextView
+            android:id="@+id/tvQuote"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="“Happiness can be found, even in the darkest of times, if one only remembers to turn on the light.”\nJ. K. Rowling, 2015"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:fontFamily="serif"
+            android:textStyle="italic"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:padding="8dp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Bullet list for cures -->
+        <TextView
+            android:id="@+id/tvCuresList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:background="@android:color/transparent"
+            android:fontFamily="sans-serif-light"
+            android:letterSpacing="0.05"
+            android:lineSpacingExtra="4dp"
+            android:padding="12dp"
+            android:shadowColor="#000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"
+            android:text="• Write in a gratitude journal\n• Listen to uplifting music\n• Talk to a supportive friend or loved one\n• Take a walk in nature\n• Practice mindful breathing\n• Try a short meditation session\n• Seek professional help if needed"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Horizontal buttons row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Back"
+                android:backgroundTint="@android:color/black"
+                android:textColor="@android:color/white"/>
+
+            <View
+                android:layout_width="32dp"
+                android:layout_height="0dp"/>
+
+            <Button
+                android:id="@+id/btnMoreTips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="More Tips?"
+                android:backgroundTint="@android:color/black"
+                android:textColor="@android:color/white"/>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

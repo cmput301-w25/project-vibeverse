@@ -29,6 +29,7 @@ public class MoodEvent implements Serializable {
     private String ownerUserId;
 
 
+
     private String documentId; // Firestore document ID
     private String socialSituation;
     private String timestamp; // Formatted timestamp
@@ -38,6 +39,23 @@ public class MoodEvent implements Serializable {
     private String subtitle;
 
     private boolean isPublic;
+    private String username;
+    private String profilePictureUrl;
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getProfilePictureUrl() {
+        return profilePictureUrl;
+    }
+
+    public void setProfilePictureUrl(String profilePictureUrl) {
+        this.profilePictureUrl = profilePictureUrl;
+    }
 
 
     public boolean isPublic() {

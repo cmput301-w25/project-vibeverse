@@ -46,6 +46,7 @@
             android:exported="false"
             android:label="@string/title_activity_maps" />
 
+        <activity android:name=".SadnessCuresActivity" />
 
         <activity
             android:name=".Register"
@@ -109,6 +110,7 @@
             android:exported="false" />
 
 
+        <activity android:name=".MoodInsightsActivity" />
 
 
         <!-- Mood Selection Activity -->

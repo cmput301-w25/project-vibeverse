@@ -1,5 +1,7 @@
 package com.example.vibeverse;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +13,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -19,6 +22,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
@@ -37,6 +41,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -88,9 +93,11 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     private FirebaseAuth mAuth;
     /** ID of the current user. */
     private String userId;
+    private ImageButton InsightsButton;
 
     private DrawerLayout drawerLayout;
     private NavigationView rightNavView;
+    private boolean sadDialogShown = false;
 
     /** Formatter for parsing and formatting timestamps. */
     private final SimpleDateFormat sourceFormat =
@@ -123,10 +130,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 userId = java.util.UUID.randomUUID().toString();
                 prefs.edit().putString("device_id", userId).apply();
             }
-
-
         }
-
 
         // **Find your TextViews & ImageView from XML**
         textName = findViewById(R.id.fullName);
@@ -156,7 +160,7 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             if (id == R.id.menu_vibestore) {
                 startActivity(new Intent(ProfilePage.this, VibeStoreActivity.class));
             } else if (id == R.id.menu_vibestatus) {
-                //to be added
+                startActivity(new Intent(ProfilePage.this, MoodInsightsActivity.class));
             } else if (id == R.id.menu_editprofile) {
                 Intent intent = new Intent(ProfilePage.this, UserDetails.class);
                 intent.putExtra("source", "edit_profile");
@@ -288,6 +292,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                     }
                     moodEventAdapter.updateMoodEvents(new ArrayList<>(allMoodEvents));
 
+                    checkConsecutiveSadMoodsInProfile(new ArrayList<>(allMoodEvents));
+
                     if (progressLoading != null) {
                         progressLoading.setVisibility(View.GONE);
                     }
@@ -366,6 +372,14 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
     public void onResume() {
         super.onResume();
         loadMoodsFromFirestore();
+
+        //Addition
+        SharedPreferences prefs = getSharedPreferences("VibeVersePrefs", Context.MODE_PRIVATE);
+        boolean sad3InARow = prefs.getBoolean("sad_3_in_a_row", false);
+
+        if (sad3InARow) {
+            prefs.edit().putBoolean("sad_3_in_a_row", false).apply();
+        }
         loadUserProfile(); // Reload updated user details
     }
 
@@ -600,4 +614,46 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+
+    //Addition
+    private void showSadPopup() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialog);
+        builder.setTitle("We care about you!")
+                .setMessage("We've noticed you've been feeling down lately. Remember, you're not alone. If you're looking for solutions to help you feel better, please visit the Vibe Status page for more support and resources.")
+                .setPositiveButton("Visit VibePulse", (dialog, which) -> {
+                    startActivity(new Intent(ProfilePage.this, SadnessCuresActivity.class));
+                    dialog.dismiss();
+                })
+                .setNegativeButton("I'm OK", (dialog, which) -> dialog.dismiss());
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void checkConsecutiveSadMoodsInProfile(ArrayList<MoodEvent> moods) {
+        if (moods == null || moods.size() < 3) {
+            Log.d(TAG, "Not enough moods to check for three consecutive sad moods.");
+            return;
+        }
+        // Sort moods in descending order (newest first)
+        ArrayList<MoodEvent> sortedMoods = new ArrayList<>(moods);
+        Collections.sort(sortedMoods, (m1, m2) -> m2.getDate().compareTo(m1.getDate()));
+
+        int consecutiveSadCount = 0;
+        for (int i = 0; i < 3; i++) {
+            MoodEvent event = sortedMoods.get(i);
+            if (event.getEmoji().equals("😢")) {
+                consecutiveSadCount++;
+            } else {
+                break; // stop if a non-sad mood is encountered
+            }
+        }
+
+        if (consecutiveSadCount >= 3 && !sadDialogShown) {
+            showSadPopup();
+            sadDialogShown = true;
+        }
+    }
+
+
 }
