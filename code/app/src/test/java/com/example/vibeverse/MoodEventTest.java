@@ -13,7 +13,7 @@ public class MoodEventTest {
 
     @Before
     public void setUp() {
-        
+
         moodEvent = new MoodEvent("user123", "Happy", "😄", "Had a great day!", "With friends", false);
         moodEvent.setDate(new Date());
     }
