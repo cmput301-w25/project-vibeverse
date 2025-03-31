@@ -16,17 +16,36 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     private List<User> userList;
     private OnUserClickListener listener;
 
-    // Interface for click events
+    /**
+     * Interface for handling click events on a user item.
+     */
     public interface OnUserClickListener {
+        /**
+         * Called when a user item is clicked.
+         *
+         * @param user The User object that was clicked.
+         */
         void onUserClick(User user);
     }
 
-    // Constructor
+    /**
+     * Constructs a new UserAdapter.
+     *
+     * @param userList The list of User objects to display.
+     * @param listener The listener for handling user click events.
+     */
     public UserAdapter(List<User> userList, OnUserClickListener listener) {
         this.userList = userList;
         this.listener = listener;
     }
 
+    /**
+     * Creates a new UserViewHolder by inflating the user item layout.
+     *
+     * @param parent The parent ViewGroup.
+     * @param viewType The view type of the new View.
+     * @return A new instance of UserViewHolder.
+     */
     @NonNull
     @Override
     public UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -34,6 +53,12 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         return new UserViewHolder(view);
     }
 
+    /**
+     * Binds data from a User object to the UserViewHolder.
+     *
+     * @param holder The UserViewHolder which should be updated.
+     * @param position The position of the item within the adapter's data set.
+     */
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
         User user = userList.get(position);
@@ -63,17 +88,28 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
     }
 
+    /**
+     * Returns the total number of user items.
+     *
+     * @return The size of the user list.
+     */
     @Override
     public int getItemCount() {
         return userList.size();
     }
 
-    // ViewHolder class
+    /**
+     * UserViewHolder holds the view elements for a single user item.
+     */
     public static class UserViewHolder extends RecyclerView.ViewHolder {
         ImageView imageProfile;
         TextView textUsername;
 
-
+        /**
+         * Constructs a new UserViewHolder.
+         *
+         * @param itemView The view representing a single user item.
+         */
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
             imageProfile = itemView.findViewById(R.id.imageProfile);

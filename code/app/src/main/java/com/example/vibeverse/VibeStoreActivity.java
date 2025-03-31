@@ -22,6 +22,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * VibeStoreActivity displays the available themes in the Vibe Store.
+ * <p>
+ * It loads the themes from assets, retrieves the user's selected theme and locked themes from Firestore,
+ * and sets up the ThemeAdapter to display the themes.
+ * </p>
+ */
 public class VibeStoreActivity extends AppCompatActivity {
 
     private static final String TAG = "VibeStoreActivity";
@@ -34,6 +41,15 @@ public class VibeStoreActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private String selectedTheme = ""; // initially empty
 
+    /**
+     * Called when the activity is starting.
+     * <p>
+     * Initializes Firestore, FirebaseAuth, the RecyclerView, loads the user's selected theme,
+     * themes from assets, and locked themes from Firestore.
+     * </p>
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,8 +87,11 @@ public class VibeStoreActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Log.e(TAG, "Error loading user data", e));
     }
 
-
-
+    /**
+     * Loads the list of themes from the assets folder by parsing the themes.json file.
+     *
+     * @return A list of ThemeData objects.
+     */
     private List<ThemeData> loadThemesFromAssets() {
         try {
             InputStream inputStream = getAssets().open("themes.json");
@@ -87,7 +106,14 @@ public class VibeStoreActivity extends AppCompatActivity {
         }
     }
 
-    // If you need to load locked themes from Firestore:
+    /**
+     * Loads the locked themes from Firestore for the given user ID.
+     * <p>
+     * It retrieves the locked themes from the "lockedThemes" subcollection and updates the adapter.
+     * </p>
+     *
+     * @param userId The ID of the current user.
+     */
     private void loadLockedThemes(String userId) {
         // For example, load the names/IDs of locked themes and add them to lockedThemesSet.
         db.collection("users")
@@ -105,5 +131,4 @@ public class VibeStoreActivity extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> Log.e(TAG, "Error loading locked themes", e));
     }
-
 }

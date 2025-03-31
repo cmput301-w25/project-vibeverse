@@ -36,6 +36,8 @@ import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -100,10 +102,16 @@ public class UserDetails extends AppCompatActivity {
     private Bitmap currentBitmap;
 
     /**
-     * Request codes for image capture and selection.
+     * Request code for image capture.
      */
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    /**
+     * Request code for image selection from gallery.
+     */
     private static final int REQUEST_PICK_IMAGE = 2;
+    /**
+     * Request code for permission requests.
+     */
     private static final int PERMISSION_REQUEST_CODE = 100;
     /**
      * URI of the selected profile picture.
@@ -126,9 +134,12 @@ public class UserDetails extends AppCompatActivity {
     private String originalUsername = "";
     private boolean isEditMode;
 
-
-
     private interface UsernameSuggestionCallback {
+        /**
+         * Callback method invoked when a unique username suggestion is generated.
+         *
+         * @param suggestion The generated username suggestion.
+         */
         void onSuggestionGenerated(String suggestion);
     }
 
@@ -142,8 +153,6 @@ public class UserDetails extends AppCompatActivity {
      *
      * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
      */
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,19 +169,15 @@ public class UserDetails extends AppCompatActivity {
         profilePictureSelected = findViewById(R.id.profilePictureSelected);
         usernameValidationText = findViewById(R.id.usernameValidationText);
 
-
-
         // Set up the profile picture button click listener
         FrameLayout btnProfilePicture = findViewById(R.id.btnProfilePicture);
         btnProfilePicture.setOnClickListener(v -> showImagePickerDialog());
-
 
         auth = FirebaseAuth.getInstance();
         user = auth.getCurrentUser();
         if (user != null) {
             String userDetails = "User ID: " + user.getUid() + "\nEmail: " + user.getEmail();
         }
-
 
         // Set the hint for the Date of Birth field
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
@@ -196,7 +201,6 @@ public class UserDetails extends AppCompatActivity {
                 return view;
             }
 
-
             @Override
             public View getDropDownView(int position, View convertView, ViewGroup parent) {
                 View view = super.getDropDownView(position, convertView, parent);
@@ -208,7 +212,6 @@ public class UserDetails extends AppCompatActivity {
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(adapter);
-
 
         username.addTextChangedListener(new TextWatcher() {
             @Override
@@ -226,7 +229,6 @@ public class UserDetails extends AppCompatActivity {
             }
         });
 
-
         // Set onClickListener for the continue button
         String source = getIntent().getStringExtra("source");
         if ("edit_profile".equals(source)) {
@@ -242,7 +244,6 @@ public class UserDetails extends AppCompatActivity {
             isEditMode = false;
         }
 
-
         // Set onClickListener for the date of birth field to show a DatePickerDialog
         dob.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -252,7 +253,11 @@ public class UserDetails extends AppCompatActivity {
         });
     }
 
-
+    /**
+     * Validates the entered username by checking its availability in Firestore.
+     *
+     * @param usernameToCheck The username to validate.
+     */
     private void validateUsername(String usernameToCheck) {
         if (usernameToCheck.isEmpty()) return;
 
@@ -299,7 +304,6 @@ public class UserDetails extends AppCompatActivity {
                 });
     }
 
-
     /**
      * Handles the continue button click by validating input fields and saving user details to Firestore.
      * <p>
@@ -307,7 +311,6 @@ public class UserDetails extends AppCompatActivity {
      * collection in Firestore. On success, the activity navigates to MainActivity.
      * </p>
      */
-
     private void handleContinueButtonClick() {
         boolean allFieldsFilled = true;
 
@@ -356,9 +359,6 @@ public class UserDetails extends AppCompatActivity {
             userData.put("mood_streak", 0);
             userData.put("last_mood", "none");
 
-
-
-
             if (imageUri != null) {
                 userData.put("hasProfilePic", true);
                 userData.put("profilePicUri", imageUri.toString());
@@ -374,7 +374,6 @@ public class UserDetails extends AppCompatActivity {
 
             FirebaseFirestore db = FirebaseFirestore.getInstance();
             DocumentReference userDocRef = db.collection("users").document(user.getUid());
-
 
             // Get Firestore instance and save data
             userDocRef.set(userData)
@@ -429,7 +428,6 @@ public class UserDetails extends AppCompatActivity {
                                 .document("list")
                                 .set(followingMap);
 
-
                         userDocRef.collection("notifications")
                                 .document("placeholder")
                                 .set(new HashMap<String, Object>());
@@ -464,7 +462,6 @@ public class UserDetails extends AppCompatActivity {
         }
     }
 
-
     /**
      * Displays a DatePickerDialog for the user to select their date of birth.
      * <p>
@@ -491,6 +488,9 @@ public class UserDetails extends AppCompatActivity {
         datePickerDialog.show();
     }
 
+    /**
+     * Displays a dialog for the user to pick an image for their profile picture.
+     */
     private void showImagePickerDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select Image")
@@ -516,8 +516,6 @@ public class UserDetails extends AppCompatActivity {
                 })
                 .show();
     }
-
-
 
     /**
      * Dispatches an intent to capture an image using the device camera.
@@ -646,7 +644,11 @@ public class UserDetails extends AppCompatActivity {
         }
     }
 
-
+    /**
+     * Checks if the app has camera permission.
+     *
+     * @return true if camera permission is granted, false otherwise.
+     */
     private boolean hasCameraPermission() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             return checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
@@ -654,6 +656,11 @@ public class UserDetails extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Checks if the app has storage permissions.
+     *
+     * @return true if both read and write storage permissions are granted, false otherwise.
+     */
     private boolean hasStoragePermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             return checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
@@ -809,6 +816,11 @@ public class UserDetails extends AppCompatActivity {
         }
     }
 
+    /**
+     * Loads themes from the assets folder by parsing the themes.json file.
+     *
+     * @return A list of ThemeData objects.
+     */
     private List<ThemeData> loadThemesFromAssets() {
         try {
             InputStream inputStream = getAssets().open("themes.json");
@@ -823,6 +835,11 @@ public class UserDetails extends AppCompatActivity {
         }
     }
 
+    /**
+     * Loads achievements from the assets folder by parsing the achievements.json file.
+     *
+     * @return A list of Achievement objects.
+     */
     private List<Achievement> loadAchievementsFromAssets() {
         try {
             InputStream inputStream = getAssets().open("achievements.json");
@@ -835,7 +852,4 @@ public class UserDetails extends AppCompatActivity {
             return new ArrayList<>();
         }
     }
-
-
-
 }

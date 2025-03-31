@@ -48,44 +48,66 @@ import de.hdodenhof.circleimageview.CircleImageView;
 
 public class UsersProfile extends AppCompatActivity implements FilterDialog.FilterListener {
 
+    /** The ID of the user whose profile is being viewed. */
     private String pageUserId;
+    /** Firestore instance for database operations. */
     private FirebaseFirestore db;
 
     // UI Elements
+
+    /** The profile picture view. */
     private CircleImageView profilePicture;
 
+    /** TextView displaying the user's full name. */
     private TextView textName, textBioContent, textFollowers, textFollowing, textPosts;
 
+    /** Button shown when the active user can follow the profile user. */
     private Button buttonFollowStateFollow;
+    /** Button shown when a follow request has been sent. */
     private Button buttonFollowStateRequested;
+    /** Button shown when the active user is already following the profile user. */
     private Button buttonFollowStateFollowing;
 
+    /** TextView showing the username at the top of the profile. */
     private TextView  textTopUsername;
+    /** Button to initiate a follow action. */
     private Button buttonFollow;
 
+    /** Button to go back from the profile view. */
     private ImageButton buttonBack;
+    /** RecyclerView to display the profile user's posts. */
     private RecyclerView recyclerUserPosts;
+    /** ProgressBar displayed during loading operations. */
     private ProgressBar progressLoading;
+    /** View displayed when no posts are available or follow is required. */
     private View emptyStateView;
 
-
+    /** ID of the currently active user. */
     String activeUserId;
+    /** EditText for searching/filtering mood events. */
     private EditText editSearch;
+    /** Button to open the filter dialog. */
     private ImageButton buttonFilter;
+    /** List holding all mood events for the profile user. */
     private List<MoodEvent> allMoodEvents = new ArrayList<>();
 
-
+    /** Adapter for displaying mood events in the RecyclerView. */
     private MoodEventAdapter moodEventAdapter;
+    /** Formatter for parsing source timestamps. */
     private final SimpleDateFormat sourceFormat =
             new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
 
-
+    /**
+     * Called when the activity is created. Initializes UI components, loads user data and posts,
+     * and sets up event listeners for follow actions, back navigation, and filtering.
+     *
+     * @param savedInstanceState Bundle containing saved state data.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.users_profile);
         activeUserId = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-
 
         // Get user ID from intent
         pageUserId = getIntent().getStringExtra("userId");
@@ -111,14 +133,11 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         // Load user data
         loadUserData();
 
-
         // Load user posts
-
         loadUserPosts();
 
         // Set up back button
         buttonBack.setOnClickListener(v -> finish());
-
 
         // Set up follow button (placeholder for now)
         buttonFollowStateFollow.setOnClickListener(v -> {
@@ -315,14 +334,35 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
 
         // Set up search functionality for client-side filtering
         editSearch.addTextChangedListener(new TextWatcher() {
+            /**
+             * Called before text is changed.
+             *
+             * @param s The text before change.
+             * @param start The start position.
+             * @param count The number of characters before change.
+             * @param after The number of characters after change.
+             */
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
+            /**
+             * Called when text is changed. Filters mood events based on the search string.
+             *
+             * @param s The new text.
+             * @param start The start position.
+             * @param before The number of characters before change.
+             * @param count The number of characters after change.
+             */
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 moodEventAdapter.filter(s.toString());
             }
 
+            /**
+             * Called after text is changed.
+             *
+             * @param s The final text.
+             */
             @Override
             public void afterTextChanged(Editable s) {}
         });
@@ -333,6 +373,9 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         );
     }
 
+    /**
+     * Initializes the UI views.
+     */
     private void initViews() {
         profilePicture = findViewById(R.id.profilePicture);
         textName = findViewById(R.id.textName);
@@ -357,6 +400,9 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         recyclerUserPosts.setLayoutManager(new LinearLayoutManager(this));
     }
 
+    /**
+     * Loads user data from Firestore and updates the UI accordingly.
+     */
     private void loadUserData() {
         showLoading(true);
 
@@ -384,19 +430,22 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
                 });
     }
 
+    /**
+     * Updates the UI elements based on the retrieved user data.
+     *
+     * @param document The Firestore DocumentSnapshot containing user data.
+     */
     private void updateUI(DocumentSnapshot document) {
         User user = document.toObject(User.class);
         if (user != null) {
             textName.setText(user.getFullName());
             textTopUsername.setText("@" + user.getUsername());
 
-
             // Set follower and following counts
             textFollowers.setText(String.valueOf(user.getFollowerCount()));
             textFollowing.setText(String.valueOf(user.getFollowingCount()));
 
             // Set bio if available
-
             if (user.getBio() != null && !user.getBio().isEmpty()) {
                 textBioContent.setText(user.getBio());
             } else {
@@ -412,11 +461,12 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
             } else {
                 profilePicture.setImageResource(R.drawable.user_icon);
             }
-
-
         }
     }
 
+    /**
+     * Loads the posts of the user. Checks follow status before fetching posts.
+     */
     private void loadUserPosts() {
         showLoading(true);
 
@@ -447,6 +497,9 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         });
     }
 
+    /**
+     * Fetches the user's posts from Firestore and updates the mood events adapter.
+     */
     private void fetchUserPosts() {
         db.collection("Usermoods")
                 .document(pageUserId)
@@ -507,7 +560,11 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
                 });
     }
 
-    // Add this new method to the class
+    /**
+     * Displays or hides the "Follow to view posts" state.
+     *
+     * @param show true to show the empty state prompting follow; false to hide it.
+     */
     private void showFollowToViewPostsState(boolean show) {
         recyclerUserPosts.setVisibility(show ? View.GONE : View.VISIBLE);
         emptyStateView.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -522,6 +579,11 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         }
     }
 
+    /**
+     * Shows or hides the loading indicator.
+     *
+     * @param isLoading true to show the loading indicator; false to hide it.
+     */
     private void showLoading(boolean isLoading) {
         progressLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         if (isLoading) {
@@ -530,11 +592,20 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         }
     }
 
+    /**
+     * Displays or hides the empty state view.
+     *
+     * @param isEmpty true to show the empty state view; false to show the posts.
+     */
     private void showEmptyState(boolean isEmpty) {
         recyclerUserPosts.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         emptyStateView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
+    /**
+     * Checks the follow status between the active user and the profile user.
+     * Updates the UI based on whether the active user is a follower, has requested to follow, or neither.
+     */
     private void checkFollowStatus() {
         // 1) Check if activeUserId is in the pageUserId's followers
         DocumentReference followersDocRef = db.collection("users")
@@ -587,24 +658,46 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         });
     }
 
+    /**
+     * Updates the UI to show the follow button state.
+     */
     private void showFollowState() {
         buttonFollowStateFollow.setVisibility(View.VISIBLE);
         buttonFollowStateRequested.setVisibility(View.GONE);
         buttonFollowStateFollowing.setVisibility(View.GONE);
     }
 
+    /**
+     * Updates the UI to show that a follow request has been sent.
+     */
     private void showRequestedState() {
         buttonFollowStateFollow.setVisibility(View.GONE);
         buttonFollowStateRequested.setVisibility(View.VISIBLE);
         buttonFollowStateFollowing.setVisibility(View.GONE);
     }
 
+    /**
+     * Updates the UI to show that the active user is following the profile user.
+     */
     private void showFollowingState() {
         buttonFollowStateFollow.setVisibility(View.GONE);
         buttonFollowStateRequested.setVisibility(View.GONE);
         buttonFollowStateFollowing.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Callback when a filter is applied from the FilterDialog.
+     *
+     * @param timeFilter The selected time filter.
+     * @param isHappy    Whether the happy filter is applied.
+     * @param isSad      Whether the sad filter is applied.
+     * @param isAngry    Whether the angry filter is applied.
+     * @param isSurprised Whether the surprised filter is applied.
+     * @param isAfraid   Whether the afraid filter is applied.
+     * @param isDisgusted Whether the disgusted filter is applied.
+     * @param isConfused Whether the confused filter is applied.
+     * @param isShameful Whether the shameful filter is applied.
+     */
     @Override
     public void onFilterApplied(String timeFilter,
                                 boolean isHappy,
@@ -618,6 +711,11 @@ public class UsersProfile extends AppCompatActivity implements FilterDialog.Filt
         // Intentionally left empty if not needed
     }
 
+    /**
+     * Callback when filtered results are available from the FilterDialog.
+     *
+     * @param filteredMoods The list of filtered MoodEvent objects.
+     */
     @Override
     public void onFilteredResults(List<MoodEvent> filteredMoods) {
         // First update the adapter with filtered moods
