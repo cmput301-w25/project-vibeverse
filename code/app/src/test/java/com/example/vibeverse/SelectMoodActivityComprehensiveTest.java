@@ -261,12 +261,12 @@ public class SelectMoodActivityComprehensiveTest {
     @Test
     public void testMoodEventCreation() {
         // Test without photo
-        MoodEvent noPhotoEvent = new MoodEvent("123", "Happy", "😃", "Good day", "Got good news",false);
+        MoodEvent noPhotoEvent = new MoodEvent("123", "Happy", "😃", "Good day", "Got good news", false);
 
         assertEquals("Happy", noPhotoEvent.getMoodTitle());
         assertEquals("😃", noPhotoEvent.getEmoji());
         assertEquals("Good day", noPhotoEvent.getReasonWhy());
-        assertEquals("With friends", noPhotoEvent.getSocialSituation());
+        assertEquals("Got good news", noPhotoEvent.getSocialSituation());
         assertNotNull(noPhotoEvent.getTimestamp());
         assertNull(noPhotoEvent.getPhotograph());
         assertEquals("N/A", noPhotoEvent.getPhotoUri());
