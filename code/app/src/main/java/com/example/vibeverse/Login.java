@@ -37,10 +37,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-
 import java.util.concurrent.Executors;
-
-
 
 /**
  * Login activity handles user authentication using Firebase.
@@ -49,6 +46,7 @@ import java.util.concurrent.Executors;
  * If the user is already authenticated, it redirects them either to HomePage
  * or UserDetails (if additional user information is needed).
  * On login attempt, it validates inputs and uses FirebaseAuth to sign in.
+ * It also supports Google Sign-In via CredentialManager.
  * </p>
  */
 public class Login extends AppCompatActivity {
@@ -105,7 +103,8 @@ public class Login extends AppCompatActivity {
      * <p>
      * Sets up the UI components, including email and password input fields,
      * login button, progress bar, and a link to the registration screen.
-     * Also sets up the click listeners for logging in and navigating to registration.
+     * Also sets up the click listeners for logging in and navigating to registration,
+     * as well as for Google Sign-In.
      * </p>
      *
      * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
@@ -118,7 +117,6 @@ public class Login extends AppCompatActivity {
 
         credentialManager = CredentialManager.create(this);
 
-
         // Initialize UI components
         editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
@@ -126,8 +124,6 @@ public class Login extends AppCompatActivity {
         progressBar = findViewById(R.id.progress_bar);
         textViewLogin = findViewById(R.id.registerNow);
         googleSignInButton = findViewById(R.id.google_sign_in);
-
-
 
         // Set click listener to navigate to the registration activity
         textViewLogin.setOnClickListener(new View.OnClickListener() {
@@ -192,6 +188,13 @@ public class Login extends AppCompatActivity {
         });
     }
 
+    /**
+     * Initiates Google Sign-In using CredentialManager.
+     * <p>
+     * It creates a Google sign-in request with authorized accounts filtering and a server client ID,
+     * then launches the credential manager to get the user's credential.
+     * </p>
+     */
     private void signInWithGoogle() {
         progressBar.setVisibility(View.VISIBLE);
 
@@ -206,7 +209,7 @@ public class Login extends AppCompatActivity {
                 .addCredentialOption(googleIdOption)
                 .build();
 
-        // Launch Google Sign-in
+        // Launch Google Sign-In
         credentialManager.getCredentialAsync(
                 this,
                 request,
@@ -229,11 +232,20 @@ public class Login extends AppCompatActivity {
                 });
     }
 
+    /**
+     * Handles the received credential after Google Sign-In.
+     * <p>
+     * Checks whether the credential is of the Google ID token type, and if so,
+     * extracts the token and proceeds with Firebase authentication.
+     * </p>
+     *
+     * @param credential The Credential obtained from CredentialManager.
+     */
     private void handleSignIn(Credential credential) {
         // Check if credential is of type Google ID
         if (credential instanceof CustomCredential customCredential
                 && credential.getType().equals(GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL)) {
-            // Create Google ID Token
+            // Create Google ID Token Credential from data bundle
             android.os.Bundle credentialData = customCredential.getData();
             GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credentialData);
 
@@ -246,6 +258,15 @@ public class Login extends AppCompatActivity {
         }
     }
 
+    /**
+     * Authenticates with Firebase using the provided Google ID token.
+     * <p>
+     * It creates a Firebase credential from the Google ID token and attempts to sign in.
+     * On success, it checks if the user's details exist in Firestore and navigates accordingly.
+     * </p>
+     *
+     * @param idToken The Google ID token to use for authentication.
+     */
     private void firebaseAuthWithGoogle(String idToken) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         mAuth.signInWithCredential(credential)

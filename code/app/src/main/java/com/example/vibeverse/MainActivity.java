@@ -7,7 +7,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-
 import com.google.android.libraries.places.api.Places;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -28,9 +27,9 @@ import com.google.firebase.firestore.FirebaseFirestore;
  */
 public class MainActivity extends AppCompatActivity {
 
-    /** FirebaseAuth instance for user authentication. */
+    /** FirebaseAuth instance for authentication. */
     FirebaseAuth auth;
-    /** Button to sign out the current user. */
+    /** Button to trigger logout (if implemented). */
     Button button;
     /** TextView to display user details (for debugging or informational purposes). */
     TextView textView;
@@ -45,11 +44,10 @@ public class MainActivity extends AppCompatActivity {
      * This method initializes FirebaseAuth and Firestore, retrieves the current user, and checks
      * if the user exists in the "users" collection in Firestore. Based on this check, the activity
      * redirects the user to HomePage or UserDetails. If no user is authenticated, it redirects to Login.
-     * It also sets up a logout button which signs out the user when clicked.
      * </p>
      *
      * @param savedInstanceState If the activity is being re-initialized after previously being shut down,
-     *                           this Bundle contains the data it most recently supplied.
+     *                           this contains the data it most recently supplied.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
 
 //        button = findViewById(R.id.logout_button);
 //        textView = findViewById(R.id.userDetails);
-
 
         user = auth.getCurrentUser();
 

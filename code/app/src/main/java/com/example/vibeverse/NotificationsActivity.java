@@ -1,4 +1,5 @@
 package com.example.vibeverse;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageButton;
@@ -18,6 +19,13 @@ import com.google.firebase.firestore.WriteBatch;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * NotificationsActivity displays a list of notifications for the current user.
+ * <p>
+ * It retrieves notifications from Firestore, displays them in a RecyclerView using NotificationsAdapter,
+ * marks notifications as read, and provides navigation back to HomePage via a back button.
+ * </p>
+ */
 public class NotificationsActivity extends AppCompatActivity {
     private RecyclerView recyclerNotifications;
     private NotificationsAdapter adapter;
@@ -30,6 +38,15 @@ public class NotificationsActivity extends AppCompatActivity {
 
     private String currentUserId;
 
+    /**
+     * Called when the activity is created.
+     * <p>
+     * Initializes UI components, Firebase instances, loads notifications from Firestore,
+     * marks them as read, and sets up bottom navigation.
+     * </p>
+     *
+     * @param savedInstanceState the previously saved state of the activity.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +76,9 @@ public class NotificationsActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Loads notifications for the current user from Firestore and updates the RecyclerView.
+     */
     private void loadNotifications() {
         // Query the notifications subcollection sorted by dateTime descending
         db.collection("users")
@@ -80,7 +100,9 @@ public class NotificationsActivity extends AppCompatActivity {
                 });
     }
 
-
+    /**
+     * Marks all notifications for the current user as read and resets the new notification count.
+     */
     private void markNotificationsAsRead() {
         db.collection("users")
                 .document(currentUserId)
@@ -96,6 +118,4 @@ public class NotificationsActivity extends AppCompatActivity {
                     });
                 });
     }
-
-
 }

@@ -14,6 +14,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 
+/**
+ * ViewHolder for displaying a mood event in a RecyclerView.
+ * <p>
+ * This ViewHolder holds references to the UI components used to display a mood event,
+ * including post images, titles, subtitles, mood emojis, and various UI containers.
+ * It is used by the MoodEventAdapter to efficiently manage and recycle views.
+ * </p>
+ */
 public class MoodEventViewHolder extends RecyclerView.ViewHolder {
 
     // Original views
@@ -43,6 +51,11 @@ public class MoodEventViewHolder extends RecyclerView.ViewHolder {
     public ImageView imageProfile;
     public TextView textUsername;
 
+    /**
+     * Constructs a new MoodEventViewHolder.
+     *
+     * @param itemView The view representing a single mood event item.
+     */
     public MoodEventViewHolder(@NonNull View itemView) {
         super(itemView);
         imagePost = itemView.findViewById(R.id.imagePost);
