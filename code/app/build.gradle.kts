@@ -130,15 +130,36 @@ dependencies {
 }
 
 tasks.register<Javadoc>("javadoc") {
-    // Convert the main source set directories to a FileTree.
+    // Include your main Java source directories.
     source = files(android.sourceSets["main"].java.srcDirs).asFileTree
 
-    // Add the Android SDK JAR to the classpath.
-    classpath += files("${android.sdkDirectory}/platforms/android-${android.compileSdk}/android.jar")
+    // Add the Android boot classpath so basic Android classes (and AndroidX, if available) are included.
+    classpath += files(android.bootClasspath)
 
-    // Use the setter method to configure the output directory.
+    // Also add the debug variant’s compile classpath to bring in your external dependencies.
+    classpath += configurations.getByName("debugCompileClasspath")
+
+    // Set the output directory using the setter.
     setDestinationDir(file("$buildDir/docs/javadoc"))
+
+    // Configure Javadoc options.
+    (options as StandardJavadocDocletOptions).apply {
+        encoding = "UTF-8"
+        addStringOption("Xdoclint:none", "-quiet")
+        // Link to external documentation for Android and Firebase.
+        links("https://developer.android.com/reference/")
+        links("https://firebase.google.com/docs/reference/android/")
+        // You can add additional links for libraries like Glide if needed.
+    }
+
+    // Prevent the task from failing even if errors remain.
+    setFailOnError(false)
 }
+
+
+
+
+
 
 fun getLocalProperty(key: String): String {
     val properties = Properties()

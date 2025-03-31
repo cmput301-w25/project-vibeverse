@@ -1,3 +1,5 @@
+package com.example.vibeverse;
+
 import static org.junit.Assert.assertEquals;
 
 import android.graphics.Bitmap;
