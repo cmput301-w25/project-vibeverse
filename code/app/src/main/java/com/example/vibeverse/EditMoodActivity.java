@@ -5,21 +5,31 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -33,16 +43,28 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.RectangularBounds;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -98,6 +120,19 @@ public class EditMoodActivity extends AppCompatActivity {
 
     private boolean isPublic;
 
+    // Location-related fields
+    private static final int REQUEST_LOCATION_AUTOCOMPLETE = 3;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 101;
+    private FrameLayout locationButton;
+    private TextView selectedLocationText;
+    private String selectedLocationName = null;
+    private LatLng selectedLocationCoords = null;
+    private LocationManager locationManager;
+    private Location currentLocation;
+    private String currentLocationAddress = null;
+
+    private boolean userRemovedLocation = false;
+
     /**
      * Called when the activity is first created.
      * <p>
@@ -115,6 +150,11 @@ public class EditMoodActivity extends AppCompatActivity {
         // Use the same layout as SelectMoodActivity
         setContentView(R.layout.activity_select_mood);
 
+        // Initialize Places API if needed
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY);
+        }
+
         mainContainer = findViewById(R.id.mainContainer);
         selectedMoodEmoji = findViewById(R.id.selectedMoodEmoji);
         selectedMoodText = findViewById(R.id.selectedMoodText);
@@ -127,6 +167,14 @@ public class EditMoodActivity extends AppCompatActivity {
         imgSelected = findViewById(R.id.imgSelected);
         imgPlaceholder = findViewById(R.id.imgPlaceholder);
         visibilitySwitch = findViewById(R.id.visibilitySwitch);
+
+        // Initialize location-related UI elements
+        locationButton = findViewById(R.id.btnLocation);
+        selectedLocationText = findViewById(R.id.selectedLocationText);
+
+        // Request location permissions and get current location
+        requestLocationPermission();
+        getCurrentLocation();
 
         // Create a custom toolbar without a title
         Toolbar toolbar = new Toolbar(this);
@@ -215,14 +263,10 @@ public class EditMoodActivity extends AppCompatActivity {
         reasonWhyLabel.setTypeface(null, Typeface.BOLD);
         reasonWhyLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         reasonWhyLabel.setPadding(0, (int) dpToPx(16), 0, (int) dpToPx(4));
-      
-      // Get the parent container and add the labels before the respective inputs
 
-
-
+        // Get the parent container and add the labels before the respective inputs
         int reasonWhyIndex = mainContainer.indexOfChild(reasonWhyInput);
         mainContainer.addView(reasonWhyLabel, reasonWhyIndex);
-
 
         int socialIndex = mainContainer.indexOfChild(socialSituationInput);
         mainContainer.addView(socialLabel, socialIndex);
@@ -280,7 +324,21 @@ public class EditMoodActivity extends AppCompatActivity {
         String socialSituation = intent.getStringExtra("socialSituation");
         String currentPhotoUri = intent.getStringExtra("photoUri");
 
+        // Retrieve location information if it exists
+        if (intent.hasExtra("moodLocation")) {
+            selectedLocationName = intent.getStringExtra("moodLocation");
+            double latitude = intent.getDoubleExtra("moodLatitude", 0);
+            double longitude = intent.getDoubleExtra("moodLongitude", 0);
+            if (latitude != 0 || longitude != 0) {
+                selectedLocationCoords = new LatLng(latitude, longitude);
+            }
 
+            // Update the location text with existing location
+            if (selectedLocationName != null && !selectedLocationName.isEmpty()) {
+                selectedLocationText.setText(selectedLocationName);
+                selectedLocationText.setTextColor(Color.BLACK);
+            }
+        }
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this,
@@ -354,8 +412,6 @@ public class EditMoodActivity extends AppCompatActivity {
         buttonBg.setCornerRadius(dpToPx(24));
         buttonBg.setColor(Color.parseColor("#5C4B99"));  // Use consistent purple color
 
-
-
         // Apply elevation for a modern look
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             updateButton.setElevation(dpToPx(4));
@@ -391,10 +447,78 @@ public class EditMoodActivity extends AppCompatActivity {
         // Set click listener for image picker button
         btnTestImage.setOnClickListener(v -> showImagePickerDialog());
 
+        // Set the click listener for the location button
+        locationButton.setOnClickListener(v -> {
+            if (selectedLocationName != null && !selectedLocationName.isEmpty()) {
+                // Location already exists for this mood
+                List<LocationOption> options = new ArrayList<>();
+
+                options.add(new LocationOption(
+                        "Keep existing: " + selectedLocationName,
+                        android.R.drawable.ic_menu_mylocation,
+                        () -> {
+                            // Keep existing location - no action needed
+                        }
+                ));
+
+                options.add(new LocationOption(
+                        "Search for a different location",
+                        android.R.drawable.ic_menu_search,
+                        this::startPlacesAutocomplete
+                ));
+
+                options.add(new LocationOption(
+                        "Remove location",
+                        android.R.drawable.ic_menu_close_clear_cancel,
+                        () -> {
+                            // Remove location
+                            selectedLocationName = null;
+                            selectedLocationCoords = null;
+                            selectedLocationText.setText("Add Location (Optional)");
+                            selectedLocationText.setTextColor(Color.parseColor("#757575"));
+                            userRemovedLocation = true;
+                        }
+                ));
+
+                showCustomLocationDialog("Choose Location", options);
+            } else {
+                // No location exists for this mood yet
+                if (currentLocationAddress != null && !currentLocationAddress.isEmpty()) {
+                    // Current device location is available
+                    List<LocationOption> options = new ArrayList<>();
+
+                    options.add(new LocationOption(
+                            "Use Current Location: " + currentLocationAddress,
+                            android.R.drawable.ic_menu_mylocation,
+                            () -> {
+                                // Use current location
+                                selectedLocationName = currentLocationAddress;
+                                if (currentLocation != null) {
+                                    selectedLocationCoords = new LatLng(
+                                            currentLocation.getLatitude(),
+                                            currentLocation.getLongitude());
+                                }
+                                selectedLocationText.setText(selectedLocationName);
+                                selectedLocationText.setTextColor(Color.BLACK);
+                            }
+                    ));
+
+                    options.add(new LocationOption(
+                            "Search for a different location",
+                            android.R.drawable.ic_menu_search,
+                            this::startPlacesAutocomplete
+                    ));
+
+                    showCustomLocationDialog("Choose Location", options);
+                } else {
+                    // No existing location and no current location available
+                    startPlacesAutocomplete();
+                }
+            }
+        });
+
         // Set click listener for the update button with animation
         updateButton.setOnClickListener(view -> {
-
-
             String newreasonWhy = reasonWhyInput.getText().toString().trim();
 
             // Check if reasonWhy is empty
@@ -411,9 +535,7 @@ public class EditMoodActivity extends AppCompatActivity {
                 return;
             }
 
-
             isPublic = visibilitySwitch.isChecked();
-
 
             // Show updating toast
             Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
@@ -421,11 +543,7 @@ public class EditMoodActivity extends AppCompatActivity {
                     .alpha(0.8f)
                     .setDuration(200)
                     .withEndAction(() -> {
-
-
-
                         // Original code for handling the update
-
                         Intent resultIntent = new Intent();
                         resultIntent.putExtra("updatedMood", selectedMood);
                         resultIntent.putExtra("updatedEmoji", selectedEmoji);
@@ -440,6 +558,25 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedphotoSizeKB", photoSize);
                         resultIntent.putExtra("isPublic", isPublic);
 
+                        if (userRemovedLocation) {
+                            // Only mark as removed if user explicitly chose to remove it
+                            resultIntent.putExtra("locationRemoved", true);
+                        } else if (selectedLocationName != null && selectedLocationCoords != null) {
+                            // User selected or kept a location
+                            resultIntent.putExtra("updatedMoodLocation", selectedLocationName);
+                            resultIntent.putExtra("updatedMoodLatitude", selectedLocationCoords.latitude);
+                            resultIntent.putExtra("updatedMoodLongitude", selectedLocationCoords.longitude);
+                        }
+
+//                        // Add location information if available
+//                        if (selectedLocationName != null && selectedLocationCoords != null) {
+//                            resultIntent.putExtra("updatedMoodLocation", selectedLocationName);
+//                            resultIntent.putExtra("updatedMoodLatitude", selectedLocationCoords.latitude);
+//                            resultIntent.putExtra("updatedMoodLongitude", selectedLocationCoords.longitude);
+//                        } else {
+//                            // Explicitly pass null to indicate location should be removed
+//                            resultIntent.putExtra("locationRemoved", true);
+//                        }
 
                         setResult(RESULT_OK, resultIntent);
                         finish();
@@ -452,6 +589,210 @@ public class EditMoodActivity extends AppCompatActivity {
             startActivity(goBackIntent);
             finish();
         });
+    }
+
+    private void showCustomLocationDialog(String title, List<LocationOption> options) {
+        // Create dialog
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_location_choice);
+
+        // Set dialog width to 90% of screen width
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setGravity(Gravity.CENTER);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        // Set dialog title
+        TextView dialogTitle = dialog.findViewById(R.id.dialog_title);
+        dialogTitle.setText(title);
+
+        // Get container for options
+        LinearLayout optionsContainer = dialog.findViewById(R.id.location_options_container);
+
+        // Add each option as a button
+        for (LocationOption option : options) {
+            View optionView = getLayoutInflater().inflate(R.layout.item_location_option, optionsContainer, false);
+
+            ImageView optionIcon = optionView.findViewById(R.id.option_icon);
+            TextView optionText = optionView.findViewById(R.id.option_text);
+
+            // Set option text and icon
+            optionIcon.setImageResource(option.iconResId);
+            optionText.setText(option.text);
+
+            // Set click listener
+            optionView.setOnClickListener(v -> {
+                option.clickListener.run();
+                dialog.dismiss();
+            });
+
+            optionsContainer.addView(optionView);
+        }
+
+        dialog.show();
+    }
+
+    // Class to represent location options
+    private static class LocationOption {
+        String text;
+        int iconResId;
+        Runnable clickListener;
+
+        LocationOption(String text, int iconResId, Runnable clickListener) {
+            this.text = text;
+            this.iconResId = iconResId;
+            this.clickListener = clickListener;
+        }
+    }
+
+    /**
+     * Starts the Places Autocomplete activity for location selection.
+     * If current location is available, it biases the search results toward the current location.
+     */
+    private void startPlacesAutocomplete() {
+        // Define the place fields to return
+        List<Place.Field> fields = Arrays.asList(
+                Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG);
+
+        // Create the autocomplete intent builder
+        Autocomplete.IntentBuilder intentBuilder =
+                new Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields);
+
+        // If we have the current location, use it to bias the search results
+        if (currentLocation != null) {
+            // Create a bias around the current location (approximately 10km radius)
+            double radiusDegrees = 0.1; // Roughly 10km at the equator
+            LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+
+            RectangularBounds bounds = RectangularBounds.newInstance(
+                    new LatLng(currentLatLng.latitude - radiusDegrees, currentLatLng.longitude - radiusDegrees),
+                    new LatLng(currentLatLng.latitude + radiusDegrees, currentLatLng.longitude + radiusDegrees));
+
+            intentBuilder.setLocationBias(bounds);
+        }
+
+        // Start the autocomplete intent
+        Intent intent = intentBuilder.build(this);
+        startActivityForResult(intent, REQUEST_LOCATION_AUTOCOMPLETE);
+    }
+
+    /**
+     * Request location permissions
+     */
+    private void requestLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    /**
+     * Get the current location
+     */
+    private void getCurrentLocation() {
+        try {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                // Define location listener
+                LocationListener locationListener = new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        currentLocation = location;
+                        getAddressFromLocation(location);
+                        locationManager.removeUpdates(this);
+                    }
+
+                    @Override
+                    public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+                    @Override
+                    public void onProviderEnabled(String provider) {}
+
+                    @Override
+                    public void onProviderDisabled(String provider) {
+                        Toast.makeText(EditMoodActivity.this,
+                                "Please enable location services for better experience",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                };
+
+                // Request location updates
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            0,
+                            0,
+                            locationListener);
+                } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.NETWORK_PROVIDER,
+                            0,
+                            0,
+                            locationListener);
+                }
+
+                // Try to get last known location immediately
+                Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (lastKnownLocation != null) {
+                    currentLocation = lastKnownLocation;
+                    getAddressFromLocation(lastKnownLocation);
+                } else {
+                    // Try with network provider
+                    lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    if (lastKnownLocation != null) {
+                        currentLocation = lastKnownLocation;
+                        getAddressFromLocation(lastKnownLocation);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error getting location: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Convert location coordinates to address
+     */
+    private void getAddressFromLocation(Location location) {
+        try {
+            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+            List<Address> addresses = geocoder.getFromLocation(
+                    location.getLatitude(), location.getLongitude(), 1);
+
+            if (addresses != null && !addresses.isEmpty()) {
+                Address address = addresses.get(0);
+                StringBuilder sb = new StringBuilder();
+
+                // Get address details
+                for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+                    sb.append(address.getAddressLine(i));
+                    if (i < address.getMaxAddressLineIndex()) {
+                        sb.append(", ");
+                    }
+                }
+
+                currentLocationAddress = sb.toString();
+
+                // Only update UI if location is not already set from intent
+                runOnUiThread(() -> {
+                    if (selectedLocationText != null && (selectedLocationName == null || selectedLocationName.isEmpty())) {
+                        selectedLocationText.setText("Tap to use current location");
+                        selectedLocationText.setTextColor(Color.parseColor("#0277BD")); // Light Blue
+                    }
+                });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -749,14 +1090,22 @@ public class EditMoodActivity extends AppCompatActivity {
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, get location
+                getCurrentLocation();
+            } else {
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
             }
         }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     /**
@@ -806,6 +1155,21 @@ public class EditMoodActivity extends AppCompatActivity {
                     imgSelected.setVisibility(View.VISIBLE);
                     imgSelected.setImageBitmap(bitmap);
                 });
+            } else if (requestCode == REQUEST_LOCATION_AUTOCOMPLETE) {
+                // Handle location selection from Places Autocomplete
+                Place place = Autocomplete.getPlaceFromIntent(data);
+                selectedLocationName = place.getName() + ", " + place.getAddress();
+                selectedLocationCoords = place.getLatLng();
+                selectedLocationText.setText(selectedLocationName);
+                selectedLocationText.setTextColor(Color.BLACK);
+                Log.d("EditMoodActivity", "Location selected: " + selectedLocationName);
+            }
+        } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+            if (requestCode == REQUEST_LOCATION_AUTOCOMPLETE) {
+                // Handle the error
+                Status status = Autocomplete.getStatusFromIntent(data);
+                Log.e("EditMoodActivity", "Place selection error: " + status.getStatusMessage());
+                Toast.makeText(this, "Error selecting location", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -910,5 +1274,4 @@ public class EditMoodActivity extends AppCompatActivity {
         float b = (Color.blue(color1) * ratio) + (Color.blue(color2) * inverseRatio);
         return Color.rgb((int) r, (int) g, (int) b);
     }
-
 }

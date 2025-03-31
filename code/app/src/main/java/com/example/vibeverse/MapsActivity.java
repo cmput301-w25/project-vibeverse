@@ -1,31 +1,43 @@
 package com.example.vibeverse;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.Typeface;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -36,10 +48,13 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -50,6 +65,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private String userId;
+
+    // New UI elements
+    private ToggleButton mapToggleButton;
+    private SeekBar radiusSlider;
+    private TextView radiusValueText;
+
+    // Map mode and radius
+    private boolean showFollowersMoods = false;
+    private float currentRadiusKm = 5.0f;
+    private static final float MIN_RADIUS_KM = 5.0f;
+    private static final float MAX_RADIUS_KM = 100.0f;
+
+    // Location-related fields
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
+    private LatLng currentUserLocation;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
     // Maps to store mood colors and emojis (copied from SelectMoodActivity)
     private final Map<String, Integer> moodColors = new HashMap<>();
@@ -66,6 +98,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Initialize Firebase
         initializeFirebase();
 
+        // Initialize UI elements
+        initializeUIElements();
+
+        // Initialize location services
+        initializeLocationServices();
+
         // Set up bottom navigation
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         NavigationHelper.setupBottomNavigation(this, bottomNavigationView);
@@ -77,6 +115,185 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             mapFragment.getMapAsync(this);
         } else {
             Log.e(TAG, "Map fragment is null");
+        }
+
+        // Set Map as the selected item - put this AFTER everything else
+        bottomNavigationView.setSelectedItemId(R.id.nav_map);
+    }
+
+    /**
+     * Initialize UI elements for map control
+     */
+    private void initializeUIElements() {
+        // Initialize toggle button
+        mapToggleButton = findViewById(R.id.map_toggle_button);
+        mapToggleButton.setTextOff("MY MOODS");
+        mapToggleButton.setTextOn("FOLLOWERS' MOODS");
+        mapToggleButton.setChecked(false); // Default to showing own moods
+
+        // Find the radius control panel to show/hide it entirely
+        View radiusControlPanel = findViewById(R.id.radius_control_panel);
+
+        mapToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                showFollowersMoods = isChecked;
+
+                // Show/hide radius panel based on mode
+                if (isChecked) {
+                    // When switching to followers mode, show the radius panel
+                    radiusControlPanel.setVisibility(View.VISIBLE);
+                    // Reset to default radius
+                    currentRadiusKm = MIN_RADIUS_KM;
+                    radiusSlider.setProgress(0); // First position
+                    updateRadiusText();
+                } else {
+                    // In personal mode, hide the radius panel
+                    radiusControlPanel.setVisibility(View.GONE);
+                }
+
+                // Refresh the map
+                if (mMap != null) {
+                    loadMoodData();
+                }
+            }
+        });
+
+        // Initialize radius slider
+        radiusSlider = findViewById(R.id.radius_slider);
+        radiusValueText = findViewById(R.id.radius_value_text);
+
+        // Configure slider range
+        int maxProgress = 95; // For 95 intervals between 5 and 100
+        radiusSlider.setMax(maxProgress);
+        radiusSlider.setProgress(0); // Default to minimum (5km)
+
+        radiusSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // Calculate radius based on progress (5km to 100km)
+                currentRadiusKm = MIN_RADIUS_KM + (progress * (MAX_RADIUS_KM - MIN_RADIUS_KM) / maxProgress);
+                updateRadiusText();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // Not needed
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Refresh the map when user stops dragging
+                if (mMap != null) {
+                    loadMoodData();
+                }
+            }
+        });
+
+        // Initially hide radius panel if starting in personal mode
+        if (!showFollowersMoods) {
+            radiusControlPanel.setVisibility(View.GONE);
+        }
+
+        updateRadiusText();
+    }
+
+    /**
+     * Update the radius text display
+     */
+    private void updateRadiusText() {
+        radiusValueText.setText(String.format("Radius: %.1f km", currentRadiusKm));
+    }
+
+    /**
+     * Initialize location services and request permission if needed
+     */
+    private void initializeLocationServices() {
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    // Update current location
+                    currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+
+                    // If map is ready, center on current location and load mood data
+                    if (mMap != null) {
+                        // First center map on current location
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 14));
+                        // Then load mood data without changing map center
+                        loadMoodData();
+                    }
+
+                    // We only need one location update
+                    stopLocationUpdates();
+                    break;
+                }
+            }
+        };
+
+        // Check for location permission
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        } else {
+            startLocationUpdates();
+        }
+    }
+
+    private void startLocationUpdates() {
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        fusedLocationClient.requestLocationUpdates(locationRequest,
+                locationCallback,
+                Looper.getMainLooper());
+    }
+
+    private void stopLocationUpdates() {
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, enable location features
+                if (mMap != null) {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+                        mMap.setMyLocationEnabled(true);
+                    }
+                }
+                startLocationUpdates();
+            } else {
+                Toast.makeText(this, "Location permission denied. Some features may not work properly.",
+                        Toast.LENGTH_SHORT).show();
+                // Use default location
+                currentUserLocation = new LatLng(53.5461, -113.4938); // Edmonton
+                if (mMap != null) {
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
+                }
+                loadMoodData();
+            }
         }
     }
 
@@ -133,35 +350,93 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
-        // Default location (will be overridden by user's moods if available)
-        LatLng defaultLocation = new LatLng(53.5461, -113.4938); // Edmonton coordinates
-        boolean hasMoodLocations = false;
+        // Try to enable my-location layer if permission is granted
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mMap.setMyLocationEnabled(true);
 
-        // Fetch user mood data from Firestore
-        loadUserMoods(defaultLocation);
+            // Get current location and center map on it immediately
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, location -> {
+                        if (location != null) {
+                            // Update current location
+                            currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+
+                            // Center map on current location immediately
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 14));
+
+                            // Then load mood data without changing map center
+                            loadMoodData();
+                        } else {
+                            // If null location, request a fresh location update
+                            startLocationUpdates();
+
+                            // Use default location temporarily
+                            currentUserLocation = new LatLng(53.5461, -113.4938); // Edmonton
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
+                            loadMoodData();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        // Use default location if location retrieval fails
+                        currentUserLocation = new LatLng(53.5461, -113.4938); // Edmonton
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
+                        loadMoodData();
+                    });
+        } else {
+            // Request location permission
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+
+            // Use default location until permission granted
+            currentUserLocation = new LatLng(53.5461, -113.4938); // Edmonton
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 12));
+            loadMoodData();
+        }
     }
 
     /**
-     * Loads the user's moods from Firestore and adds them to the map
+     * Call this method to load moods based on current toggle state
      */
-    private void loadUserMoods(LatLng defaultLocation) {
+    private void loadMoodData() {
         // Show loading toast
-        Toast.makeText(this, "Loading your mood map...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Loading mood map...", Toast.LENGTH_SHORT).show();
 
+        // Clear the map
+        mMap.clear();
+
+        if (showFollowersMoods) {
+            // Load only followers' moods with current radius
+            loadFollowedUsersMoods();
+            Toast.makeText(this, "Showing followers' moods within " +
+                    String.format("%.1f", currentRadiusKm) + " km", Toast.LENGTH_SHORT).show();
+        } else {
+            // Load only user's own moods
+            loadUserMoodsWithoutCentering();
+            Toast.makeText(this, "Showing your moods", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Sets initial map position to the current user location
+     */
+    private void centerMapOnCurrentLocation() {
+        if (currentUserLocation != null && mMap != null) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 14));
+        }
+    }
+
+    /**
+     * Loads the user's own moods from Firestore and adds them to the map
+     * without changing the map center
+     */
+    private void loadUserMoodsWithoutCentering() {
         db.collection("Usermoods")
                 .document(userId)
                 .collection("moods")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (queryDocumentSnapshots.isEmpty()) {
-                        Toast.makeText(MapsActivity.this, "No mood locations found", Toast.LENGTH_SHORT).show();
-                        // If no moods, center on default location
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 12));
-                        return;
-                    }
-
-                    LatLng latestMoodLocation = null;
-
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         // Check if the mood has location data
                         if (document.contains("moodLatitude") && document.contains("moodLongitude")) {
@@ -187,64 +462,198 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                             // Create a LatLng object for the mood location
                             LatLng moodLocation = new LatLng(latitude, longitude);
 
-                            // Remember the most recent mood location to center the map
-                            if (latestMoodLocation == null) {
-                                latestMoodLocation = moodLocation;
-                            }
-
                             // Add a custom marker for this mood
-                            addMoodMarker(moodLocation, moodTitle, emoji, moodColor, reasonWhy, locationName);
+                            addMoodMarker(moodLocation, moodTitle, emoji, moodColor, reasonWhy, locationName, userId, true);
                         }
-                    }
-
-                    // Center and zoom the map on the latest mood location if available
-                    if (latestMoodLocation != null) {
-                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latestMoodLocation, 13));
-                    } else {
-                        // If no mood locations, center on default location
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 12));
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error loading mood data", e);
-                    Toast.makeText(MapsActivity.this, "Error loading mood data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    // Center on default location if error
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 12));
+                    Log.e(TAG, "Error loading user mood data", e);
+                    Toast.makeText(MapsActivity.this, "Error loading user mood data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
     /**
-     * Adds a custom marker to the map representing a mood
+     * Loads the moods of users that the current user is following
      */
-    private void addMoodMarker(LatLng position, String moodTitle, String emoji, int moodColor, String reasonWhy, String locationName) {
-        // Create a custom marker icon
-        Bitmap markerBitmap = createCustomMarkerBitmap(emoji, moodTitle, moodColor);
+    private void loadFollowedUsersMoods() {
+        // Get the list of followed users first
+        db.collection("users")
+                .document(userId)
+                .collection("following")
+                .document("list")
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Get the list of user IDs that the current user is following
+                        @SuppressWarnings("unchecked")
+                        List<String> followingIds = (List<String>) documentSnapshot.get("followingIds");
 
-        // Create the marker
-        Marker marker = mMap.addMarker(new MarkerOptions()
-                .position(position)
-                .title(moodTitle)
-                .snippet(reasonWhy + " @ " + locationName)
-                .icon(BitmapDescriptorFactory.fromBitmap(markerBitmap)));
-
-        // Set custom info window if needed
-        // mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter());
+                        if (followingIds != null && !followingIds.isEmpty()) {
+                            // Fetch mood data for each followed user
+                            for (String followedUserId : followingIds) {
+                                loadFollowedUserMoods(followedUserId);
+                            }
+                        } else {
+                            Log.d(TAG, "User is not following anyone");
+                            Toast.makeText(MapsActivity.this, "You are not following anyone yet", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading followed users", e);
+                });
     }
 
     /**
-     * Creates a truly premium, professional custom bitmap for the mood marker
-     * with clean lines, balanced proportions, and sophisticated styling
+     * Loads mood data for a specific followed user and filters by distance
      */
-    private Bitmap createCustomMarkerBitmap(String emoji, String moodTitle, int color) {
-        // Create appropriately sized bitmap (reduced by ~40%)
+    private void loadFollowedUserMoods(String followedUserId) {
+        db.collection("Usermoods")
+                .document(followedUserId)
+                .collection("moods")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+
+                        // Check if mood is public
+                        Boolean isPublic = (Boolean) document.getData().get("isPublic");
+                        if (isPublic == null || !isPublic) {
+                            continue;
+                        }
+
+                        // Check if the mood has location data
+                        if (document.contains("moodLatitude") && document.contains("moodLongitude")) {
+                            double latitude = document.getDouble("moodLatitude");
+                            double longitude = document.getDouble("moodLongitude");
+
+                            // Create a LatLng object for the mood location
+                            LatLng moodLocation = new LatLng(latitude, longitude);
+
+                            // Check if the mood is within the current radius of the user's location
+                            if (isWithinRange(moodLocation, currentUserLocation, currentRadiusKm)) {
+                                String locationName = document.getString("moodLocation");
+                                String moodTitle = document.getString("mood");
+                                String emoji = document.getString("emoji");
+                                Long intensity = document.getLong("intensity");
+                                String reasonWhy = document.getString("reasonWhy");
+
+                                // Get mood color
+                                int moodColor = Color.GRAY; // Default color
+                                if (moodColors.containsKey(moodTitle)) {
+                                    moodColor = moodColors.get(moodTitle);
+                                }
+
+                                // Adjust color based on intensity if available
+                                if (intensity != null) {
+                                    moodColor = adjustColorIntensity(moodColor, intensity.intValue());
+                                }
+
+                                // Add a custom marker for this mood
+                                addMoodMarker(moodLocation, moodTitle, emoji, moodColor, reasonWhy, locationName, followedUserId, false);
+                            }
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error loading followed user mood data", e);
+                });
+    }
+
+    /**
+     * Checks if a mood location is within the specified range of the user's location
+     */
+    private boolean isWithinRange(LatLng moodLocation, LatLng userLocation, float maxDistanceKm) {
+        if (userLocation == null) {
+            return false; // Can't determine distance without user location
+        }
+
+        // Calculate distance between the two points using Android's Location class
+        float[] results = new float[1];
+        Location.distanceBetween(
+                userLocation.latitude, userLocation.longitude,
+                moodLocation.latitude, moodLocation.longitude,
+                results);
+
+        // Convert m to km and check if within range
+        float distanceKm = results[0] / 1000;
+        return distanceKm <= maxDistanceKm;
+    }
+
+    /**
+     * Adds a custom marker to the map representing a mood
+     *
+     * @param position The geographic position of the marker
+     * @param moodTitle The mood title to display
+     * @param emoji The emoji representing the mood
+     * @param moodColor The color for the marker
+     * @param reasonWhy The reason for the mood
+     * @param locationName The location name
+     * @param ownerId The user ID of the mood owner
+     * @param isOwnMood Whether this is the current user's own mood
+     */
+    private void addMoodMarker(LatLng position, String moodTitle, String emoji, int moodColor,
+                               String reasonWhy, String locationName, String ownerId, boolean isOwnMood) {
+        if (!isOwnMood) {
+            // For a follower's mood, get their username first, then create the marker
+            db.collection("users").document(ownerId).get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        String username = null;
+                        if (documentSnapshot.exists()) {
+                            username = documentSnapshot.getString("username");
+                        }
+
+                        // Create marker with username on the bitmap
+                        Bitmap markerBitmap = createCustomMarkerBitmap(emoji, moodTitle, moodColor, username);
+
+                        // Add the marker with the custom bitmap
+                        mMap.addMarker(new MarkerOptions()
+                                .position(position)
+                                .title(moodTitle)
+                                .snippet(reasonWhy + " @ " + locationName)
+                                .icon(BitmapDescriptorFactory.fromBitmap(markerBitmap)));
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error getting user info for marker", e);
+                        // Fallback: create marker without username
+                        Bitmap markerBitmap = createCustomMarkerBitmap(emoji, moodTitle, moodColor, null);
+                        mMap.addMarker(new MarkerOptions()
+                                .position(position)
+                                .title(moodTitle)
+                                .snippet(reasonWhy + " @ " + locationName)
+                                .icon(BitmapDescriptorFactory.fromBitmap(markerBitmap)));
+                    });
+        } else {
+            // Create marker for own mood (without username)
+            Bitmap markerBitmap = createCustomMarkerBitmap(emoji, moodTitle, moodColor, null);
+            mMap.addMarker(new MarkerOptions()
+                    .position(position)
+                    .title(moodTitle) // Just the mood title, no username
+                    .snippet(reasonWhy + " @ " + locationName)
+                    .icon(BitmapDescriptorFactory.fromBitmap(markerBitmap)));
+        }
+    }
+
+    /**
+     * Creates a custom marker bitmap with mood and username (if available)
+     *
+     * @param emoji The emoji representing the mood
+     * @param moodTitle The mood title text
+     * @param color The background color for the marker
+     * @param username Optional username to display (for followers' moods)
+     * @return A bitmap for the custom marker
+     */
+    private Bitmap createCustomMarkerBitmap(String emoji, String moodTitle, int color, String username) {
+        // Adjust height if username is present
         int width = 240;
-        int height = 280;
+        int height = username != null ? 310 : 280; // Extra height for username
+
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
         // Calculate dimensions
         float pinWidth = width * 0.85f;
-        float pinHeight = height * 0.75f;
+        float pinHeight = username != null ? height * 0.7f : height * 0.75f; // Slightly shorter to make room for username
         float pinLeft = (width - pinWidth) / 2;
         float pinTop = 0;
         float pinBottom = pinTop + pinHeight;
@@ -362,18 +771,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         float titleY = pinTop + (pinHeight * 0.75f);
         canvas.drawText(moodTitle.toUpperCase(), width/2, titleY, titlePaint);
 
-        return bitmap;
-    }
+        // Draw username if provided (for followers' moods)
+        if (username != null && !username.isEmpty()) {
+            Paint usernamePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            usernamePaint.setColor(getContrastColor(color));
+            usernamePaint.setTextSize(dpToPx(11));
+            usernamePaint.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+            usernamePaint.setTextAlign(Paint.Align.CENTER);
 
-    /**
-     * Determines the optimal text color (black or white) based on background color brightness
-     * Using the W3C contrast algorithm for better readability
-     */
-    private int getContrastColor(int color) {
-        // Calculate perceived brightness using the improved formula
-        // (0.299*R + 0.587*G + 0.114*B)
-        double brightness = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color));
-        return brightness >= 128 ? Color.BLACK : Color.WHITE;
+            // Draw "@username" below the mood title
+            float usernameY = titleY + dpToPx(14); // Position below the mood title
+            canvas.drawText("@" + username, width/2, usernameY, usernamePaint);
+        }
+
+        return bitmap;
     }
 
     /**
@@ -419,6 +830,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         cardView.draw(canvas);
 
         return bitmap;
+    }
+
+    /**
+     * Determines the optimal text color (black or white) based on background color brightness
+     * Using the W3C contrast algorithm for better readability
+     */
+    private int getContrastColor(int color) {
+        // Calculate perceived brightness using the improved formula
+        // (0.299*R + 0.587*G + 0.114*B)
+        double brightness = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color));
+        return brightness >= 128 ? Color.BLACK : Color.WHITE;
     }
 
     /**
@@ -480,5 +902,28 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     private int dpToPx(float dp) {
         return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mMap != null) {
+            // Always center on current location first if available
+            if (currentUserLocation != null) {
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserLocation, 14));
+                // Then load mood data without changing the map center
+                loadMoodData();
+            } else if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                startLocationUpdates();
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Stop location updates when the activity is paused
+        stopLocationUpdates();
     }
 }

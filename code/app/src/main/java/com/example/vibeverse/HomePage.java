@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class HomePage extends AppCompatActivity implements FilterDialog.FilterListener {
     private static final String TAG = "HomePage";
@@ -137,9 +138,13 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         allMoodEvents = new ArrayList<>();
         moodEventAdapter = new MoodEventAdapter(this, new ArrayList<>());
         recyclerFeed.setAdapter(moodEventAdapter);
+        // Hide menu button for other users' profiles
+        moodEventAdapter.setMenuButtonVisibility(false);
+        moodEventAdapter.setProfileVisibility(true);
     }
 
     private void fetchFollowedUsersPosts() {
+        // Show loading state
         if (emptyStateView != null) {
             emptyStateView.setVisibility(View.GONE);
         }
@@ -164,74 +169,15 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
                         return;
                     }
 
-                    // Fetch most recent 3 public mood events for each followed user
+                    // Create a combined list for all mood events
                     List<MoodEvent> combinedMoodEvents = new ArrayList<>();
 
+                    // Track completion with AtomicInteger to handle async calls
+                    AtomicInteger pendingTasks = new AtomicInteger(followingIds.size());
+
+                    // Process each followed user
                     for (String userId : followingIds) {
-                        int[] userMoodEventCount = {0};
-                        db.collection("Usermoods")
-                                .document(userId)
-                                .collection("moods")
-                                .orderBy("timestamp", Query.Direction.DESCENDING)
-                                .get()
-                                .addOnSuccessListener(queryDocumentSnapshots -> {
-                                    for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
-                                        if (userMoodEventCount[0] >= 3) {
-                                            break;
-                                        }
-                                        try {
-                                            MoodEvent moodEvent = MoodEvent.fromMap(doc.getData());
-
-                                            // Check if the post is public
-                                            Boolean isPublic = (Boolean) doc.getData().get("isPublic");
-                                            if (isPublic == null || !isPublic) {
-                                                continue;
-                                            }
-
-                                            moodEvent.setDocumentId(doc.getId());
-
-                                            if (moodEvent.getTimestamp() != null) {
-                                                Date date = sourceFormat.parse(moodEvent.getTimestamp());
-                                                moodEvent.setDate(date);
-                                            }
-
-                                            // Build subtitle
-                                            StringBuilder subtitle = new StringBuilder();
-                                            if (moodEvent.getSocialSituation() != null &&
-                                                    !moodEvent.getSocialSituation().isEmpty()) {
-                                                subtitle.append("Social: ").append(moodEvent.getSocialSituation());
-                                            }
-                                            moodEvent.setSubtitle(subtitle.toString());
-
-                                            combinedMoodEvents.add(moodEvent);
-                                            userMoodEventCount[0]++;
-                                        } catch (ParseException e) {
-                                            Log.e(TAG, "Error parsing timestamp", e);
-                                        }
-                                    }
-
-                                    // Sort by timestamp and limit to top events
-                                    combinedMoodEvents.sort((a, b) -> b.getDate().compareTo(a.getDate()));
-                                    allMoodEvents = combinedMoodEvents;
-
-                                    if (allMoodEvents.isEmpty()) {
-                                        showEmptyState(true);
-                                    } else {
-                                        showEmptyState(false);
-                                        moodEventAdapter.updateMoodEvents(allMoodEvents);
-                                    }
-
-                                    if (progressLoading != null) {
-                                        progressLoading.setVisibility(View.GONE);
-                                    }
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e(TAG, "Error fetching posts", e);
-                                    showEmptyState(true);
-                                    if (progressLoading != null) {
-                                        progressLoading.setVisibility(View.GONE);
-                                    }
-                                });
+                        processUserMoodEvents(userId, combinedMoodEvents, pendingTasks, followingIds.size());
                     }
                 })
                 .addOnFailureListener(e -> {
@@ -241,6 +187,116 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
                         progressLoading.setVisibility(View.GONE);
                     }
                 });
+    }
+
+    private void processUserMoodEvents(String userId, List<MoodEvent> combinedMoodEvents,
+                                       AtomicInteger pendingTasks, int totalUsers) {
+        // First fetch user profile information
+        db.collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(userDoc -> {
+                    String username = userDoc.getString("username");
+                    String profilePicUri = userDoc.getString("profilePicUri");
+
+                    // Track mood events for this user
+                    AtomicInteger userMoodEventCount = new AtomicInteger(0);
+
+                    // Then fetch their mood events
+                    db.collection("Usermoods")
+                            .document(userId)
+                            .collection("moods")
+                            .orderBy("timestamp", Query.Direction.DESCENDING)
+                            .get()
+                            .addOnSuccessListener(queryDocumentSnapshots -> {
+                                for (QueryDocumentSnapshot doc : queryDocumentSnapshots) {
+                                    if (userMoodEventCount.get() >= 3) {
+                                        break;
+                                    }
+                                    try {
+                                        MoodEvent moodEvent = MoodEvent.fromMap(doc.getData());
+
+                                        // Check if the post is public
+                                        Boolean isPublic = (Boolean) doc.getData().get("isPublic");
+                                        if (isPublic == null || !isPublic) {
+                                            continue;
+                                        }
+
+                                        moodEvent.setDocumentId(doc.getId());
+
+                                        // Set the user profile information
+                                        moodEvent.setUsername(username);
+                                        moodEvent.setProfilePictureUrl(profilePicUri);
+                                        moodEvent.setOwnerUserId(userId);
+
+                                        if (moodEvent.getTimestamp() != null) {
+                                            Date date = sourceFormat.parse(moodEvent.getTimestamp());
+                                            moodEvent.setDate(date);
+                                        }
+
+                                        // Build subtitle
+                                        StringBuilder subtitle = new StringBuilder();
+                                        if (moodEvent.getSocialSituation() != null &&
+                                                !moodEvent.getSocialSituation().isEmpty()) {
+                                            subtitle.append("Social: ").append(moodEvent.getSocialSituation());
+                                        }
+                                        moodEvent.setSubtitle(subtitle.toString());
+
+                                        synchronized (combinedMoodEvents) {
+                                            combinedMoodEvents.add(moodEvent);
+                                        }
+                                        userMoodEventCount.incrementAndGet();
+                                    } catch (ParseException e) {
+                                        Log.e(TAG, "Error parsing timestamp", e);
+                                    }
+                                }
+
+                                // Check if all users have been processed
+                                if (pendingTasks.decrementAndGet() == 0) {
+                                    finalizeMoodEvents(combinedMoodEvents);
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Error fetching posts for user: " + userId, e);
+                                // Still decrement counter even if there's an error
+                                if (pendingTasks.decrementAndGet() == 0) {
+                                    finalizeMoodEvents(combinedMoodEvents);
+                                }
+                            });
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error fetching user profile for: " + userId, e);
+                    // Decrement counter on failure
+                    if (pendingTasks.decrementAndGet() == 0) {
+                        finalizeMoodEvents(combinedMoodEvents);
+                    }
+                });
+    }
+
+    private void finalizeMoodEvents(List<MoodEvent> combinedMoodEvents) {
+        // Sort by timestamp and update UI on main thread
+        runOnUiThread(() -> {
+            // Sort by timestamp
+            combinedMoodEvents.sort((a, b) -> b.getDate().compareTo(a.getDate()));
+            allMoodEvents = new ArrayList<>(combinedMoodEvents);
+
+            if (allMoodEvents.isEmpty()) {
+                showEmptyState(true);
+            } else {
+                showEmptyState(false);
+                moodEventAdapter.updateMoodEvents(allMoodEvents);
+            }
+
+            if (progressLoading != null) {
+                progressLoading.setVisibility(View.GONE);
+            }
+
+            // Apply any existing text search filter
+            String currentSearchText = editSearch.getText().toString();
+            if (!currentSearchText.isEmpty()) {
+                moodEventAdapter.filter(currentSearchText);
+            }
+        });
     }
 
     private void showEmptyState(boolean show) {

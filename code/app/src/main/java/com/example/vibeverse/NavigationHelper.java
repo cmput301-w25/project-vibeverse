@@ -47,8 +47,12 @@ public class NavigationHelper {
             else if (itemId == R.id.nav_search && !(activity instanceof SearchUserPage)) {
                  intent = new Intent(activity, SearchUserPage.class);
             } else if (itemId == R.id.nav_map && !(activity instanceof MapsActivity)) {
-                 intent = new Intent(activity, MapsActivity.class);
-             }
+                intent = new Intent(activity, MapsActivity.class);
+            }
+            // Uncomment when implementing these pages:
+            // } else if (itemId == R.id.nav_map && !(activity instanceof MapPage)) {
+            //     intent = new Intent(activity, MapPage.class);
+            // }
 
             if (intent != null) {
                 activity.startActivity(intent);
@@ -75,7 +79,9 @@ public class NavigationHelper {
             return R.id.nav_add;
         } else if (activity instanceof SearchUserPage) {
              return R.id.nav_search;
-         }
+        } else if (activity instanceof MapsActivity) {
+            return R.id.nav_map;
+        }
         // Uncomment when implementing:
         // else if (activity instanceof MapPage) {
         //     return R.id.nav_map;

@@ -15,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.view.ContextThemeWrapper;
@@ -60,6 +61,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
     private final Map<String, Integer> moodColors = new HashMap<>();
     /** Flag to show or hide the menu button in the mood event items. */
     private boolean showMenuButton = true;
+    private boolean showProfileInfo = false;
 
     /**
      * Constructs a new MoodEventAdapter.
@@ -111,6 +113,16 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
         notifyDataSetChanged(); // Refresh all items
     }
 
+    /**
+     * Sets the visibility of the profile picture and username.
+     *
+     * @param shouldShow True to show the profile info, false to hide it.
+     */
+    public void setProfileVisibility(boolean shouldShow) {
+        this.showProfileInfo = shouldShow;
+        notifyDataSetChanged(); // Refresh all items
+    }
+
     @NonNull
     @Override
     public MoodEventViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -124,6 +136,14 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
         // Set the menu button visibility.
         holder.buttonPostMenu.setVisibility(showMenuButton ? View.VISIBLE : View.GONE);
+
+        // Handle profile picture and username visibility
+        if (holder.imageProfile != null) {
+            holder.imageProfile.setVisibility(showProfileInfo ? View.VISIBLE : View.GONE);
+        }
+        if (holder.textUsername != null) {
+            holder.textUsername.setVisibility(showProfileInfo ? View.VISIBLE : View.GONE);
+        }
 
         // Set the emoji for the mood event.
         holder.textEmoji.setText(moodEvent.getEmoji());
@@ -180,6 +200,38 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
                     holder.socialLabel.setVisibility(View.GONE);
                     holder.socialText.setVisibility(View.GONE);
                 }
+            }
+        }
+
+        if (showProfileInfo) {
+            // Set username
+            if (holder.textUsername != null && moodEvent.getUsername() != null) {
+                holder.textUsername.setText(moodEvent.getUsername());
+                holder.textUsername.setVisibility(View.VISIBLE);
+            } else {
+                holder.textUsername.setVisibility(View.GONE);
+            }
+
+            // Set profile picture
+            if (holder.imageProfile != null) {
+                holder.imageProfile.setVisibility(View.VISIBLE);
+//                String profilePicUrl = moodEvent.getProfilePictureUrl();
+//                Toast.makeText(context, profilePicUrl, Toast.LENGTH_SHORT).show();
+//                if (moodEvent.getProfilePictureUrl() != null && !(moodEvent.getProfilePictureUrl().isEmpty())) {
+//                    Toast.makeText(context, "123", Toast.LENGTH_SHORT).show();
+                    Glide.with(context)
+                            .load(moodEvent.getProfilePictureUrl())
+                            .placeholder(R.drawable.user_icon) // fallback placeholder
+                            .error(R.drawable.user_icon)       // error placeholder// Make the image circular
+                            .into(holder.imageProfile);
+//                }
+            }
+        } else {
+            if (holder.textUsername != null) {
+                holder.textUsername.setVisibility(View.GONE);
+            }
+            if (holder.imageProfile != null) {
+                holder.imageProfile.setVisibility(View.GONE);
             }
         }
 

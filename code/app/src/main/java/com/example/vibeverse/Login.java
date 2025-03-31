@@ -264,8 +264,8 @@ public class Login extends AppCompatActivity {
                                 .addOnCompleteListener(firestoreTask -> {
                                     if (firestoreTask.isSuccessful()) {
                                         if (firestoreTask.getResult().exists()) {
-                                            // User exists in Firestore, go to profile
-                                            startActivity(new Intent(getApplicationContext(), ProfilePage.class));
+                                            // User exists in Firestore, go to home
+                                            startActivity(new Intent(getApplicationContext(), HomePage.class));
                                         } else {
                                             // New user, go to user details
                                             Intent intent = new Intent(getApplicationContext(), UserDetails.class);

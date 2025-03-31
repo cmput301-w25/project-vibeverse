@@ -5,6 +5,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,7 +14,13 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.GradientDrawable;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +30,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -36,17 +44,30 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.model.RectangularBounds;
+import com.google.android.libraries.places.widget.Autocomplete;
+import com.google.android.libraries.places.widget.AutocompleteActivity;
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -94,6 +115,18 @@ public class SelectMoodActivity extends AppCompatActivity {
     private ImageView imgPlaceholder, imgSelected;
     private TextView imageHintText;
 
+    private static final int REQUEST_LOCATION_AUTOCOMPLETE = 3;
+    private FrameLayout locationButton;
+    private TextView selectedLocationText;
+    private String selectedLocationName = null;
+    private LatLng selectedLocationCoords = null;
+
+    // Location fields
+    private LocationManager locationManager;
+    private Location currentLocation;
+    private String currentLocationAddress = null;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 101;
+
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private String userId;
@@ -109,6 +142,10 @@ public class SelectMoodActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_mood);
 
+        if (!Places.isInitialized()) {
+            Places.initialize(getApplicationContext(), BuildConfig.MAPS_API_KEY);
+        }
+
         // Initialize UI references
         mainContainer = findViewById(R.id.mainContainer);
         selectedMoodEmoji = findViewById(R.id.selectedMoodEmoji);
@@ -122,8 +159,12 @@ public class SelectMoodActivity extends AppCompatActivity {
         imgSelected = findViewById(R.id.imgSelected);
         reasonWhyInput = findViewById(R.id.reasonWhyInput);
         visibilitySwitch = findViewById(R.id.visibilitySwitch);
+        locationButton = findViewById(R.id.btnLocation);
+        selectedLocationText = findViewById(R.id.selectedLocationText);
 
-
+        // Request location permission and get current location
+        requestLocationPermission();
+        getCurrentLocation();
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -144,16 +185,6 @@ public class SelectMoodActivity extends AppCompatActivity {
 
         // Create a custom toolbar
         setupToolbar();
-
-        // REMOVE THIS SECTION THAT ADDS THE DUPLICATE TEXT
-        // TextView chooseTextView = new TextView(this);
-        // chooseTextView.setText("Choose how you're feeling right now");
-        // chooseTextView.setTextColor(Color.WHITE);
-        // chooseTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 22);
-        // chooseTextView.setTypeface(null, Typeface.BOLD);
-        // chooseTextView.setGravity(Gravity.CENTER);
-        // chooseTextView.setPadding(0, dpToPx(16), 0, dpToPx(20));
-        // mainContainer.addView(chooseTextView, 1);
 
         // Set continue button text and style
         setupContinueButton();
@@ -223,8 +254,6 @@ public class SelectMoodActivity extends AppCompatActivity {
                                     "VibeVerse Location" // Default location - get location functionality not yet implemented
                             );
 
-
-
                             moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph, isPublic);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
@@ -248,6 +277,245 @@ public class SelectMoodActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+
+        // Set the click listener for the location button
+        locationButton.setOnClickListener(v -> {
+            if (currentLocationAddress != null && !currentLocationAddress.isEmpty()) {
+                // Current device location is available
+                List<LocationOption> options = new ArrayList<>();
+
+                options.add(new LocationOption(
+                        "Use Current Location: " + currentLocationAddress,
+                        android.R.drawable.ic_menu_mylocation,
+                        () -> {
+                            // Use current location
+                            selectedLocationName = currentLocationAddress;
+                            if (currentLocation != null) {
+                                selectedLocationCoords = new LatLng(
+                                        currentLocation.getLatitude(),
+                                        currentLocation.getLongitude());
+                            }
+                            selectedLocationText.setText(selectedLocationName);
+                            selectedLocationText.setTextColor(Color.BLACK);
+                        }
+                ));
+
+                options.add(new LocationOption(
+                        "Search for a different location",
+                        android.R.drawable.ic_menu_search,
+                        this::startPlacesAutocomplete
+                ));
+
+                showCustomLocationDialog("Choose Location", options);
+            } else {
+                // If current location isn't available, just open the search
+                startPlacesAutocomplete();
+            }
+        });
+    }
+
+    private void showCustomLocationDialog(String title, List<LocationOption> options) {
+        // Create dialog
+        Dialog dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_location_choice);
+
+        // Set dialog width to 90% of screen width
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setGravity(Gravity.CENTER);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        // Set dialog title
+        TextView dialogTitle = dialog.findViewById(R.id.dialog_title);
+        dialogTitle.setText(title);
+
+        // Get container for options
+        LinearLayout optionsContainer = dialog.findViewById(R.id.location_options_container);
+
+        // Add each option as a button
+        for (LocationOption option : options) {
+            View optionView = getLayoutInflater().inflate(R.layout.item_location_option, optionsContainer, false);
+
+            ImageView optionIcon = optionView.findViewById(R.id.option_icon);
+            TextView optionText = optionView.findViewById(R.id.option_text);
+
+            // Set option text and icon
+            optionIcon.setImageResource(option.iconResId);
+            optionText.setText(option.text);
+
+            // Set click listener
+            optionView.setOnClickListener(v -> {
+                option.clickListener.run();
+                dialog.dismiss();
+            });
+
+            optionsContainer.addView(optionView);
+        }
+
+        dialog.show();
+    }
+
+    // Class to represent location options
+    private static class LocationOption {
+        String text;
+        int iconResId;
+        Runnable clickListener;
+
+        LocationOption(String text, int iconResId, Runnable clickListener) {
+            this.text = text;
+            this.iconResId = iconResId;
+            this.clickListener = clickListener;
+        }
+    }
+
+    /**
+     * Starts the Places Autocomplete activity for location selection.
+     * If current location is available, it biases the search results toward the current location.
+     */
+    private void startPlacesAutocomplete() {
+        // Define the place fields to return
+        List<Place.Field> fields = Arrays.asList(
+                Place.Field.ID, Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG);
+
+        // Create the autocomplete intent builder
+        Autocomplete.IntentBuilder intentBuilder =
+                new Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields);
+
+        // If we have the current location, use it to bias the search results
+        if (currentLocation != null) {
+            // Create a bias around the current location (approximately 10km radius)
+            double radiusDegrees = 0.1; // Roughly 10km at the equator
+            LatLng currentLatLng = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
+
+            RectangularBounds bounds = RectangularBounds.newInstance(
+                    new LatLng(currentLatLng.latitude - radiusDegrees, currentLatLng.longitude - radiusDegrees),
+                    new LatLng(currentLatLng.latitude + radiusDegrees, currentLatLng.longitude + radiusDegrees));
+
+            intentBuilder.setLocationBias(bounds);
+        }
+
+        // Start the autocomplete intent
+        Intent intent = intentBuilder.build(this);
+        startActivityForResult(intent, REQUEST_LOCATION_AUTOCOMPLETE);
+    }
+
+    /**
+     * Request location permissions
+     */
+    private void requestLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    /**
+     * Get the current location
+     */
+    private void getCurrentLocation() {
+        try {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+                // Define location listener
+                LocationListener locationListener = new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        currentLocation = location;
+                        getAddressFromLocation(location);
+                        locationManager.removeUpdates(this);
+                    }
+
+                    @Override
+                    public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+                    @Override
+                    public void onProviderEnabled(String provider) {}
+
+                    @Override
+                    public void onProviderDisabled(String provider) {
+                        Toast.makeText(SelectMoodActivity.this,
+                                "Please enable location services for better experience",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                };
+
+                // Request location updates
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            0,
+                            0,
+                            locationListener);
+                } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.NETWORK_PROVIDER,
+                            0,
+                            0,
+                            locationListener);
+                }
+
+                // Try to get last known location immediately
+                Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (lastKnownLocation != null) {
+                    currentLocation = lastKnownLocation;
+                    getAddressFromLocation(lastKnownLocation);
+                } else {
+                    // Try with network provider
+                    lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                    if (lastKnownLocation != null) {
+                        currentLocation = lastKnownLocation;
+                        getAddressFromLocation(lastKnownLocation);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error getting location: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Convert location coordinates to address
+     */
+    private void getAddressFromLocation(Location location) {
+        try {
+            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+            List<Address> addresses = geocoder.getFromLocation(
+                    location.getLatitude(), location.getLongitude(), 1);
+
+            if (addresses != null && !addresses.isEmpty()) {
+                Address address = addresses.get(0);
+                StringBuilder sb = new StringBuilder();
+
+                // Get address details
+                for (int i = 0; i <= address.getMaxAddressLineIndex(); i++) {
+                    sb.append(address.getAddressLine(i));
+                    if (i < address.getMaxAddressLineIndex()) {
+                        sb.append(", ");
+                    }
+                }
+
+                currentLocationAddress = sb.toString();
+
+                // Update UI to indicate current location is available
+                runOnUiThread(() -> {
+                    if (selectedLocationText != null) {
+                        selectedLocationText.setText("Tap to use current location");
+                        selectedLocationText.setTextColor(Color.parseColor("#0277BD")); // Light Blue
+                    }
+                });
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -269,6 +537,12 @@ public class SelectMoodActivity extends AppCompatActivity {
         moodData.put("reasonWhy", moodEvent.getReasonWhy());
         moodData.put("ownerUserId", userId);
         moodData.put("isPublic", moodEvent.isPublic());
+
+        if (selectedLocationName != null && selectedLocationCoords != null) {
+            moodData.put("moodLocation", selectedLocationName);
+            moodData.put("moodLatitude", selectedLocationCoords.latitude);
+            moodData.put("moodLongitude", selectedLocationCoords.longitude);
+        }
 
         // Handle photograph if present
         if (moodEvent.getPhotograph() != null) {
@@ -321,7 +595,7 @@ public class SelectMoodActivity extends AppCompatActivity {
                     // Handle the error saving the mood event.
                     Toast.makeText(SelectMoodActivity.this, "Error saving mood: " + e.getMessage(),
                             Toast.LENGTH_LONG).show();
-                    // Navigate back so the user isn’t stuck.
+                    // Navigate back so the user isn't stuck.
                     Intent intent = new Intent(SelectMoodActivity.this, ProfilePage.class);
                     startActivity(intent);
                     finish();
@@ -887,14 +1161,22 @@ public class SelectMoodActivity extends AppCompatActivity {
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, get location
+                getCurrentLocation();
+            } else {
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
             }
         }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     /**
@@ -931,8 +1213,22 @@ public class SelectMoodActivity extends AppCompatActivity {
                     imageUri = downloadUrl;
 
                 });
+            } else if (requestCode == REQUEST_LOCATION_AUTOCOMPLETE) {
+                // Handle location selection
+                Place place = Autocomplete.getPlaceFromIntent(data);
+                selectedLocationName = place.getName() + ", " + place.getAddress();
+                selectedLocationCoords = place.getLatLng();
+                selectedLocationText.setText(selectedLocationName);
+                selectedLocationText.setTextColor(Color.BLACK);
+                Toast.makeText(this, "Location selected: " + selectedLocationName, Toast.LENGTH_SHORT).show();
+            }
+        } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+            if (requestCode == REQUEST_LOCATION_AUTOCOMPLETE) {
+                // Handle the error
+                Status status = Autocomplete.getStatusFromIntent(data);
+                Log.e("SelectMoodActivity", "Place selection error: " + status.getStatusMessage());
+                Toast.makeText(this, "Error selecting location", Toast.LENGTH_SHORT).show();
             }
         }
     }
-
 }
