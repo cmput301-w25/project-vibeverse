@@ -59,6 +59,13 @@ public class Photograph implements Serializable {
         this.location = location;
     }
 
+    public Photograph(String imageUri, long photoSize, Date dateTaken, String location) {
+        this.imageUriString = imageUri;
+        this.fileSize = photoSize;
+        this.dateTaken = dateTaken;
+        this.location = location;
+    }
+
     /**
      * Returns the image URI as a string.
      *

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Disabled or selected state -->
+    <item android:state_enabled="false">
+        <shape android:shape="rectangle">
+            <solid android:color="#808080" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+    <!-- Default state for selected theme -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#808080" />
+            <corners android:radius="24dp" />
+            <padding
+                android:left="12dp"
+                android:top="12dp"
+                android:right="12dp"
+                android:bottom="12dp" />
+        </shape>
+    </item>
+</selector>

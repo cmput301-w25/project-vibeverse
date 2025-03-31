@@ -1,0 +1,70 @@
+[
+  {
+    "id": "default",
+    "name": "Default",
+    "bundleTitle": "Classic Bundle",
+    "unlockedBy": "N/A",
+    "backgroundRes": "theme_default"
+  },
+  {
+    "id": "clown",
+    "name": "Clown",
+    "bundleTitle": "Circus Bundle",
+    "unlockedBy": "reaching Level 5",
+    "backgroundRes": "theme_clown"
+  }
+  ,
+  {
+    "id": "heart",
+    "name": "heart",
+    "bundleTitle": "Valentines Bundle",
+    "unlockedBy": "completing achievement 'Love is in the Air'",
+    "backgroundRes": "theme_heart"
+  },
+  {
+    "id": "alien",
+    "name": "Alien",
+    "bundleTitle": "Outer Space Bundle",
+    "unlockedBy": "reaching level 10",
+    "backgroundRes": "theme_alien"
+  },
+  {
+    "id": "robot",
+    "name": "Robot",
+    "bundleTitle": "Automaton Bundle",
+    "unlockedBy": "completing achievement 'Mood Machine'",
+    "backgroundRes": "theme_robot"
+  }
+
+  ,
+  {
+    "id": "lion",
+    "name": "Lion",
+    "bundleTitle": "King of the Jungle Bundle",
+    "unlockedBy": "reaching level 15",
+    "backgroundRes": "theme_lion"
+  },
+  {
+    "id": "ghost",
+    "name": "Ghost",
+    "bundleTitle": "Haunted Bundle",
+    "unlockedBy": "completing achievement 'It's getting spooky'",
+    "backgroundRes": "theme_ghost"
+  },
+   {
+    "id": "skull",
+    "name": "Skull",
+    "bundleTitle": "Graveyard Bundle",
+    "unlockedBy": "completing achievement 'Target on your back II'",
+    "backgroundRes": "theme_skull"
+  },
+  {
+    "id": "cold",
+    "name": "Cold",
+    "bundleTitle": "Subzero Bundle",
+    "unlockedBy": "reaching level 20",
+    "backgroundRes": "theme_cold"
+  }
+  
+
+]

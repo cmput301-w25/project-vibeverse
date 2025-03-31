@@ -14,13 +14,18 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
+
+import android.graphics.drawable.Drawable;
+
 import android.graphics.drawable.ColorDrawable;
+
 import android.graphics.drawable.GradientDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ParseException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -45,6 +50,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.transition.TransitionManager;
 
@@ -58,11 +64,16 @@ import com.google.android.libraries.places.widget.AutocompleteActivity;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.IOException;
+
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -131,6 +142,8 @@ public class SelectMoodActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private String userId;
 
+    private String selectedTheme;
+
     /**
      * Called when the activity is starting. Initializes the UI, sets up mood data,
      * creates mood buttons, configures the image picker, and sets the click listener for the continue button.
@@ -169,6 +182,14 @@ public class SelectMoodActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
+        setupToolbar();
+        setupContinueButton();
+        initializeMoodData();
+        setupMoodIntensitySlider();
+        setupInputFields();
+        setupImageSelector();
+
+
         // Get current user ID or use a device ID if not logged in
         if (mAuth.getCurrentUser() != null) {
             userId = mAuth.getCurrentUser().getUid();
@@ -183,31 +204,34 @@ public class SelectMoodActivity extends AppCompatActivity {
             }
         }
 
-        // Create a custom toolbar
-        setupToolbar();
+        db.collection("users").document(userId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists() && documentSnapshot.contains("selectedTheme")) {
+                        selectedTheme = documentSnapshot.getString("selectedTheme");
+                    } else {
+                        selectedTheme = "default"; // default value if not set
+                    }
+                    // Continue initializing after setting the theme
 
-        // Set continue button text and style
-        setupContinueButton();
+                    // Create a custom toolbar, set up UI elements, etc.
 
-        // Initialize mood colors and emojis
-        initializeMoodData();
 
-        // Style the mood intensity slider
-        setupMoodIntensitySlider();
+                    // Build the mood selection grid with a polished, uniform design
+                    GridLayout moodGrid = findViewById(R.id.moodGrid);
+                    createMoodButtons(moodGrid);
 
-        // Style the input fields
-        setupInputFields();
+                    // Set the initial mood and apply its style
+                    selectMood(selectedMood);
+                })
+                .addOnFailureListener(e -> {
+                    // In case of error, fallback to default theme and continue initializing
+                    selectedTheme = "default";
 
-        // Enhance the image selector
-        setupImageSelector();
-
-        // Build the mood selection grid with a polished, uniform design
-        GridLayout moodGrid = findViewById(R.id.moodGrid);
-        createMoodButtons(moodGrid);
-
-        // Set the initial mood and apply its style
-        selectMood(selectedMood);
-
+                    GridLayout moodGrid = findViewById(R.id.moodGrid);
+                    createMoodButtons(moodGrid);
+                    selectMood(selectedMood);
+                });
         // Set up continue button to create a MoodEvent and pass it to MainActivity
         continueButton.setOnClickListener(v -> {
 
@@ -243,6 +267,7 @@ public class SelectMoodActivity extends AppCompatActivity {
 
 
                         MoodEvent moodEvent;
+                        Date currentDate = new Date();
                         if (imageUri != null && currentBitmap != null) {
                             // If an image is selected, create a Photograph instance and attach it to the mood event
                             // Using the existing Photograph constructor that matches your implementation
@@ -254,17 +279,62 @@ public class SelectMoodActivity extends AppCompatActivity {
                                     "VibeVerse Location" // Default location - get location functionality not yet implemented
                             );
 
-                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph, isPublic);
+                            moodEvent = new MoodEvent(userId, selectedMood, selectedEmoji, reasonWhy, socialSituation, photograph, isPublic);
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
+                            moodEvent.setDate(currentDate);
                         } else {
                             Log.d("SelectMoodActivity", "onClick: Emoji before assignment= " + selectedEmoji);
-                            moodEvent = new MoodEvent(userId,selectedMood, selectedEmoji, reasonWhy, socialSituation, isPublic);
+                            moodEvent = new MoodEvent(userId, selectedMood, selectedEmoji, reasonWhy, socialSituation, isPublic);
                             Log.d("SelectMoodActivity", "onClick: Emoji after assignment= " + moodEvent.getEmoji());
                             Log.d("SelectMoodActivity", "onClick: Title after assignment= " + moodEvent.getMoodTitle());
                             // Add intensity to the mood event
                             moodEvent.setIntensity(intensity);
+                            moodEvent.setDate(currentDate);
                         }
+
+                        AchievementChecker achievementChecker = new AchievementChecker(userId);
+
+                        // Check mood event achievements (ach1, ach2, ach3, ach4)
+                        achievementChecker.checkMoodEventAchievements(moodEvent);
+
+                        // Check for early bird achievement (ach5) and night owl achievement (ach6)
+                        achievementChecker.checkAch5(moodEvent);
+                        achievementChecker.checkAch6(moodEvent);
+
+                        // Check for public (ach7) vs private mood event achievement (ach8)
+                        if (isPublic) {
+                            achievementChecker.checkAch7(moodEvent);
+                        } else {
+                            achievementChecker.checkAch8(moodEvent);
+                        }
+
+                        // Check for emoji-based achievements (ach9 and ach10)
+                        achievementChecker.checkAch9(moodEvent);
+                        achievementChecker.checkAch10(moodEvent);
+
+                        // Check for photo mood achievement (ach22) if a photo is attached
+                        if (moodEvent.getPhotograph() != null) {
+                            achievementChecker.checkAch22(moodEvent);
+                        }
+
+                        // Check for location-based achievement (ach13) if a location is attached
+                        if (selectedLocationName != null && !selectedLocationName.isEmpty()) {
+                            achievementChecker.checkAch13();
+                        }
+
+                        // Check for special date achievements:
+                        // Halloween: ach20
+                        achievementChecker.checkAch20(moodEvent);
+
+                        // Valentine's Day: ach21
+                        achievementChecker.checkAch21(moodEvent);
+                        // Christmas: ach24
+                        achievementChecker.checkAch24(moodEvent);
+                        // New Year: ach25
+                        achievementChecker.checkAch25(moodEvent);
+
+                        updateMoodStreak(currentDate);
 
                         // Save to Firestore
                         saveMoodToFirestore(moodEvent);
@@ -434,10 +504,12 @@ public class SelectMoodActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onStatusChanged(String provider, int status, Bundle extras) {}
+                    public void onStatusChanged(String provider, int status, Bundle extras) {
+                    }
 
                     @Override
-                    public void onProviderEnabled(String provider) {}
+                    public void onProviderEnabled(String provider) {
+                    }
 
                     @Override
                     public void onProviderDisabled(String provider) {
@@ -943,17 +1015,26 @@ public class SelectMoodActivity extends AppCompatActivity {
             buttonContent.setGravity(Gravity.CENTER);
             buttonContent.setPadding(dpToPx(4), dpToPx(8), dpToPx(4), dpToPx(8));
 
-            TextView emojiView = new TextView(this);
-            emojiView.setText(moodEmojis.get(mood));
-            emojiView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 32);
-            emojiView.setGravity(Gravity.CENTER);
+            View emojiView;
+
+            ImageView imageEmojiView = new ImageView(this);
+            int resId = getEmojiResourceId(mood, selectedTheme);
+            imageEmojiView.setImageResource(resId);
+
+            LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(dpToPx(48), dpToPx(48));
+            imageEmojiView.setLayoutParams(imageParams);
+            imageEmojiView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+            imageEmojiView.setAdjustViewBounds(true);
+            emojiView = imageEmojiView;
 
             TextView moodNameView = new TextView(this);
+
             moodNameView.setText(mood);
             moodNameView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
             moodNameView.setTextColor(Color.WHITE);
             moodNameView.setGravity(Gravity.CENTER);
             moodNameView.setTypeface(null, Typeface.BOLD);
+
 
             buttonContent.addView(emojiView);
             buttonContent.addView(moodNameView);
@@ -1019,9 +1100,34 @@ public class SelectMoodActivity extends AppCompatActivity {
         selectedColor = moodColors.get(mood);
 
         selectedMoodContainer.animate().alpha(0f).setDuration(150).withEndAction(() -> {
-            selectedMoodText.setText(mood);
-            selectedMoodEmoji.setText(selectedEmoji);
 
+            // Themed mode: show PNG emoji.
+            selectedMoodEmoji.setText("");
+            selectedMoodEmoji.setBackground(null);
+
+            // Load the themed drawable.
+            Drawable drawable = ContextCompat.getDrawable(this, getEmojiResourceId(mood, selectedTheme));
+            // Size roughly equivalent to 80sp.
+            int size = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 80, getResources().getDisplayMetrics());
+            drawable.setBounds(0, 0, size, size);
+            // Set the drawable as the top compound drawable.
+            selectedMoodEmoji.setCompoundDrawables(null, drawable, null, null);
+            // Add some padding between the image and any potential text.
+            selectedMoodEmoji.setCompoundDrawablePadding(dpToPx(8));
+            // Force a fixed height so the image appears centered.
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) selectedMoodEmoji.getLayoutParams();
+            params.height = dpToPx(100); // Adjust this value as needed.
+            selectedMoodEmoji.setLayoutParams(params);
+            // Center the drawable.
+            selectedMoodEmoji.setGravity(Gravity.CENTER);
+
+            // Make sure the mood label below remains visible with the same style as default.
+            selectedMoodText.setText(mood);
+            selectedMoodText.setTextColor(Color.WHITE);
+            selectedMoodText.setVisibility(View.VISIBLE);
+
+
+            // Update the container background.
             GradientDrawable moodContainerBg = new GradientDrawable();
             moodContainerBg.setColor(selectedColor);
             moodContainerBg.setCornerRadius(dpToPx(12));
@@ -1034,6 +1140,7 @@ public class SelectMoodActivity extends AppCompatActivity {
         moodIntensitySlider.setProgressTintList(ColorStateList.valueOf(selectedColor));
         setupContinueButton();
     }
+
 
     /**
      * Utility class for color manipulation.
@@ -1231,4 +1338,77 @@ public class SelectMoodActivity extends AppCompatActivity {
             }
         }
     }
+
+    private int getEmojiResourceId(String moodId, String theme) {
+        // For local assets, use naming conventions. For instance:
+
+        if (moodId == null) {
+            moodId = "happy";
+        } else if (theme == null) {
+            theme = "default";
+        }
+
+
+        // Use the provided moodId and theme to generate the resource name
+        String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
+        return getResources().getIdentifier(resourceName, "drawable", getPackageName());
+
+    }
+
+    private void updateMoodStreak(Date currentDate) {
+        // Use a simple date format (e.g., "yyyy-MM-dd") to compare dates
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        String currentDateStr = sdf.format(currentDate);
+        DocumentReference userDocRef = db.collection("users").document(userId);
+
+        userDocRef.get().addOnSuccessListener(documentSnapshot -> {
+            String lastMoodDate = documentSnapshot.contains("last_mood_date")
+                    ? documentSnapshot.getString("last_mood_date") : null;
+            Long streakLong = documentSnapshot.contains("mood_streak")
+                    ? documentSnapshot.getLong("mood_streak") : 0L;
+            int currentStreak = streakLong != null ? streakLong.intValue() : 0;
+            int newStreak = 0;
+
+            if (lastMoodDate != null) {
+                if (lastMoodDate.equals(currentDateStr)) {
+                    // If the user has already posted a mood today, do not increment the streak
+                    newStreak = currentStreak;
+                } else {
+                    try {
+                        Date lastDate = sdf.parse(lastMoodDate);
+                        Date today = sdf.parse(currentDateStr);
+                        // Calculate difference in days (in millis)
+                        long diffInMillis = today.getTime() - lastDate.getTime();
+                        long diffInDays = diffInMillis / (24 * 60 * 60 * 1000);
+                        if (diffInDays == 1) {
+                            // Consecutive day – increment the streak
+                            newStreak = currentStreak + 1;
+                        } else {
+                            // Not consecutive – reset streak
+                            newStreak = 1;
+                        }
+                    } catch (ParseException | java.text.ParseException e) {
+                        e.printStackTrace();
+                        newStreak = 1;
+                    }
+                }
+            } else {
+                // No previous mood posted – start with streak 1
+                newStreak = 1;
+            }
+
+            // Update the user's document with the new streak and today's date
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("mood_streak", newStreak);
+            updates.put("last_mood_date", currentDateStr);
+            userDocRef.update(updates);
+
+            // Call the achievement checker with the new streak value
+            AchievementChecker achievementChecker = new AchievementChecker(userId);
+            achievementChecker.checkAch23(newStreak);
+        });
+    }
+
+
+
 }

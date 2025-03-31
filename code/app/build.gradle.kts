@@ -64,6 +64,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     testImplementation ("org.robolectric:robolectric:4.9")
     androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+    implementation ("com.google.android.material:material:<latest_version>")
 
     // Import the BoM for the Firebase platform
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
@@ -111,6 +112,7 @@ dependencies {
     implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.android.libraries.places:places:2.7.0")
     implementation ("com.google.maps.android:android-maps-utils:2.3.0")
+    implementation ("androidx.cardview:cardview:1.0.0")
 
     configurations.all {
         resolutionStrategy {

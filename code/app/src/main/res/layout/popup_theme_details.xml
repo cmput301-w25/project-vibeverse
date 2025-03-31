@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/theme_popup_background">
+
+    <!-- Bundle Title -->
+    <TextView
+        android:id="@+id/popupBundleTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bundle Title"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:gravity="center" />
+
+    <!-- GridLayout for emojis: 2 rows, 4 columns -->
+    <GridLayout
+        android:id="@+id/emojiGrid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="4"
+        android:rowCount="2"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:alignmentMode="alignMargins"
+        android:columnOrderPreserved="false">
+
+        <!-- We'll add the 8 ImageViews programmatically -->
+    </GridLayout>
+
+    <!-- Bottom container: shows either a locked message or a select button -->
+    <FrameLayout
+        android:id="@+id/bottomContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Locked message -->
+        <TextView
+            android:id="@+id/lockedMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Unlocked by ..."
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/newUnlockMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_green_dark"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:padding="8dp"
+            android:visibility="gone" />
+
+
+        <!-- Select button -->
+        <Button
+            android:id="@+id/selectThemeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select"
+            android:layout_gravity="center"
+            android:background="@drawable/button_background"
+            android:textColor="@android:color/white"
+            android:visibility="gone" />
+    </FrameLayout>
+
+</LinearLayout>

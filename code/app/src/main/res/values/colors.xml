@@ -25,7 +25,18 @@
     <color name="neutral_gray">#757575</color>
 
     <color name="sendButtonColor">#000000</color>
+s
+    <!-- Bronze: a warm, copper-like tone -->
+    <color name="bronze">#CD7F32</color>
+
+    <!-- Silver: a light grayish tone -->
+    <color name="silver">#C0C0C0</color>
+
+    <!-- Gold: a bright, golden yellow tone -->
+    <color name="gold">#FFD700</color>
+
     <color name="dark_gray">#2C2C2C</color>
+
 
     <color name="deep_background">#121212</color>
     <color name="card_background">#1E1E1E</color>

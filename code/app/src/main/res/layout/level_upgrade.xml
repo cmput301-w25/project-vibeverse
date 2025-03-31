@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/levelUpgradeOverlay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#CC000000">  <!-- Semi-transparent black background -->
+
+    <!-- Old level TextView (positioned to slide out to the left) -->
+    <TextView
+        android:id="@+id/oldLevelText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Level 1"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_gravity="center_vertical|start"
+        android:padding="16dp" />
+
+    <!-- New level TextView (positioned to slide in from the right) -->
+    <TextView
+        android:id="@+id/newLevelText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Level 2"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_gravity="center_vertical|end"
+        android:padding="16dp" />
+
+</FrameLayout>

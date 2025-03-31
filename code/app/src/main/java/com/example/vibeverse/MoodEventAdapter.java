@@ -26,6 +26,8 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.button.MaterialButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -63,6 +65,8 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
     private boolean showMenuButton = true;
     private boolean showProfileInfo = false;
 
+    private String selectedTheme;
+
     /**
      * Constructs a new MoodEventAdapter.
      *
@@ -75,6 +79,35 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
         this.originalList = new ArrayList<>(moodEventList);
         this.currentList = new ArrayList<>(moodEventList);
         initializeMoodColors();
+        fetchUserTheme();
+    }
+    /**
+     * Queries Firestore for the current user's selectedTheme and updates the adapter.
+     */
+    private void fetchUserTheme() {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        String userId = (auth.getCurrentUser() != null) ? auth.getCurrentUser().getUid() : null;
+        if (userId != null) {
+            db.collection("users").document(userId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists() && documentSnapshot.contains("selectedTheme")) {
+                            selectedTheme = documentSnapshot.getString("selectedTheme");
+                        } else {
+                            selectedTheme = "default";
+                        }
+                        // Refresh the list so that emojis are reloaded based on the theme.
+                        notifyDataSetChanged();
+                    })
+                    .addOnFailureListener(e -> {
+                        selectedTheme = "default";
+                        notifyDataSetChanged();
+                    });
+        } else {
+            // No logged in user; keep default theme.
+            selectedTheme = "default";
+        }
     }
 
     /**
@@ -132,7 +165,15 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull MoodEventViewHolder holder, int position) {
+
         MoodEvent moodEvent = moodEventList.get(position);
+
+        // Instead of setting the emoji as text, load the appropriate PNG based on the theme.
+        // Assume that MoodEventViewHolder now has an ImageView called imageEmoji.
+        int emojiResId = getEmojiResourceId(moodEvent.getMoodTitle(), selectedTheme);
+        if (holder.imageEmoji != null) {
+            holder.imageEmoji.setImageResource(emojiResId);
+        }
 
         // Set the menu button visibility.
         holder.buttonPostMenu.setVisibility(showMenuButton ? View.VISIBLE : View.GONE);
@@ -145,8 +186,7 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
             holder.textUsername.setVisibility(showProfileInfo ? View.VISIBLE : View.GONE);
         }
 
-        // Set the emoji for the mood event.
-        holder.textEmoji.setText(moodEvent.getEmoji());
+
 
         // Use the trigger as the title if it exists; otherwise, use the mood title.
         String reasonWhy = moodEvent.getReasonWhy();
@@ -465,5 +505,15 @@ public class MoodEventAdapter extends RecyclerView.Adapter<MoodEventViewHolder> 
         moodEventList.clear();
         moodEventList.addAll(currentList);
         notifyDataSetChanged();
+    }
+
+    /**
+     * Helper method to return the drawable resource ID for the emoji image.
+     * Uses the naming convention: "emoji_<mood>_<theme>".
+     */
+
+    private int getEmojiResourceId(String moodId, String theme) {
+        String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
+        return context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
     }
 }

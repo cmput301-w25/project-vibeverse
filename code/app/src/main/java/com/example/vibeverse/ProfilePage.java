@@ -158,18 +158,17 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         rightNavView.setNavigationItemSelectedListener(menuItem -> {
             int id = menuItem.getItemId();
             if (id == R.id.menu_vibestore) {
-                // to be added
+                startActivity(new Intent(ProfilePage.this, VibeStoreActivity.class));
             } else if (id == R.id.menu_vibestatus) {
                 startActivity(new Intent(ProfilePage.this, MoodInsightsActivity.class));
-            }
-            else if (id == R.id.menu_vibepulse) {
-                startActivity(new Intent(ProfilePage.this, SadnessCuresActivity.class));
-            }
-            else if (id == R.id.menu_editprofile) {
+            } else if (id == R.id.menu_editprofile) {
                 Intent intent = new Intent(ProfilePage.this, UserDetails.class);
                 intent.putExtra("source", "edit_profile");
                 startActivity(intent);
-            } else if (id == R.id.menu_logout) {
+                }else if (id == R.id.menu_vibequests) {
+                startActivity(new Intent(ProfilePage.this, AchievementActivity.class));
+
+            }else if (id == R.id.menu_logout) {
                 mAuth.signOut();
                 startActivity(new Intent(ProfilePage.this, Login.class));
                 finish();

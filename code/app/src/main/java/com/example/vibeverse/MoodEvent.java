@@ -34,7 +34,7 @@ public class MoodEvent implements Serializable {
     private String socialSituation;
     private String timestamp; // Formatted timestamp
     private int intensity = 5; // Default intensity set to middle value
-    private Photograph photograph;
+    private Photograph photograph = null;
     private Date date;
     private String subtitle;
 
@@ -186,6 +186,8 @@ public class MoodEvent implements Serializable {
         this.photograph = photograph;
         this.isPublic = privacy;
     }
+
+
 
     /**
      * Converts this MoodEvent into a Map for storage in Firestore.

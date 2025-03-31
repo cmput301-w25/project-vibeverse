@@ -1,5 +1,7 @@
 package com.example.vibeverse;
 
+import static android.content.ContentValues.TAG;
+
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -35,12 +37,18 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -342,6 +350,12 @@ public class UserDetails extends AppCompatActivity {
             userData.put("followingCount", 0);
             userData.put("newNotificationCount", 0);
             userData.put("usernameLowercase", username.getText().toString().trim().toLowerCase()); // Lowercase version
+            userData.put("selectedTheme", "default");
+            userData.put("totalXP", 0);
+            userData.put("level", 1);
+            userData.put("mood_streak", 0);
+            userData.put("last_mood", "none");
+
 
 
 
@@ -365,7 +379,35 @@ public class UserDetails extends AppCompatActivity {
             // Get Firestore instance and save data
             userDocRef.set(userData)
                     .addOnSuccessListener(aVoid -> {
-                        // 2) Create subcollections:
+
+                        List<ThemeData> themes = loadThemesFromAssets();
+                        List<String> unlockedThemesList = new ArrayList<>();
+                        List<String> lockedThemesList = new ArrayList<>();
+
+                        if (themes != null && !themes.isEmpty()) {
+                            for (ThemeData theme : themes) {
+                                // Default theme is "default" (or whatever id you designate)
+                                if ("default".equalsIgnoreCase(theme.getId())) {
+                                    unlockedThemesList.add(theme.getId());
+                                } else {
+                                    lockedThemesList.add(theme.getId());
+                                }
+                            }
+                        }
+
+                        // Create the unlockedThemes subcollection with the default theme
+                        Map<String, Object> unlockedThemesMap = new HashMap<>();
+                        unlockedThemesMap.put("themeNames", unlockedThemesList);
+                        userDocRef.collection("unlockedThemes")
+                                .document("list")
+                                .set(unlockedThemesMap);
+
+                        // Create the lockedThemes subcollection with the rest of the themes
+                        Map<String, Object> lockedThemesMap = new HashMap<>();
+                        lockedThemesMap.put("themeNames", lockedThemesList);
+                        userDocRef.collection("lockedThemes")
+                                .document("list")
+                                .set(lockedThemesMap);
 
                         // (a) followers subcollection with an empty array of follower IDs
                         Map<String, Object> followersMap = new HashMap<>();
@@ -391,6 +433,23 @@ public class UserDetails extends AppCompatActivity {
                         userDocRef.collection("notifications")
                                 .document("placeholder")
                                 .set(new HashMap<String, Object>());
+
+                        // ----- New Code: Load achievements.json and create achievement docs -----
+                        List<Achievement> achievements = loadAchievementsFromAssets(); // Your helper to parse achievements.json
+                        if (achievements != null && !achievements.isEmpty()) {
+                            for (Achievement achievement : achievements) {
+                                // For each achievement, create a document with:
+                                // progress = 0, completion_status = "incomplete", unique_entities = empty array
+                                Map<String, Object> achData = new HashMap<>();
+                                achData.put("progress", 0);
+                                achData.put("completion_status", "incomplete");
+                                achData.put("unique_entities", new ArrayList<String>());
+
+                                userDocRef.collection("achievements")
+                                        .document(achievement.getId())
+                                        .set(achData);
+                            }
+                        }
 
                         Toast.makeText(UserDetails.this, "Profile created successfully!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(UserDetails.this, MainActivity.class);
@@ -737,6 +796,8 @@ public class UserDetails extends AppCompatActivity {
                     .update(userData)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(UserDetails.this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
+                        AchievementChecker achievementChecker = new AchievementChecker(user.getUid());
+                        achievementChecker.checkAch11();
                         // Optionally, navigate back or finish activity
                         finish();
                     })
@@ -747,4 +808,34 @@ public class UserDetails extends AppCompatActivity {
             Toast.makeText(this, "Please fill in all required fields!", Toast.LENGTH_SHORT).show();
         }
     }
+
+    private List<ThemeData> loadThemesFromAssets() {
+        try {
+            InputStream inputStream = getAssets().open("themes.json");
+            InputStreamReader reader = new InputStreamReader(inputStream);
+            Type listType = new TypeToken<List<ThemeData>>() {}.getType();
+            List<ThemeData> themes = new Gson().fromJson(reader, listType);
+            reader.close();
+            return themes;
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading themes from assets", e);
+            return new ArrayList<>();
+        }
+    }
+
+    private List<Achievement> loadAchievementsFromAssets() {
+        try {
+            InputStream inputStream = getAssets().open("achievements.json");
+            InputStreamReader reader = new InputStreamReader(inputStream);
+            AchievementsWrapper wrapper = new Gson().fromJson(reader, AchievementsWrapper.class);
+            reader.close();
+            return wrapper != null ? wrapper.getAchievements() : new ArrayList<>();
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading achievements from assets", e);
+            return new ArrayList<>();
+        }
+    }
+
+
+
 }

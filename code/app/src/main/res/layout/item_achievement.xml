@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/achievementContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp"
+    android:background="@drawable/wooden_frame_background">
+
+    <!-- White inner container for a "paper" look -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:padding="8dp">
+
+        <!-- XP reward TextView in the top right -->
+        <TextView
+            android:id="@+id/achievementXpTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:text="10 XP"
+            android:textStyle="italic"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp" />
+
+        <!-- Fixed-size container for the emblem -->
+        <FrameLayout
+            android:id="@+id/emblemContainer"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true">
+
+            <!-- Achievement Icon -->
+            <ImageView
+                android:id="@+id/emblemImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerInside"
+                android:adjustViewBounds="true"/>
+        </FrameLayout>
+
+        <!-- Container for texts, progress and claim/complete actions -->
+        <LinearLayout
+            android:id="@+id/textContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/emblemContainer"
+            android:layout_marginStart="16dp"
+            android:layout_below="@id/achievementXpTextView"
+            android:orientation="vertical">
+
+            <!-- Achievement Name -->
+            <TextView
+                android:id="@+id/achievementNameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Achievement Name"
+                android:textStyle="bold"
+                android:textSize="16sp" />
+
+            <!-- Achievement Description -->
+            <TextView
+                android:id="@+id/achievementDescriptionTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Achievement Description"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp" />
+
+            <!-- Claim Button (visible only if achievement is complete but unclaimed) -->
+            <Button
+                android:id="@+id/claimButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Claim"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@android:color/holo_blue_dark"
+                android:visibility="gone"
+                android:layout_marginTop="8dp"/>
+
+            <!-- Progress Bar for Achievement (visible when progress is not complete) -->
+            <ProgressBar
+                android:id="@+id/achievementProgressBar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"/>
+
+            <!-- Progress Text (e.g., 2 / 3) -->
+            <TextView
+                android:id="@+id/achievementProgressTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 / 0"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"/>
+
+            <!-- Completed Text (visible only when achievement is claimed/complete) -->
+            <TextView
+                android:id="@+id/completedTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Completed"
+                android:textStyle="italic"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:layout_marginTop="8dp"/>
+        </LinearLayout>
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>
