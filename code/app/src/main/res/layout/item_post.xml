@@ -246,9 +246,15 @@
                     android:id="@+id/buttonComment"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Comment"
+                    android:text="Comments"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
                     android:drawableLeft="@drawable/baseline_comment_24"
-                    android:padding="8dp"/>
+                    android:drawablePadding="8dp"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"
+                    android:backgroundTint="@android:color/black"
+                    app:drawableTint="@android:color/white"/>
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
