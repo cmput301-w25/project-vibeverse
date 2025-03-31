@@ -1,5 +1,7 @@
 package com.example.vibeverse;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -158,10 +160,12 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
             if (id == R.id.menu_vibestore) {
                 // to be added
             } else if (id == R.id.menu_vibestatus) {
-                        // Launch Insights activity
                 startActivity(new Intent(ProfilePage.this, MoodInsightsActivity.class));
-
-            } else if (id == R.id.menu_editprofile) {
+            }
+            else if (id == R.id.menu_vibepulse) {
+                startActivity(new Intent(ProfilePage.this, SadnessCuresActivity.class));
+            }
+            else if (id == R.id.menu_editprofile) {
                 Intent intent = new Intent(ProfilePage.this, UserDetails.class);
                 intent.putExtra("source", "edit_profile");
                 startActivity(intent);
@@ -579,8 +583,8 @@ public class ProfilePage extends AppCompatActivity implements FilterDialog.Filte
         AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialog);
         builder.setTitle("We care about you!")
                 .setMessage("We've noticed you've been feeling down lately. Remember, you're not alone. If you're looking for solutions to help you feel better, please visit the Vibe Status page for more support and resources.")
-                .setPositiveButton("Visit Vibe Status", (dialog, which) -> {
-                    startActivity(new Intent(ProfilePage.this, MoodInsightsActivity.class));
+                .setPositiveButton("Visit VibePulse", (dialog, which) -> {
+                    startActivity(new Intent(ProfilePage.this, SadnessCuresActivity.class));
                     dialog.dismiss();
                 })
                 .setNegativeButton("I'm OK", (dialog, which) -> dialog.dismiss());

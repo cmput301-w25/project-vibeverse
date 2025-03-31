@@ -12,6 +12,11 @@
         android:icon="@drawable/ic_graph"
         app:itemIconTint="@android:color/white"/>
     <item
+        android:id="@+id/menu_vibepulse"
+        android:title="@string/vibepulse_menu_text"
+        android:icon="@drawable/ic_heart_pulse"
+        app:itemIconTint="@android:color/white"/>
+    <item
         android:id="@+id/menu_editprofile"
         android:title="@string/edit_profile_menu_text"
         android:icon="@drawable/ic_edit"
