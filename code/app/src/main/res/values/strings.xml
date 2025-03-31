@@ -72,7 +72,6 @@
     <string name="vibestore_menu_text">VibeShift</string>
     <string name="vibestatus_menu_text">VibeCheck</string>
 
-    <string name="vibepulse_menu_text">VibePulse</string>
     <string name="edit_profile_menu_text">Edit Profile</string>
     <string name="logout_menu_text">Logout</string>
     <string name="save_changes_edit_profile">Save Changes</string>
