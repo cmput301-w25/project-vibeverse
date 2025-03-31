@@ -42,6 +42,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Activity that handles the display and management of user achievements and levels.
+ */
 public class AchievementActivity extends AppCompatActivity {
 
     private static final String TAG = "AchievementsActivity";
@@ -59,6 +62,11 @@ public class AchievementActivity extends AppCompatActivity {
 
     ImageButton backButton;
 
+    /**
+     * Called when the activity is starting. This is where most initialization should go.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down then this Bundle contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,6 +110,8 @@ public class AchievementActivity extends AppCompatActivity {
 
     /**
      * Loads levels.json from assets and returns a list of Level objects.
+     *
+     * @return a List of Level objects loaded from the assets or an empty list if an error occurs.
      */
     private List<Level> loadLevelsFromAssets() {
         try {
@@ -119,6 +129,8 @@ public class AchievementActivity extends AppCompatActivity {
 
     /**
      * Loads achievements.json from assets and returns a list of Achievement objects.
+     *
+     * @return a List of Achievement objects loaded from the assets or an empty list if an error occurs.
      */
     private List<Achievement> loadAchievementsFromAssets() {
         try {
@@ -135,7 +147,7 @@ public class AchievementActivity extends AppCompatActivity {
     }
 
     /**
-     * Retrieves the current user's XP and level from Firestore.
+     * Retrieves the current user's XP and level from Firestore and updates the UI.
      */
     private void loadCurrentUserData() {
         String userId = FirebaseAuth.getInstance().getUid();
@@ -176,6 +188,9 @@ public class AchievementActivity extends AppCompatActivity {
 
     /**
      * Updates the UI based on the current user's XP and level.
+     *
+     * @param currentXP   the current total XP of the user.
+     * @param currentLevel the current level of the user.
      */
     private void updateUI(int currentXP, int currentLevel) {
         // Find xp thresholds from the levelsList
@@ -204,7 +219,10 @@ public class AchievementActivity extends AppCompatActivity {
     }
 
     /**
-     * Looks up the xpRequired for a given level in the levelsList.
+     * Looks up the XP required for a given level from the levelsList.
+     *
+     * @param level the level to look up.
+     * @return the XP required for the level, or 0 if not found.
      */
     private int getXPForLevel(int level) {
         for (Level lvl : levelsList) {
@@ -215,6 +233,12 @@ public class AchievementActivity extends AppCompatActivity {
         return 0;
     }
 
+    /**
+     * Animates the XP gain effect by creating sparkles and updating the XP bar.
+     *
+     * @param startView the view from which the animation starts.
+     * @param xpAmount  the amount of XP to add.
+     */
     public void animateXpGain(View startView, int xpAmount) {
         final int sparkleCount = 5; // number of sparkles to create
         final int delayBetweenSparkles = 150; // milliseconds delay between each sparkle
@@ -314,7 +338,9 @@ public class AchievementActivity extends AppCompatActivity {
         progressAnimator.start();
     }
 
-    // Helper method to flash the XP bar
+    /**
+     * Creates a flash effect on the XP bar by scaling it up and then down.
+     */
     private void flashXpBar() {
         ObjectAnimator scaleUpX = ObjectAnimator.ofFloat(xpProgressBar, "scaleX", 1f, 1.2f);
         ObjectAnimator scaleUpY = ObjectAnimator.ofFloat(xpProgressBar, "scaleY", 1f, 1.2f);
@@ -335,6 +361,13 @@ public class AchievementActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Animates the level upgrade process by sliding the level card out, updating the level, and sliding it back in.
+     *
+     * @param oldLevel   the previous level before upgrade.
+     * @param newLevel   the new level after upgrade.
+     * @param leftoverXP the remaining XP after leveling up.
+     */
     private void animateLevelUpgrade(final int oldLevel, final int newLevel, final int leftoverXP) {
         // Get the existing level container and its TextView
         final View levelCard = findViewById(R.id.levelCard);
@@ -414,7 +447,9 @@ public class AchievementActivity extends AppCompatActivity {
     }
 
     /**
-     * Checks if the new level unlocks a theme. If so, removes it from lockedThemes and adds it to unlockedThemes.
+     * Checks if the new level unlocks a theme and updates the user's theme collections in Firestore accordingly.
+     *
+     * @param level the new level to check for theme unlocks.
      */
     private void unlockThemeIfAvailable(int level) {
         String themeToUnlock = levelsList.stream().filter(lvl -> lvl.getLevel() == level).findFirst().map(Level::getUnlocks).orElse("N/A");
@@ -450,7 +485,11 @@ public class AchievementActivity extends AppCompatActivity {
 
     }
 
-
+    /**
+     * Loads themes.json from assets and returns a list of ThemeData objects.
+     *
+     * @return a List of ThemeData objects loaded from the assets or an empty list if an error occurs.
+     */
     public List<ThemeData> loadThemesFromAssets() {
         try {
             InputStream inputStream = getAssets().open("themes.json");
@@ -465,6 +504,12 @@ public class AchievementActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Finds and returns the ThemeData corresponding to the given theme ID.
+     *
+     * @param themeId the ID of the theme to find.
+     * @return the ThemeData object if found; otherwise, null.
+     */
     public ThemeData findThemeData(String themeId) {
         if (themeList != null) {
             for (ThemeData theme : themeList) {
@@ -476,6 +521,11 @@ public class AchievementActivity extends AppCompatActivity {
         return null;
     }
 
+    /**
+     * Displays a popup with details of the unlocked theme.
+     *
+     * @param themeData the ThemeData of the unlocked theme.
+     */
     public void showUnlockedThemePopup(ThemeData themeData) {
         // Inflate the custom popup layout.
         View popupView = LayoutInflater.from(this).inflate(R.layout.popup_theme_details, null);
@@ -534,11 +584,24 @@ public class AchievementActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    /**
+     * Retrieves the resource ID for an emoji based on the mood ID and theme.
+     *
+     * @param moodId the mood identifier.
+     * @param theme  the theme identifier.
+     * @return the drawable resource ID for the corresponding emoji.
+     */
     private int getEmojiResourceId(String moodId, String theme) {
         String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
         return getResources().getIdentifier(resourceName, "drawable", getPackageName());
     }
 
+    /**
+     * Retrieves the unlocked theme ID for the given level from the levelsList.
+     *
+     * @param level the level to check for theme unlock.
+     * @return the unlocked theme ID, or "N/A" if none is available.
+     */
     private String getUnlockedThemeForLevel(int level) {
         for (Level lvl : levelsList) {
             if (lvl.getLevel() == level) {

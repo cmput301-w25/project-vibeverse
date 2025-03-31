@@ -20,20 +20,34 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.List;
 
+/**
+ * Adapter for displaying a list of achievements in a RecyclerView.
+ */
 public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.AchievementViewHolder> {
 
     private Context context;
     private List<Achievement> achievementList;
     private String userId;
 
-
-
+    /**
+     * Constructs an AchievementAdapter.
+     *
+     * @param context         the context in which the adapter is used.
+     * @param achievementList the list of achievements to display.
+     */
     public AchievementAdapter(Context context, List<Achievement> achievementList) {
         this.context = context;
         this.achievementList = achievementList;
         this.userId = FirebaseAuth.getInstance().getUid();
     }
 
+    /**
+     * Called when RecyclerView needs a new {@link AchievementViewHolder} of the given type to represent an item.
+     *
+     * @param parent   the parent ViewGroup.
+     * @param viewType the view type of the new View.
+     * @return a new AchievementViewHolder that holds a View of the given view type.
+     */
     @NonNull
     @Override
     public AchievementViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -41,6 +55,12 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
         return new AchievementViewHolder(view);
     }
 
+    /**
+     * Called by RecyclerView to display the data at the specified position.
+     *
+     * @param holder   the AchievementViewHolder which should be updated to represent the contents of the item.
+     * @param position the position of the item within the adapter's data set.
+     */
     @Override
     public void onBindViewHolder(@NonNull AchievementViewHolder holder, int position) {
         Achievement achievement = achievementList.get(position);
@@ -209,11 +229,19 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
         }
     }
 
+    /**
+     * Returns the total number of achievements.
+     *
+     * @return the size of the achievement list.
+     */
     @Override
     public int getItemCount() {
         return achievementList.size();
     }
 
+    /**
+     * ViewHolder class for achievement items.
+     */
     public static class AchievementViewHolder extends RecyclerView.ViewHolder {
         View container;
         ImageView emblemImageView;
@@ -221,6 +249,11 @@ public class AchievementAdapter extends RecyclerView.Adapter<AchievementAdapter.
         ProgressBar progressBar;
         Button claimButton;
 
+        /**
+         * Constructs an AchievementViewHolder.
+         *
+         * @param itemView the view representing the achievement item.
+         */
         public AchievementViewHolder(@NonNull View itemView) {
             super(itemView);
             container = itemView.findViewById(R.id.achievementContainer);

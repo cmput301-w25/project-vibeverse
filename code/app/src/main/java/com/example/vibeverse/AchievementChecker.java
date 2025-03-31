@@ -9,11 +9,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * AchievementChecker class provides methods to check and update achievements for a user.
+ */
 public class AchievementChecker {
 
     private FirebaseFirestore db;
     private String userId;
 
+    /**
+     * Constructs an AchievementChecker with the given userId.
+     *
+     * @param userId the unique identifier of the user.
+     */
     public AchievementChecker(String userId) {
         this.db = FirebaseFirestore.getInstance();
         this.userId = userId;
@@ -396,4 +404,3 @@ public class AchievementChecker {
         }
     }
 }
-
