@@ -46,10 +46,9 @@ public class ImageUtils {
          *
          * @param bitmap   The processed Bitmap.
          * @param imageUri The URI of the image.
-         * @param size The size of the image .
+         * @param size     The size of the image in bytes.
          */
         void onImageConfirmed(Bitmap bitmap, Uri imageUri, long size);
-
     }
 
     /**
@@ -132,19 +131,18 @@ public class ImageUtils {
         return File.createTempFile(imageFileName, ".jpg", storageDir);
     }
 
-
     /**
      * Shows a preview dialog containing the processed image. When the user confirms,
      * the provided callback is invoked.
      *
-     * @param activity       The Activity context.
-     * @param bitmap         The processed Bitmap.
-     * @param imageBytes     The final compressed image bytes (guaranteed to be below 65,536 bytes).
-     * @param imageUri       The URI of the image.
-     * @param fileSizeBytes  The size of the image in bytes.
-     * @param dateTaken      The date the image was taken.
-     * @param location       The location information.
-     * @param callback       Callback to be invoked on confirmation.
+     * @param activity      The Activity context.
+     * @param bitmap        The processed Bitmap.
+     * @param imageBytes    The final compressed image bytes (guaranteed to be below 65,536 bytes).
+     * @param imageUri      The URI of the image.
+     * @param fileSizeBytes The size of the image in bytes.
+     * @param dateTaken     The date the image was taken.
+     * @param location      The location information.
+     * @param callback      Callback to be invoked on confirmation.
      */
     public static void showPreviewDialog(final Activity activity, final Bitmap bitmap, final byte[] imageBytes, final Uri imageUri, final long fileSizeBytes, final Date dateTaken, final String location, final ImageProcessCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
@@ -184,5 +182,4 @@ public class ImageUtils {
                 })
                 .show();
     }
-
 }

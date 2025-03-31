@@ -36,6 +36,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * HomePage is the main activity that displays a feed of mood events from followed users.
+ * <p>
+ * It loads mood events from Firestore, displays them in a RecyclerView using MoodEventAdapter,
+ * supports search filtering and applying additional filters via FilterDialog, and handles notifications.
+ * </p>
+ */
 public class HomePage extends AppCompatActivity implements FilterDialog.FilterListener {
     private static final String TAG = "HomePage";
 
@@ -56,6 +63,14 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
     private final SimpleDateFormat sourceFormat =
             new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
 
+    /**
+     * Called when the activity is starting.
+     * <p>
+     * Initializes Firebase, UI components, sets up the RecyclerView, and loads initial mood events.
+     * </p>
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +91,9 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         fetchFollowedUsersPosts();
     }
 
+    /**
+     * Initializes the views and sets up UI components.
+     */
     private void initializeViews() {
         recyclerFeed = findViewById(R.id.recyclerFeed);
         editSearch = findViewById(R.id.editSearch);
@@ -132,6 +150,9 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         });
     }
 
+    /**
+     * Sets up the RecyclerView with a LinearLayoutManager and initializes the MoodEventAdapter.
+     */
     private void setupRecyclerView() {
         recyclerFeed.setLayoutManager(new LinearLayoutManager(this));
         recyclerFeed.setHasFixedSize(true);
@@ -144,6 +165,9 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         moodEventAdapter.setProfileVisibility(true);
     }
 
+    /**
+     * Fetches posts from followed users and loads them into the RecyclerView.
+     */
     private void fetchFollowedUsersPosts() {
         // Show loading state
         if (emptyStateView != null) {
@@ -190,6 +214,14 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
                 });
     }
 
+    /**
+     * Processes mood events for a specific user.
+     *
+     * @param userId             The user ID whose mood events are to be processed.
+     * @param combinedMoodEvents A list to accumulate all mood events.
+     * @param pendingTasks       An AtomicInteger to track pending async tasks.
+     * @param totalUsers         The total number of users being processed.
+     */
     private void processUserMoodEvents(String userId, List<MoodEvent> combinedMoodEvents,
                                        AtomicInteger pendingTasks, int totalUsers) {
         // First fetch user profile information
@@ -274,6 +306,12 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
                 });
     }
 
+    /**
+     * Finalizes the list of mood events after all asynchronous tasks are complete,
+     * sorts them by timestamp, and updates the UI.
+     *
+     * @param combinedMoodEvents The combined list of mood events.
+     */
     private void finalizeMoodEvents(List<MoodEvent> combinedMoodEvents) {
         // Sort by timestamp and update UI on main thread
         runOnUiThread(() -> {
@@ -300,6 +338,11 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         });
     }
 
+    /**
+     * Shows or hides the empty state view based on whether there are mood events.
+     *
+     * @param show True to show the empty state, false to hide it.
+     */
     private void showEmptyState(boolean show) {
         if (emptyStateView != null) {
             emptyStateView.setVisibility(show ? View.VISIBLE : View.GONE);
@@ -308,6 +351,12 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         }
     }
 
+    /**
+     * Called when the activity resumes.
+     * <p>
+     * Reloads followed users' posts and checks the user's mood streak.
+     * </p>
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -315,6 +364,22 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         checkAndResetStreak();
     }
 
+    /**
+     * Callback method for FilterDialog.FilterListener.
+     * <p>
+     * This method is required but not used directly.
+     * </p>
+     *
+     * @param timeFilter  The selected time filter.
+     * @param isHappy     True if "Happy" is selected.
+     * @param isSad       True if "Sad" is selected.
+     * @param isAngry     True if "Angry" is selected.
+     * @param isSurprised True if "Surprised" is selected.
+     * @param isAfraid    True if "Afraid" is selected.
+     * @param isDisgusted True if "Disgusted" is selected.
+     * @param isConfused  True if "Confused" is selected.
+     * @param isShameful  True if "Shameful" is selected.
+     */
     @Override
     public void onFilterApplied(String timeFilter,
                                 boolean isHappy,
@@ -328,6 +393,14 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         // This method is required but not used directly
     }
 
+    /**
+     * Callback method for FilterDialog.FilterListener.
+     * <p>
+     * Updates the adapter with the filtered list of mood events.
+     * </p>
+     *
+     * @param filteredMoods The list of filtered MoodEvent objects.
+     */
     @Override
     public void onFilteredResults(List<MoodEvent> filteredMoods) {
         // Update the adapter with filtered moods
@@ -340,6 +413,9 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
         }
     }
 
+    /**
+     * Checks and resets the user's mood streak if they haven't posted a mood event today.
+     */
     private void checkAndResetStreak() {
         // Use a simple date format to compare dates (e.g., "yyyy-MM-dd")
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -371,5 +447,4 @@ public class HomePage extends AppCompatActivity implements FilterDialog.FilterLi
             Log.e(TAG, "Error fetching user data for streak check", e);
         });
     }
-
 }
