@@ -25,6 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Adapter for displaying comments and their replies in a RecyclerView.
+ */
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder> {
 
     private Context context;
@@ -35,14 +38,35 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     private String moodUserId;
     private String moodDocId;
 
+    /**
+     * Interface definition for a callback to be invoked when a reply is clicked.
+     */
     public interface OnReplyClickListener {
+        /**
+         * Called when a reply action is initiated.
+         *
+         * @param comment The comment for which the reply was clicked.
+         */
         void onReplyClicked(Comment comment);
     }
 
+    /**
+     * Sets the listener for reply click events.
+     *
+     * @param listener the listener to be set.
+     */
     public void setOnReplyClickListener(OnReplyClickListener listener) {
         this.replyClickListener = listener;
     }
 
+    /**
+     * Constructs a CommentAdapter.
+     *
+     * @param context     the context.
+     * @param commentList the list of comments to display.
+     * @param moodUserId  the user ID associated with the mood.
+     * @param moodDocId   the document ID of the mood.
+     */
     public CommentAdapter(Context context, List<Comment> commentList, String moodUserId, String moodDocId) {
         this.context = context;
         this.commentList = commentList;
@@ -51,6 +75,9 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         db = FirebaseFirestore.getInstance();
     }
 
+    /**
+     * ViewHolder class for comment items.
+     */
     public static class CommentViewHolder extends RecyclerView.ViewHolder {
         CircleImageView profilePic;
         TextView username;
@@ -59,8 +86,11 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         ImageView replyButton, deleteIcon;
         RecyclerView repliesRecycler;
 
-
-
+        /**
+         * Constructs a CommentViewHolder.
+         *
+         * @param itemView the view representing a single comment item.
+         */
         public CommentViewHolder(@NonNull View itemView) {
             super(itemView);
             profilePic = itemView.findViewById(R.id.profilePic);
@@ -73,6 +103,13 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         }
     }
 
+    /**
+     * Inflates the comment item layout and creates a new CommentViewHolder.
+     *
+     * @param parent   the parent ViewGroup.
+     * @param viewType the view type.
+     * @return a new CommentViewHolder.
+     */
     @NonNull
     @Override
     public CommentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -80,6 +117,12 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         return new CommentViewHolder(view);
     }
 
+    /**
+     * Binds the data to the CommentViewHolder for a given position.
+     *
+     * @param holder   the CommentViewHolder.
+     * @param position the position in the data set.
+     */
     @Override
     public void onBindViewHolder(@NonNull final CommentViewHolder holder, int position) {
         final Comment comment = commentList.get(position);
@@ -190,12 +233,21 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
 
     }
 
+    /**
+     * Returns the total number of comments.
+     *
+     * @return the size of the comment list.
+     */
     @Override
     public int getItemCount() {
         return commentList.size();
     }
 
-    // Method to update the adapter's dataset
+    /**
+     * Updates the adapter's data set with new comments.
+     *
+     * @param newComments the new list of comments.
+     */
     public void updateComments(List<Comment> newComments) {
         this.commentList = newComments;
         notifyDataSetChanged();

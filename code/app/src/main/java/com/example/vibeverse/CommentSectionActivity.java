@@ -39,6 +39,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * Activity for displaying and managing the comment section of a mood post.
+ * Handles loading mood details, posting comments and replies, and sending notifications.
+ */
 public class CommentSectionActivity extends AppCompatActivity {
 
     private TextView textTitle, textSubtitle, socialSituationView;
@@ -74,14 +78,16 @@ public class CommentSectionActivity extends AppCompatActivity {
 
     private String selectedTheme;
 
-
-
+    /**
+     * Called when the activity is starting. Initializes UI components and loads mood and comment data.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down then this Bundle contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_comment_section);
         findViewById(android.R.id.content).setBackgroundColor(ContextCompat.getColor(this, android.R.color.white));
-
 
         // Retrieve only moodOwnerId and moodDocId from the intent.
         moodUserId = getIntent().getStringExtra("moodOwnerId");
@@ -109,7 +115,6 @@ public class CommentSectionActivity extends AppCompatActivity {
         postMenuButton.setVisibility(View.GONE);
 
         fetchUserTheme(() -> loadMoodDetails());
-
 
         // Setup the comment section
         recyclerComments = findViewById(R.id.recyclerComments);
@@ -147,7 +152,9 @@ public class CommentSectionActivity extends AppCompatActivity {
         buttonSendComment.setOnClickListener(v -> postComment());
     }
 
-
+    /**
+     * Attaches a Firestore snapshot listener to the comments collection when the activity starts.
+     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -176,11 +183,13 @@ public class CommentSectionActivity extends AppCompatActivity {
                         if (!commentList.isEmpty()) {
                             recyclerComments.smoothScrollToPosition(commentList.size() - 1);
                         }
-
                     }
                 });
     }
 
+    /**
+     * Removes the Firestore snapshot listener when the activity stops.
+     */
     @Override
     protected void onStop() {
         super.onStop();
@@ -190,7 +199,11 @@ public class CommentSectionActivity extends AppCompatActivity {
         }
     }
 
-
+    /**
+     * Fetches the current user's selected theme from Firestore.
+     *
+     * @param onComplete Runnable to execute after the theme is fetched.
+     */
     private void fetchUserTheme(final Runnable onComplete) {
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         db.collection("users").document(currentUserId)
@@ -209,9 +222,9 @@ public class CommentSectionActivity extends AppCompatActivity {
                 });
     }
 
-
     /**
-     * Posts a comment to Firestore under the appropriate mood event.
+     * Posts a comment or reply to Firestore under the appropriate mood event.
+     * Also handles notification generation and achievement checking.
      */
     private void postComment() {
         String commentText = editComment.getText().toString().trim();
@@ -501,9 +514,6 @@ public class CommentSectionActivity extends AppCompatActivity {
                     .addOnFailureListener(e -> {
                         Toast.makeText(CommentSectionActivity.this, "Error adding comment: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
-
-
-
         }
     }
 
@@ -521,13 +531,21 @@ public class CommentSectionActivity extends AppCompatActivity {
         return Color.rgb(red, green, blue);
     }
 
-
+    /**
+     * Retrieves the drawable resource ID for a given emoji based on the mood and theme.
+     *
+     * @param moodId the mood identifier.
+     * @param theme  the theme identifier.
+     * @return the drawable resource ID.
+     */
     private int getEmojiResourceId(String moodId, String theme) {
         String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
         return getResources().getIdentifier(resourceName, "drawable", getPackageName());
     }
 
-
+    /**
+     * Loads mood details from Firestore and updates the UI accordingly.
+     */
     private void loadMoodDetails() {
         db.collection("Usermoods")
                 .document(moodUserId)
