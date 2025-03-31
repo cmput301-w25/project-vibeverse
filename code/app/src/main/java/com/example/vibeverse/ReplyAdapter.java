@@ -31,6 +31,14 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
     private String moodUserId;
     private String moodDocId;
 
+    /**
+     * Constructs a new ReplyAdapter.
+     *
+     * @param context   The context in which the adapter is operating.
+     * @param replyList The list of Comment objects representing replies.
+     * @param moodUserId The user ID of the mood event owner.
+     * @param moodDocId The document ID of the mood event.
+     */
     public ReplyAdapter(Context context, List<Comment> replyList, String moodUserId, String moodDocId) {
         this.context = context;
         this.replyList = replyList;
@@ -39,6 +47,9 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
         db = FirebaseFirestore.getInstance();
     }
 
+    /**
+     * ViewHolder class for reply items.
+     */
     public static class ReplyViewHolder extends RecyclerView.ViewHolder {
         CircleImageView profilePic;
         TextView username;
@@ -46,6 +57,11 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
         TextView commentContent;
         ImageView replyIcon;
         ImageView deleteIcon;
+        /**
+         * Constructs a new ReplyViewHolder.
+         *
+         * @param itemView The view representing a single reply item.
+         */
         public ReplyViewHolder(@NonNull View itemView) {
             super(itemView);
             profilePic = itemView.findViewById(R.id.profilePic);
@@ -57,6 +73,13 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
         }
     }
 
+    /**
+     * Creates and returns a new ReplyViewHolder.
+     *
+     * @param parent   The parent ViewGroup.
+     * @param viewType The view type.
+     * @return A new instance of ReplyViewHolder.
+     */
     @NonNull
     @Override
     public ReplyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -64,6 +87,12 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
         return new ReplyViewHolder(view);
     }
 
+    /**
+     * Binds data to the ReplyViewHolder at the specified position.
+     *
+     * @param holder   The ReplyViewHolder to bind.
+     * @param position The position in the reply list.
+     */
     @Override
     public void onBindViewHolder(@NonNull ReplyViewHolder holder, int position) {
         Comment reply = replyList.get(position);
@@ -131,16 +160,23 @@ public class ReplyAdapter extends RecyclerView.Adapter<ReplyAdapter.ReplyViewHol
                         });
             }
         });
-
-
-
     }
 
+    /**
+     * Returns the total number of replies.
+     *
+     * @return The size of the reply list.
+     */
     @Override
     public int getItemCount() {
         return replyList.size();
     }
 
+    /**
+     * Updates the reply list with a new set of replies and refreshes the view.
+     *
+     * @param newReplies The new list of Comment objects representing replies.
+     */
     public void updateReplies(List<Comment> newReplies) {
         this.replyList = newReplies;
         notifyDataSetChanged();

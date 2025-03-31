@@ -23,12 +23,36 @@ import java.util.Set;
 
 public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHolder> {
 
+    /**
+     * List of ThemeData objects representing available themes.
+     */
     private List<ThemeData> themeList;
+    /**
+     * Set of theme IDs that are locked.
+     */
     private Set<String> lockedThemes;
+    /**
+     * FirebaseFirestore instance for database operations.
+     */
     private FirebaseFirestore db;
+    /**
+     * The user ID for the current user.
+     */
     private String userId;
+    /**
+     * The currently selected theme ID.
+     */
     private String selectedTheme; // current selected theme
 
+    /**
+     * Constructs a new ThemeAdapter.
+     *
+     * @param themeList     List of ThemeData objects.
+     * @param lockedThemes  Set of locked theme IDs.
+     * @param db            FirebaseFirestore instance.
+     * @param userId        The current user's ID.
+     * @param selectedTheme The currently selected theme ID.
+     */
     public ThemeAdapter(List<ThemeData> themeList, Set<String> lockedThemes, FirebaseFirestore db, String userId, String selectedTheme) {
         this.themeList = themeList;
         this.lockedThemes = lockedThemes;
@@ -37,12 +61,23 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHol
         this.selectedTheme = selectedTheme;
     }
 
-    // Optional method to update the selected theme and refresh views
+    /**
+     * Optional method to update the selected theme and refresh the views.
+     *
+     * @param newSelectedTheme The new selected theme ID.
+     */
     public void updateSelectedTheme(String newSelectedTheme) {
         this.selectedTheme = newSelectedTheme;
         notifyDataSetChanged();
     }
 
+    /**
+     * Called when RecyclerView needs a new ThemeViewHolder of the given type.
+     *
+     * @param parent   The parent ViewGroup.
+     * @param viewType The view type.
+     * @return A new ThemeViewHolder.
+     */
     @NonNull
     @Override
     public ThemeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -50,6 +85,12 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHol
         return new ThemeViewHolder(v);
     }
 
+    /**
+     * Called by RecyclerView to display the data at the specified position.
+     *
+     * @param holder   The ThemeViewHolder which should be updated.
+     * @param position The position of the item within the adapter's data set.
+     */
     @Override
     public void onBindViewHolder(@NonNull ThemeViewHolder holder, int position) {
         ThemeData themeData = themeList.get(position);
@@ -108,12 +149,22 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHol
         });
     }
 
+    /**
+     * Returns the total number of themes.
+     *
+     * @return The size of the theme list.
+     */
     @Override
     public int getItemCount() {
         return themeList.size();
     }
 
-
+    /**
+     * Displays a popup with theme details and selection options.
+     *
+     * @param context   The context.
+     * @param themeData The ThemeData object for which details are to be shown.
+     */
     private void showThemePopup(Context context, ThemeData themeData) {
         // Inflate the custom popup layout.
         View popupView = LayoutInflater.from(context).inflate(R.layout.popup_theme_details, null);
@@ -207,19 +258,45 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHol
         dialog.show();
     }
 
+    /**
+     * Retrieves the resource ID for an emoji based on the mood and theme.
+     *
+     * @param context The context.
+     * @param moodId  The mood identifier.
+     * @param theme   The theme identifier.
+     * @return The resource ID of the emoji drawable.
+     */
     private int getEmojiResourceId(Context context, String moodId, String theme) {
         String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
         return context.getResources().getIdentifier(resourceName, "drawable", context.getPackageName());
     }
 
-
-
+    /**
+     * ThemeViewHolder holds the view elements for a single theme item.
+     */
     public static class ThemeViewHolder extends RecyclerView.ViewHolder {
+        /**
+         * ImageView for displaying the theme background image.
+         */
         ImageView backgroundImage;
+        /**
+         * TextView for displaying the theme title.
+         */
         TextView themeTitle;
+        /**
+         * FrameLayout that overlays a locked indicator.
+         */
         FrameLayout lockedOverlay;
+        /**
+         * Button to select the theme.
+         */
         Button selectButton;
 
+        /**
+         * Constructs a new ThemeViewHolder.
+         *
+         * @param itemView The view representing a single theme item.
+         */
         public ThemeViewHolder(@NonNull View itemView) {
             super(itemView);
             backgroundImage = itemView.findViewById(R.id.backgroundImage);
@@ -228,6 +305,4 @@ public class ThemeAdapter extends RecyclerView.Adapter<ThemeAdapter.ThemeViewHol
             selectButton = itemView.findViewById(R.id.selectButton);
         }
     }
-
-
 }

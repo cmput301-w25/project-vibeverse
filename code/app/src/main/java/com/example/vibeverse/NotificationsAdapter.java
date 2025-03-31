@@ -24,18 +24,44 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 
-
+/**
+ * NotificationsAdapter binds a list of Notification objects to a RecyclerView.
+ * It inflates the layout for each notification and handles UI logic for displaying notification details,
+ * managing follow request actions, and updating notification status.
+ */
 public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdapter.NotificationViewHolder> {
+    /**
+     * The list of Notification objects to be displayed.
+     */
     private List<Notification> notificationList;
+    /**
+     * The context in which the adapter is operating.
+     */
     private Context context;
+    /**
+     * FirebaseFirestore instance for database operations.
+     */
     private FirebaseFirestore db;
 
+    /**
+     * Constructs a new NotificationsAdapter.
+     *
+     * @param context The context in which the adapter is created.
+     * @param notifications The list of notifications to display.
+     */
     public NotificationsAdapter(Context context, List<Notification> notifications) {
         this.context = context;
         this.notificationList = notifications;
         db = FirebaseFirestore.getInstance();
     }
 
+    /**
+     * Called when RecyclerView needs a new NotificationViewHolder to represent a notification.
+     *
+     * @param parent The parent ViewGroup.
+     * @param viewType The view type of the new View.
+     * @return A new NotificationViewHolder.
+     */
     @NonNull
     @Override
     public NotificationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -43,26 +69,66 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
         return new NotificationViewHolder(view);
     }
 
+    /**
+     * Called by RecyclerView to display the data at the specified position.
+     *
+     * @param holder The NotificationViewHolder to update.
+     * @param position The position of the notification in the list.
+     */
     @Override
     public void onBindViewHolder(@NonNull NotificationViewHolder holder, int position) {
         Notification notification = notificationList.get(position);
         holder.bind(notification);
     }
 
+    /**
+     * Returns the total number of notifications in the list.
+     *
+     * @return The number of notifications.
+     */
     @Override
     public int getItemCount() {
         return notificationList.size();
     }
 
+    /**
+     * NotificationViewHolder holds the view elements for a single notification item.
+     */
     public class NotificationViewHolder extends RecyclerView.ViewHolder {
+        /**
+         * CircleImageView for displaying the sender's profile image.
+         */
         private de.hdodenhof.circleimageview.CircleImageView profileImage;
+        /**
+         * TextView for displaying the notification content.
+         */
         private TextView contentText;
+        /**
+         * TextView for displaying the date and time of the notification.
+         */
         private TextView dateTimeText;
+        /**
+         * Button to accept a follow request.
+         */
         private Button acceptButton;
+        /**
+         * Button to reject a follow request.
+         */
         private Button rejectButton;
+        /**
+         * LinearLayout container for buttons or status icons.
+         */
         private LinearLayout buttonContainer;
+        /**
+         * Main container view for background changes.
+         */
         private View container; // This can be the CardView or main container for background changes
 
+        /**
+         * Constructs a new NotificationViewHolder and initializes view components.
+         *
+         * @param itemView The view representing a single notification item.
+         */
         public NotificationViewHolder(@NonNull View itemView) {
             super(itemView);
             container = itemView.findViewById(R.id.notificationContainer);
@@ -74,6 +140,11 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
             buttonContainer = itemView.findViewById(R.id.buttonContainer);
         }
 
+        /**
+         * Binds a Notification object to the view elements, updating the UI based on notification type and status.
+         *
+         * @param notification The Notification object to bind.
+         */
         public void bind(Notification notification) {
             // Set the notification text and date
             contentText.setText(notification.getContent());
@@ -81,8 +152,6 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
             dateTimeText.setText(formattedDateTime);
             acceptButton.setBackgroundTintList(null);
             rejectButton.setBackgroundTintList(null);
-
-
 
             // Differentiate unread notifications visually
             if (!notification.isRead()) {
@@ -117,7 +186,6 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
                 acceptButton.setVisibility(View.GONE);
                 rejectButton.setVisibility(View.GONE);
             }
-
 
             // Load the sender's profile picture using their user id.
             // This assumes that in the users collection, the profile picture URL is stored under "profilePicUri".
@@ -277,6 +345,12 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
         }
     }
 
+    /**
+     * Formats an ISO date time string into a more readable format.
+     *
+     * @param isoDateTime The ISO date time string.
+     * @return The formatted date time string, or null if formatting fails.
+     */
     private String getFormattedDateTime(String isoDateTime) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
@@ -310,6 +384,12 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
         return null;
     }
 
+    /**
+     * Returns the ordinal suffix for a given day of the month.
+     *
+     * @param day The day of the month.
+     * @return The ordinal suffix (e.g., "st", "nd", "rd", "th").
+     */
     private String getDayOfMonthSuffix(int day) {
         if (day >= 11 && day <= 13) {
             return "th";

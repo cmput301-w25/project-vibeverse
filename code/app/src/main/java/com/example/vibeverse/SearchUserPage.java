@@ -18,13 +18,24 @@ import java.util.List;
 
 public class SearchUserPage extends AppCompatActivity implements UserAdapter.OnUserClickListener {
 
+    /** EditText for entering search queries. */
     private EditText editSearch;
+    /** RecyclerView for displaying search results. */
     private RecyclerView recyclerSearchResults;
+    /** Adapter for managing user search results. */
     private UserAdapter userAdapter;
+    /** List of User objects representing search results. */
     private List<User> userList;
+    /** Firebase Firestore instance for database operations. */
     private FirebaseFirestore db;
+    /** BottomNavigationView for navigating the app. */
     private BottomNavigationView bottomNavigationView;
 
+    /**
+     * Called when the activity is first created. Initializes views, adapter, and search listener.
+     *
+     * @param savedInstanceState If the activity is being re-initialized after previously being shut down, this Bundle contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,9 +60,25 @@ public class SearchUserPage extends AppCompatActivity implements UserAdapter.OnU
 
         // Add text change listener to search box
         editSearch.addTextChangedListener(new TextWatcher() {
+            /**
+             * This method is called before the text is changed.
+             *
+             * @param s The text before change.
+             * @param start The start position.
+             * @param count The count of characters before change.
+             * @param after The count of characters that will be changed.
+             */
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
+            /**
+             * Called when the text is being changed. Updates the search results based on the query.
+             *
+             * @param s The text after change.
+             * @param start The start position.
+             * @param before The count of characters before change.
+             * @param count The count of characters after change.
+             */
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String query = s.toString().trim();
@@ -63,11 +90,21 @@ public class SearchUserPage extends AppCompatActivity implements UserAdapter.OnU
                 }
             }
 
+            /**
+             * This method is called after the text has been changed.
+             *
+             * @param s The final text.
+             */
             @Override
             public void afterTextChanged(Editable s) {}
         });
     }
 
+    /**
+     * Searches for users in the Firestore database whose usernames start with the provided query.
+     *
+     * @param query The search query entered by the user.
+     */
     private void searchUsers(String query) {
         // Search for usernames that start with the query (case-insensitive would be better, but Firestore has limitations)
         String lowerCaseQuery = query.toLowerCase();
@@ -94,6 +131,11 @@ public class SearchUserPage extends AppCompatActivity implements UserAdapter.OnU
                 });
     }
 
+    /**
+     * Called when a user in the search results is clicked. Navigates to the clicked user's profile.
+     *
+     * @param user The User object representing the clicked user.
+     */
     @Override
     public void onUserClick(User user) {
         // Navigate to user profile when a user is clicked
