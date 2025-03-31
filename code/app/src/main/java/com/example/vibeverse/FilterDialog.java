@@ -25,6 +25,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * FilterDialog provides a dialog for filtering MoodEvent objects based on time and mood criteria.
+ * <p>
+ * The dialog allows users to select a time filter and specific mood types (e.g., Happy, Sad, etc.)
+ * to filter a list of mood events. The dialog saves the last applied filter selections for persistence.
+ * When the filters are applied, the dialog notifies a FilterListener with the filter options and
+ * also returns the filtered list of MoodEvent objects.
+ * </p>
+ */
 public class FilterDialog {
 
     private static String lastTimeFilter = "all_time";
@@ -37,7 +46,23 @@ public class FilterDialog {
     private static boolean lastIsConfused = false;
     private static boolean lastIsShameful = false;
 
+    /**
+     * Interface for receiving filter selection and filtered results.
+     */
     public interface FilterListener {
+        /**
+         * Called when the filter options have been applied.
+         *
+         * @param timeFilter   The selected time filter.
+         * @param isHappy      True if "Happy" is selected.
+         * @param isSad        True if "Sad" is selected.
+         * @param isAngry      True if "Angry" is selected.
+         * @param isSurprised  True if "Surprised" is selected.
+         * @param isAfraid     True if "Afraid" is selected.
+         * @param isDisgusted  True if "Disgusted" is selected.
+         * @param isConfused   True if "Confused" is selected.
+         * @param isShameful   True if "Shameful" is selected.
+         */
         void onFilterApplied(String timeFilter,
                              boolean isHappy,
                              boolean isSad,
@@ -48,9 +73,21 @@ public class FilterDialog {
                              boolean isConfused,
                              boolean isShameful);
 
+        /**
+         * Called when the mood events have been filtered.
+         *
+         * @param results The list of filtered MoodEvent objects.
+         */
         void onFilteredResults(List<MoodEvent> results);
     }
 
+    /**
+     * Displays the filter dialog.
+     *
+     * @param context       The context in which the dialog should be displayed.
+     * @param listener      A FilterListener to receive filter selections and results.
+     * @param allMoodEvents The list of all MoodEvent objects to be filtered.
+     */
     public static void show(Context context, FilterListener listener, List<MoodEvent> allMoodEvents) {
         Dialog dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -167,6 +204,22 @@ public class FilterDialog {
         dialog.show();
     }
 
+    /**
+     * Applies the selected filters to the given list of MoodEvent objects.
+     *
+     * @param context       The context.
+     * @param listener      The FilterListener to receive the filtered results.
+     * @param allMoodEvents The complete list of MoodEvent objects.
+     * @param timeFilter    The selected time filter.
+     * @param isHappy       True if "Happy" is selected.
+     * @param isSad         True if "Sad" is selected.
+     * @param isAngry       True if "Angry" is selected.
+     * @param isSurprised   True if "Surprised" is selected.
+     * @param isAfraid      True if "Afraid" is selected.
+     * @param isDisgusted   True if "Disgusted" is selected.
+     * @param isConfused    True if "Confused" is selected.
+     * @param isShameful    True if "Shameful" is selected.
+     */
     private static void applyFilters(
             Context context,
             FilterListener listener,

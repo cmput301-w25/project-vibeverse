@@ -14,11 +14,8 @@ import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
-
 import android.graphics.drawable.Drawable;
-
 import android.graphics.drawable.ColorDrawable;
-
 import android.graphics.drawable.GradientDrawable;
 import android.location.Address;
 import android.location.Geocoder;
@@ -68,6 +65,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -139,11 +137,10 @@ public class EditMoodActivity extends AppCompatActivity {
     private Location currentLocation;
     private String currentLocationAddress = null;
 
-
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
 
-    private String selectedTheme,userId;
+    private String selectedTheme, userId;
 
     private boolean userRemovedLocation = false;
 
@@ -223,13 +220,11 @@ public class EditMoodActivity extends AppCompatActivity {
                     selectedTheme = "clown";
                     initializeUI();
                 });
-
-
-
     }
 
-
-    // Extracted method to continue initializing the activity after the theme is set.
+    /**
+     * Continues initializing the activity's UI components after the user's theme is set.
+     */
     private void initializeUI() {
         // Create a custom toolbar without a title
         Toolbar toolbar = new Toolbar(this);
@@ -416,8 +411,6 @@ public class EditMoodActivity extends AppCompatActivity {
         moodContainerBg.setCornerRadius(dpToPx(12));
         selectedMoodContainer.setBackground(moodContainerBg);
 
-
-
         // Style the update button
         GradientDrawable buttonBg = new GradientDrawable();
         buttonBg.setCornerRadius(dpToPx(24));
@@ -432,8 +425,8 @@ public class EditMoodActivity extends AppCompatActivity {
 
         // Load existing photo if available
         currentImageUri = currentPhotoUri;
-        if (currentPhotoUri != null && !currentPhotoUri.equals("N/A")) {
-            Glide.with(this).load(currentPhotoUri).into(imgSelected);
+        if (currentImageUri != null && !currentImageUri.equals("N/A")) {
+            Glide.with(this).load(currentImageUri).into(imgSelected);
             imgSelected.setVisibility(View.VISIBLE);
             imageHintText.setVisibility(View.GONE);
             imgPlaceholder.setVisibility(View.GONE);
@@ -578,8 +571,6 @@ public class EditMoodActivity extends AppCompatActivity {
                         resultIntent.putExtra("updatedphotoSizeKB", photoSize);
                         resultIntent.putExtra("isPublic", isPublic);
 
-
-
                         if (userRemovedLocation) {
                             // Only mark as removed if user explicitly chose to remove it
                             resultIntent.putExtra("locationRemoved", true);
@@ -589,16 +580,6 @@ public class EditMoodActivity extends AppCompatActivity {
                             resultIntent.putExtra("updatedMoodLatitude", selectedLocationCoords.latitude);
                             resultIntent.putExtra("updatedMoodLongitude", selectedLocationCoords.longitude);
                         }
-
-//                        // Add location information if available
-//                        if (selectedLocationName != null && selectedLocationCoords != null) {
-//                            resultIntent.putExtra("updatedMoodLocation", selectedLocationName);
-//                            resultIntent.putExtra("updatedMoodLatitude", selectedLocationCoords.latitude);
-//                            resultIntent.putExtra("updatedMoodLongitude", selectedLocationCoords.longitude);
-//                        } else {
-//                            // Explicitly pass null to indicate location should be removed
-//                            resultIntent.putExtra("locationRemoved", true);
-//                        }
 
                         setResult(RESULT_OK, resultIntent);
                         finish();
@@ -613,6 +594,12 @@ public class EditMoodActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Displays a custom dialog with location options.
+     *
+     * @param title   The title of the dialog.
+     * @param options A list of LocationOption objects representing the available choices.
+     */
     private void showCustomLocationDialog(String title, List<LocationOption> options) {
         // Create dialog
         Dialog dialog = new Dialog(this);
@@ -702,7 +689,7 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Request location permissions
+     * Requests location permissions from the user.
      */
     private void requestLocationPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -714,7 +701,7 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Get the current location
+     * Retrieves the current device location.
      */
     private void getCurrentLocation() {
         try {
@@ -782,7 +769,9 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Convert location coordinates to address
+     * Converts a location into an address string.
+     *
+     * @param location The location to convert.
      */
     private void getAddressFromLocation(Location location) {
         try {
@@ -1144,7 +1133,7 @@ public class EditMoodActivity extends AppCompatActivity {
     }
 
     /**
-     * Handles results from camera or gallery intents.
+     * Handles results from camera, gallery, or location autocomplete intents.
      *
      * @param requestCode The request code identifying the action.
      * @param resultCode  The result code from the child activity.
@@ -1293,7 +1282,6 @@ public class EditMoodActivity extends AppCompatActivity {
         }
     }
 
-
     /**
      * Blends two colors together using the specified ratio.
      *
@@ -1310,11 +1298,21 @@ public class EditMoodActivity extends AppCompatActivity {
         return Color.rgb((int) r, (int) g, (int) b);
     }
 
+    /**
+     * Retrieves the drawable resource ID for a given emoji based on the mood and theme.
+     *
+     * @param moodId The mood identifier.
+     * @param theme  The theme identifier.
+     * @return The drawable resource ID.
+     */
     private int getEmojiResourceId(String moodId, String theme) {
-        // For local assets, use naming conventions. For instance:
         String resourceName = "emoji_" + moodId.toLowerCase() + "_" + theme.toLowerCase();
         return getResources().getIdentifier(resourceName, "drawable", getPackageName());
     }
+
+    /**
+     * Updates the selected mood emoji and the background of the mood container.
+     */
     private void updateSelectedMoodEmoji() {
         if (selectedMood == null) return;
 
@@ -1334,11 +1332,6 @@ public class EditMoodActivity extends AppCompatActivity {
             drawable.setBounds(0, 0, newSize, newSize);
             selectedMoodEmoji.setCompoundDrawables(null, drawable, null, null);
             selectedMoodEmoji.setCompoundDrawablePadding(dpToPx(8));
-
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) selectedMoodEmoji.getLayoutParams();
-            params.height = dpToPx(100);
-            selectedMoodEmoji.setLayoutParams(params);
-            selectedMoodEmoji.setGravity(Gravity.CENTER);
         }
 
         // Update the container background.
@@ -1347,5 +1340,4 @@ public class EditMoodActivity extends AppCompatActivity {
         moodContainerBg.setCornerRadius(dpToPx(12));
         selectedMoodContainer.setBackground(moodContainerBg);
     }
-
 }
