@@ -31,5 +31,5 @@
 
 - [Wiki Link](https://github.com/cmput301-w25/project-vibeverse/wiki)
 - [Scrum Board](https://github.com/orgs/cmput301-w25/projects/71)
-- [UI Mockups]
-- [UML]
+- [UI Mockups](https://github.com/cmput301-w25/project-vibeverse/wiki/Final-User-Interface-Mockups)
+- [UML](https://github.com/cmput301-w25/project-vibeverse/wiki/Final-UML-Diagram)
