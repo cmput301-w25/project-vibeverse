@@ -13,9 +13,12 @@
 
 # VibeSync
 
+<div align="center">
+  <img width="226" height="197" alt="vslogo" src="https://github.com/user-attachments/assets/0c23cac2-e13a-4013-9229-3af689bdfe5d" />
+</div>
+
 Welcome to **VibeSync** – a mood-driven social media experience designed to help you express, track, and share your emotional journey. Whether you're feeling ecstatic, sad, silly, or something in between, VibeSync gives you a creative and rewarding platform to connect with your emotions and your friends.
 
-<img width="226" height="197" alt="vslogo" src="https://github.com/user-attachments/assets/0c23cac2-e13a-4013-9229-3af689bdfe5d" />
 
 ---
 
@@ -87,7 +90,30 @@ This is a native Android app built using **Java** in **Android Studio**, with Fi
 4. Add your Google Maps API key to AndroidManifest.xml to enable the maps feature
 5. Run the app on an emulator or real device
    
+---
 
+## 🛠 Tech Stack
+
+- **Language**: Java
+- **IDE**: Android Studio
+- **Backend Services**: Firebase
+  - **Authentication**: Firebase Auth (Email & Google Sign-In)
+  - **Database**: Firebase Firestore
+  - **Storage**: Firebase Storage (for images)
+- **Maps & Location**: Google Maps API
+
+---
+
+## 📌 Roadmap
+
+- [ ] Add Dark Mode
+- [ ] In-app journaling feature
+- [ ] Daily streak visualization
+- [ ] Real-time chat with friends
+- [ ] More VibeShift bundles and custom themes
+
+---
+   
 ## Documentation
 
 - [Wiki Link](https://github.com/cmput301-w25/project-vibeverse/wiki)
