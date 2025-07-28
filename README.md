@@ -15,7 +15,7 @@
 
 Welcome to **VibeSync** – a mood-driven social media experience designed to help you express, track, and share your emotional journey. Whether you're feeling ecstatic, sad, silly, or something in between, VibeSync gives you a creative and rewarding platform to connect with your emotions and your friends.
 
-![VibeSync UI](./screenshots/app-overview.png) <!-- Replace with your actual screenshot path -->
+<img width="226" height="197" alt="vslogo" src="https://github.com/user-attachments/assets/0c23cac2-e13a-4013-9229-3af689bdfe5d" />
 
 ---
 
